@@ -1,0 +1,39 @@
+Myfin harmonogram vývoje
+========================
+
+Vložit testovací data.
+
+Hlavní menu aplikace.
+--------------------
+
+Vytvořit v layoutu - zapíná presentery a šablony.
+
+Zápis dokladu
+-------------
+
+Formulářem.
+
+Import bankovních výpisů
+------------------------
+
+Nahrání souboru formulářem, přečtení csv, zápis do databáze, analýza.
+
+Zápis trvalých příkazů
+----------------------
+
+Výpis, editace.
+
+Párování dokladů
+----------------
+
+Analýza algoritmů, ošetření trvalých příkazů. Ideálně jeden obecný algoritmus spouštěný podle kontextu.
+
+Zápis hotovosti v pokladně
+--------------------------
+
+Zápis, výpočet rozdílu, rozdělení do období, generování/úprava dokladů a plateb.
+
+Přehled výdajů po období
+------------------------
+
+Přehledná tabulka výdajů.
