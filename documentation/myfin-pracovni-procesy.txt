@@ -1,0 +1,56 @@
+Myfin - pracovní procesy
+========================
+
+Přihlášení uživatele
+--------------------
+
+Později, zatím přihlášen automaticky - jeden uživatel.
+
+Základní přehled
+----------------
+
+Seznam dospělých a dětí, bankovní účty, aktuální stav peněz, příjmy/výdaje za poslední období, aktuální úkoly/chybějící data/chyby.
+
+Zápis účtenek a faktur
+----------------------
+
+Ruční zápis formulářem. Možnost pozdějšího smazání, editace. Každý uživatel maže pouze svoje data. Doklady v hotovosti aplikace zapíše jako doklad i spárovanou platbu současně.
+
+Import bankovních výpisů
+------------------------
+
+Import ze souboru - v první etapě, ruční zápis a editace popřípadě později.
+
+Párování plateb a dokladů
+-------------------------
+
+Vyřešit nezávislým modulem, který se zavolá po každém vstupu dat plateb, nebo dokladů. Spolehlivá data páruje automaticky, méně spolehlivá poloautomaticky (návrh, odsouhlasení). Nejasná data ručně.
+
+Ošetřit platby kartou, trvalé příkazy k úhradě - automatické vygenerování dokladů. Automatické filtrování bankovních poplatků do kategorie "Různé". (případně speciální kategorie později)
+
+Zápis stavu hotovosti
+---------------------
+
+Po zapsání se vygenerují balanční doklady v hotovosti (měsíční) do kategorie "Drobné výdaje v hotovosti". Pří pozdější změně se vygenerují znovu.
+
+Trvalé příkazy k úhradě
+-----------------------
+
+Zobrazení a editace trvalých příkazů.
+
+Trvalé příjmy - dodělat později
+
+Příjmy a pohyby peněz
+---------------------
+
+Později
+
+Kategorie
+---------
+
+Práce s kategoriemi později.
+
+Uživatelé, osoby, rodiny
+------------------------
+
+Vytvoření uživatelů/rodiny, práva uživatelů v aplikaci, platební karty, bankovní účty, automatické vytvoření pokladny - později.
