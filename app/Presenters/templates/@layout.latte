@@ -4,12 +4,19 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
 
-	<title>{ifset title}{include title|stripHtml} | {/ifset}Nette Web</title>
-	<link rel="stylesheet" href="{$basePath}/css/style.css"
+	<title>{ifset title}{include title|stripHtml} | {/ifset}Myfin</title>
 </head>
 
 <body>
 {*	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>*}
+
+<div>
+	<a n:href="Homepage:default" style="float:left; border:1px solid black">Hlavní stránka</a>
+	<a n:href="Invoice:show" style="float:left; border:1px solid black">Vypsat doklady</a>
+	<a n:href="Invoice:add" style="float:left; border:1px solid black">Přidat doklad</a>
+	<a n:href="Sign:out" style="float:left; border:1px solid black">Odhlásit se</a>
+</div>
+<br>
 
 	{include content}
 
