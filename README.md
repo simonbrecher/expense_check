@@ -1,3 +1,5 @@
+Language of this application is Czech.
+
 Online application for expense evidence of a family.
 
 Source code of application is in directory app.

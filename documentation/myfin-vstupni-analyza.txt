@@ -1,0 +1,92 @@
+Webová aplikace - evidence financí pro rodinu
+==========================================================
+
+Pracovní název aplikace - Myfin
+----------------------
+
+Základní idea Myfin
+--------------------
+
+- Přehled o finančních tocích, vstupy/výstupy, bankovní účty/pokladna/platební karty, osoby domácnosti - rodiče/děti, útrata za období/ útrata podle kategorie/osob, kontrola že nechybí/nepřebývají peníze.
+
+- Automatizace - dle možností - automatický import bankovních výpisů s kontrolou duplicit/kompletnosti, zápis účtenek/faktur + párování s platbami obousměrné.
+
+- Podpora pravidelných úhrad - zpravidla měsíční - například: mobil, elektřina, plyn ...
+
+- Náklady domácnosti schované ve firmě - pravidelné/nepravidelné - bez kontroly pouze do přehledů výdajů.
+
+- Možnost provozovat jako službu veřejnosti.
+
+Etapy vývoje
+------------
+
+Navrhnout vývoj do několika etap, odstupňovaných podle složitosti tak, aby každá etapa dávala smysl a funkcionalitu bylo možno snadno rozšířit přidáním tabulek a programových modulů a nebylo potřeba stávající moduly upravovat.
+
+1. etapa - minimální
+
+Tabulky (pro databázi, úplně první návrh, není platný ani v první verzi databáze):
+
+payment 	- příchozí/odchozí platby - banka/pokladna
+
+invoice 	- doklad k úhradě - účtenka, stvrzenka, faktura
+
+category 	- základní členění výdajů - jídlo, bydlení (správa domu, elektřina, plyn, internet, ...), domácnost, oblečení, 
+
+bank_account 	- bankovní účet, jeden záznam
+
+bank		- banka, jeden záznam
+
+family		- rodina, jeden záznam
+
+user		- uživatel aplikace (také member) - jeden záznam
+
+member		- člen rodiny - pouze pro členění výdajů
+
+cash		- pokladna, dospělí uživatelé jednu pokladnu - jeden záznam
+
+import		- importy bankovních výpisů
+
+Poznámky k analýze:
+
+1.) Doklady a platby - tabulky invoice a payment
+
+Prvním hlavním smyslem aplikace je evidovat výdaje. Na ty by stačila teoreticky tabulka jedna, máme ale tabulky dvě - platby a doklady, protože tím řešíme základní problém, že doklad o zaplacení vkládáme do aplikace v jinou dobu, než přijde informace o platbě z bankovního výpisu.
+
+payment (platba) - vytvoří se automaticky z výpisu
+invoice (doklad) - účtenka, faktura, atd. - zapíše uživatel
+
+Úhrady v hotovosti se zapisují tak, že automaticky zapisujeme záznam dokladu i platby současně.
+
+2.) Zanedbání drobných plateb v hotovosti
+
+Uživatele by obtěžovalo evidovat všechny malé platby v hotovosti, které nejdou zjistit z výpisu. Potřebujeme ale mít přehled  o tom, kolik tyto drobné platby v součtu činí měsíčně / ročně, protože jinak by nevycházel zůstatek v pokladně. To vyřešíme tím, že uživatel jednou za čas zapíše do aplikace aktuální stav hotovosti v pokladně. Výpočtem zjistíme, kolik hotovosti chybí, a na tuto částku vystavíme automaticky doklad a platbu, zařazené do speciální kategorie hotovostních plateb bez dokladu "Drobná útrata v hotovosti".
+
+3.) Kategorie
+
+Základním smyslem aplikace je rozčlením nákladů do kategorií. Kategorie si uživatel vytvoří sám a do těchto kategorií může členit jednotlivé doklady, nebo je může nechat nezařazené a zařadit je později. Ale do speciální kategorie "Drobná útrata v hotovosti" nemůže doklady zařazovat, protože do ní se pouze automaticky zapisují rozdíly předpokládaného a skutečného stavu pokladny.
+
+4.) Párování a importy
+
+Platby se párují s doklady, čímž získáme přehled o všech platbách z bankovního výpisu a víme, za co jsou, a že všechny doklady byly řádně zaplaceny. Měly by se odhalit chyby - zaplaceno méně/více, nezaplaceno, neznámá platba.
+
+Párování plateb v hotovosti probíhá automaticky při zápisu dokladu. Párování plateb z bankovního výpisu proběhne ihned, jakmile jsou obě párované položky (platba + doklad) zapsány do databáze, tj. v okamžiku, kdy se zapisuje ta druhá.
+
+Párovací algoritmus pro platby z bankovního účtu využije pro automatické/poloautomatické párování maximum informací o platbě a dokladu (variabilní symbol, číslo protiúčtu, číslo karty, částka, datum platby a dokladu).
+
+Importy bankovního výpisu musí zajistit maximální spolehlivost a ošetření chyb.
+
+5.) Příjmy a převody
+
+Je potřeba dodatečně analyzovat a navrhnout optimální práci s evidencí příjmů, převodů banka-pokladna a sloučení pokladny domácnosti s pokladnou podnikání (což je v praxi vždy).
+
+6.) Trvalé příkazy k úhradě
+
+Dodávky energií, internet, televize, nájemné apod. se platí trvalým příkazem v bance, nebo inkasem a k těmto platbám neexistují doklady a je zbytečné, aby uživatel tyto platby ošetřoval ručně, protože je to možné automatizovat pomocí záznamu těchto trvalých příkazů v tabulce "order". Uživatel zadá maximum identifikačních údajů k trvalému příkazu (bankovní protiúčet, variabilní symbol), podle kterých aplikace dohledá platby v importovaném bankovním výpisu, vytvoří automaticky příslušný doklad a propáruje s platbou.
+
+7.) Návrh pracovních procesů
+
+8.) Návrh formulářů a modulů
+
+9.) Návrh stránek aplikace, URL adres, formulářů a výstupních tabulek
+
+10.) Návrh struktury adresářů a souborů s aplikačním kódem
