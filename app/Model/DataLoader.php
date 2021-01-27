@@ -25,6 +25,62 @@ class DataLoader
         $this->user = $user;
     }
 
+    /**
+     * If the current user can access data from $table with $id without any admin powers.
+     * No users are admins yet.
+     * For database 01.02
+     */
+    public function canAccess(string $table, int $id)
+    {
+        switch($table) {
+            case 'db_version':
+                return false;
+            case 'bank':
+            case 'family':
+                return true;
+            case 'ba_import':
+                $bank_account_id = $this->database->table($table)->wherePrimary($id)
+                    ->fetch()->bank_account_id;
+                return $this->canAccess('bank_account', $bank_account_id);
+            case 'cash_account_balance':
+                $cash_account_id = $this->database->table($table)->wherePrimary($id)
+                    ->fetch()->cash_account_id;
+                return $this->canAccess('cash_account', $cash_account_id);
+            case 'user':
+                return $this->user->id == $id;
+            case 'payment':
+                $payment = $this->database->table($table)->wherePrimary($id)->fetch();
+                if ($payment->bank_account_id !== null) {
+                    return $this->canAccess('bank_account', $payment->bank_account_id);
+                } elseif ($payment->bank_account_id !== null) {
+                    return $this->canAccess('cash_account', $payment->cash_account_id);
+                } else {
+                    return false;
+                }
+            case 'invoice_item':
+                $invoice_head_id = $this->database->table($table)->wherePrimary($id)
+                    ->fetch()->invoice_head_id;
+                return $this->canAccess('invoice_head', $invoice_head_id);
+            case 'category':
+            case 'member':
+                $family_id = $this->database->table($table)->wherePrimary($id)
+                    ->fetch()->family_id;
+                $user_family_id = $this->database->table($table)->wherePrimary($this->user->id)
+                    ->fetch()->family_id;
+                return $family_id == $user_family_id;
+            case 'order':
+            case 'card':
+            case 'bank_account':
+            case 'cash_account':
+            case 'invoice_head':
+            $user_id = $this->database->table($table)->wherePrimary($id)
+                ->fetch()->user_id;
+            return $user_id == $this->user->id;
+            default:
+                return false;
+        }
+    }
+
     /** get table invoice_head */
     public function getInvoiceHead()
     {
@@ -32,35 +88,31 @@ class DataLoader
     }
 
     /** get invoice_item(s) by invoice_head_id */
-    public function getInvoiceItem($invoice_head_id)
+    public function getInvoiceItem(int $invoice_head_id)
     {
-//        Debugger::barDump($invoice_head_id);
-
         $invoice_items = $this->database->table("invoice_item")
                             ->where("invoice_head_id = ", $invoice_head_id);
-
-//        foreach ($invoice_items as $invoice_item) {
-//            Debugger::barDump($invoice_item);
-//        }
-
         return $invoice_items;
     }
 
     /** get user name by id */
-    public function getUserName($userId) {
+    public function getUserName(int $userId)
+    {
         $user = $this->database->table("user")->where("id = ", $userId)->fetch();
         return $user->name;
     }
 
     /** get card card_name by id */
-    public function getCardName($cardId) {
+    public function getCardName(int $cardId)
+    {
         $card = $this->database->table("card")->where("id = ", $cardId)->fetch();
         return $card->card_name;
     }
 
     /** get member name by id */
-    public function getMemberName($memberId) {
-        if ($memberId === NULL) {
+    public function getMemberName(int $memberId)
+    {
+        if ($memberId === null) {
             return "Všichni";
         } else {
             $member = $this->database->table("member")->where("id = ", $memberId)->fetch();
@@ -69,8 +121,9 @@ class DataLoader
     }
 
     /** get card category_name by id */
-    public function getCategoryName($categoryId) {
-        if ($categoryId === NULL) {
+    public function getCategoryName(int $categoryId)
+    {
+        if ($categoryId === null) {
             return "Nezařazeno";
         } else {
             $category = $this->database->table("category")->where("id = ", $categoryId)->fetch();
@@ -79,63 +132,67 @@ class DataLoader
     }
 
     /** return dictionary of all id(s) and var_symbol(s) from card for current user */
-    public function getUserAllCardsVS() {
+    public function getUserAllCardsVS()
+    {
         $cards = $this->database->table("card")->where("user_id = ", $this->user->id);
         $varSymbols = [];
         foreach ($cards as $card) {
             $cardNumber = $card->public_card_num;
             $varSymbols[$card->id] = $this->getVSFromCardNumber($cardNumber);
         }
-//        Debugger::barDump($varSymbols);
         return $varSymbols;
     }
 
     /** return dictionary of all id(s) and var_symbol(s) from card for current user */
-    public function getUserAllBankAccountNumbers() {
+    public function getUserAllBankAccountNumbers()
+    {
         $bankAccounts = $this->database->table("bank_account")->where("user_id = ", $this->user->id);
         $bankAccountNumbers = [];
         foreach ($bankAccounts as $bankAccount) {
             $bankAccountNumbers[$bankAccount->id] = $bankAccount->number_account;
         }
-//        Debugger::barDump($varSymbols);
         return $bankAccountNumbers;
     }
 
     /** return dictionary of all id(s) and var_symbol(s) from card for current user */
-    public function getAllCategories() {
+    public function getAllCategories()
+    {
         $familyId = $this->getUserFamily();
         $categories = $this->database->table("category")->where("family_id = ", $familyId);
-        // Not NULL, because otherwise it coultn't be set as default value
+        // Not null, because otherwise it coultn't be set as default value
         $dictionary = [0 => "Nezařazeno"];
         foreach ($categories as $category) {
             if (!$category->is_cash_account_balance) {
                 $dictionary[$category->id] = $category->name;
             }
         }
-//        Debugger::barDump($varSymbols);
         return $dictionary;
     }
 
 
     /** return dictionary of all id(s) and var_symbol(s) from card for current user */
-    public function getAllMembers() {
+    public function getAllMembers()
+    {
         $familyId = $this->getUserFamily();
         $members = $this->database->table("member")->where("family_id = ", $familyId);
-        // Not NULL, because otherwise it coultn't be set as default value
+        /** It will be changed to null after the form is used,
+         *  but it has to ve 0 now, otherwise it could not be set as default value for radiolist.
+         */
         $dictionary = [0 => "Všichni"];
         foreach ($members as $member) {
             $dictionary[$member->id] = $member->name;
         }
-//        Debugger::barDump($varSymbols);
         return $dictionary;
     }
 
     /** return family_id for current user */
-    public function getUserFamily() {
+    public function getUserFamily()
+    {
         return $this->database->table('user')->wherePrimary($this->user->id)->fetch()->family_id;
     }
 
-    private function getVSFromCardNumber($cardNumber) {
+    private function getVSFromCardNumber(string $cardNumber)
+    {
         return substr($cardNumber, -4);
     }
 }
