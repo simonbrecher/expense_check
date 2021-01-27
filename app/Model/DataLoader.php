@@ -110,7 +110,7 @@ class DataLoader
     }
 
     /** get member name by id */
-    public function getMemberName(int $memberId)
+    public function getMemberName($memberId)
     {
         if ($memberId === null) {
             return "Všichni";
@@ -121,7 +121,7 @@ class DataLoader
     }
 
     /** get card category_name by id */
-    public function getCategoryName(int $categoryId)
+    public function getCategoryName($categoryId)
     {
         if ($categoryId === null) {
             return "Nezařazeno";
