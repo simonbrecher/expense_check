@@ -9,6 +9,8 @@ use App\Model;
 
 use DateTime;
 
+use App\Controls\MyForm;
+
 use Tracy\Debugger;
 
 class InvoicePresenter extends Nette\Application\UI\Presenter
@@ -40,10 +42,13 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $this->template->invoice_heads = $invoice_heads;
     }
 
-    protected function createComponentAddInvoice(string $paidBy): Form
+    protected function createComponentAddInvoice(string $paidBy): MyForm
     {
-        $form = new Form;
+        $form = new MyForm;
         $form->values->paidBy = $paidBy;
+
+        $itemCount = 2;
+        $form->values->itemCount = $itemCount;
 
         $form->getElementPrototype()->setAttribute('autocomplete', 'off');
 
@@ -74,6 +79,23 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
             ->setRequired('Doplňte datum platby');
 
         $form->addText('description', 'Poznámka:');
+
+        for ($i = 0; $i < $itemCount; $i++) {
+
+            $categories = $this->dataLoader->getAllCategories();
+
+            $radio = $form->addMyRadioList('category'.$i, 'Utraceno za:', $categories)
+                ->setRequired('Doplňte, za co byla položka utracená.')
+                ->setDefaultValue(0);
+
+            $members = $this->dataLoader->getAllMembers();
+            $form->addMyRadioList('member'.$i, 'Utraceno pro:', $members)
+                ->setRequired('Doplňte, pro kterého člena rodiny byla položka utracená.')
+                ->setDefaultValue(0);
+
+            $form->addText('amount'.$i, 'Cena v kč:')
+                ->setRequired('Doplňte cenu položky.');
+        }
 
         $form->addSubmit('send', 'Přidat doklad');
 

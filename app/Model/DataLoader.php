@@ -93,12 +93,46 @@ class DataLoader
     /** return dictionary of all id(s) and var_symbol(s) from card for current user */
     public function getUserAllBankAccountNumbers() {
         $bankAccounts = $this->database->table("bank_account")->where("user_id = ", $this->user->id);
-        $varSymbols = [];
+        $bankAccountNumbers = [];
         foreach ($bankAccounts as $bankAccount) {
-            $varSymbols[$bankAccount->id] = $bankAccount->number_account;
+            $bankAccountNumbers[$bankAccount->id] = $bankAccount->number_account;
         }
 //        Debugger::barDump($varSymbols);
-        return $varSymbols;
+        return $bankAccountNumbers;
+    }
+
+    /** return dictionary of all id(s) and var_symbol(s) from card for current user */
+    public function getAllCategories() {
+        $familyId = $this->getUserFamily();
+        $categories = $this->database->table("category")->where("family_id = ", $familyId);
+        // Not NULL, because otherwise it coultn't be set as default value
+        $dictionary = [0 => "Nezařazeno"];
+        foreach ($categories as $category) {
+            if (!$category->is_cash_account_balance) {
+                $dictionary[$category->id] = $category->name;
+            }
+        }
+//        Debugger::barDump($varSymbols);
+        return $dictionary;
+    }
+
+
+    /** return dictionary of all id(s) and var_symbol(s) from card for current user */
+    public function getAllMembers() {
+        $familyId = $this->getUserFamily();
+        $members = $this->database->table("member")->where("family_id = ", $familyId);
+        // Not NULL, because otherwise it coultn't be set as default value
+        $dictionary = [0 => "Všichni"];
+        foreach ($members as $member) {
+            $dictionary[$member->id] = $member->name;
+        }
+//        Debugger::barDump($varSymbols);
+        return $dictionary;
+    }
+
+    /** return family_id for current user */
+    public function getUserFamily() {
+        return $this->database->table('user')->wherePrimary($this->user->id)->fetch()->family_id;
     }
 
     private function getVSFromCardNumber($cardNumber) {
