@@ -155,7 +155,8 @@ class DataLoader
     public function getUserAllBankAccountNumbers()
     {
         $bankAccounts = $this->database->table("bank_account")->where("user_id = ", $this->user->id);
-        $bankAccountNumbers = [];
+        // Not null, because otherwise it coultn't be set as default value
+        $bankAccountNumbers = [0 => "Neuvedeno"];
         foreach ($bankAccounts as $bankAccount) {
             $bankAccountNumbers[$bankAccount->id] = $bankAccount->number_account;
         }

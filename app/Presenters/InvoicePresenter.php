@@ -3,12 +3,13 @@
 declare(strict_types=1);
 namespace App\Presenters;
 
+use ErrorException;
 use Nette;
 use Nette\Application\UI\Form;
-use App\Model;
 
 use DateTime;
 
+use App\Model;
 use App\Controls\MyForm;
 
 use Tracy\Debugger;
@@ -17,6 +18,9 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
 {
     /* @var Model\DataLoader */
     private $dataLoader;
+
+    // temporary
+    private $itemCount;
 
     public  function __construct(Model\DataLoader $dataLoader)
     {
@@ -42,13 +46,12 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $this->template->invoice_heads = $invoice_heads;
     }
 
-    protected function createComponentAddInvoice(string $paidBy): MyForm
+    protected function createComponentAddInvoice(): MyForm
     {
         $form = new MyForm;
-        $form->values->paidBy = $paidBy;
 
-        $itemCount = 1;
-        $form->values->itemCount = $itemCount;
+        $itemCount = 2;
+        $this->itemCount = $itemCount;
 
         $form->getElementPrototype()->setAttribute('autocomplete', 'off');
 
@@ -66,30 +69,32 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
 
         if ($paidBy === 'card') {
             $cards = $this->dataLoader->getUserAllCardsVS();
-            $form->addRadioList('card', 'Platební karta:', $cards)
+            $form->addMyRadioList('card', 'Platební karta:', $cards)
                 ->setRequired('Doplňte variabilní kód platební karty.');
 
         } elseif ($paidBy === "bank") {
             $bankAccounts = $this->dataLoader->getUserAllBankAccountNumbers();
-            $form->addRadioList('bank_account', 'Bankovní účet:', $bankAccounts)
+            $form->addMyRadioList('bank_account', 'Bankovní účet:', $bankAccounts)
                 ->setRequired('Doplňte číslo bankovního účtu.');
-            $form->addText('var_symbol', 'Variabilní symbol:');
+            $form->addText('var_symbol', 'Variabilní symbol:')
+                ->setMaxLength(10);
         }
 
-        $form->addText('total_price', $itemCount == 1 ? 'Cena:' : 'Celková cena:')
-            ->setRequired('Doplňte datum platby');
-        if ($itemCount > 1) {
-            $form->addCheckbox('count_total_price', 'Dopočítat celkovou cenu');
+        if ($itemCount == 1) {
+            $form->addText('total_price', $itemCount == 1 ? 'Cena:' : 'Celková cena:')
+                ->setRequired('Doplňte datum platby.');
+        } else {
+            $form->addText('total_price', $itemCount == 1 ? 'Cena:' : 'Celková cena:');
+            $form->addCheckbox('count_total_price', 'Dopočítat celkovou cenu automaticky');
         }
 
-        $form->addText('date', 'Datum platby:')
-            ->setRequired('Doplňte datum platby');
+        $form->addText('date', 'Datum platby:');
         $form->addCheckbox('today', 'Zaplaceno dnes');
 
-        $form->addText('description', 'Poznámka:');
+        $form->addTextArea('description', 'Poznámka:')->setMaxLength(50);
 
         for ($i = 0; $i < $itemCount; $i++) {
-            $form->addMyHtml("-------------------------------   ");
+            $form->addMyHtml("-------------------------------");
 
             $categories = $this->dataLoader->getAllCategories();
 
@@ -102,9 +107,8 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
                 ->setDefaultValue(0);
 
             if ($itemCount > 1) {
-                $form->addText('amount'.$i, 'Cena v kč:')
-                    ->setRequired('Doplňte cenu položky.');
-                $form->addCheckbox('count_price'.$i, 'Dopočítat cenu položky');
+                $form->addText('price'.$i, 'Cena v kč:');
+                $form->addCheckbox('count_price'.$i, 'Dopočítat cenu položky automaticky');
             }
         }
 
@@ -114,16 +118,157 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         return $form;
     }
 
-    private function controlDate($date) {
+    private function isDateExist($date): bool
+    {
         $dt = DateTime::createFromFormat("d.m.Y", $date);
         return $dt !== false && !array_sum($dt::getLastErrors());
     }
 
+    private function isVarSymbolCorrect(string $string): bool
+    {
+        if (strlen($string) == 0 or strlen($string) > 10) {
+            return false;
+        }
+        $digits = '0123456789';
+        foreach (str_split($string) as $digit) {
+            if (strpos($digits, $digit) === false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function isPriceCorrect(string $string): bool
+    {
+        if (strlen($string) == 0 or strlen($string) > 11) {
+            return false;
+        }
+        return floatval($string) != 0 or $string == "0";
+    }
+
+    private function isFormCorrect(Form $form, \stdClass $values, int $itemCount): bool
+    {
+        if ($itemCount <= 0) {
+            throw new ErrorException('Wrong $itemcount.');
+        }
+
+        switch($this->getParameter("action")) {
+            case 'addCash':
+                break;
+            case 'addCard':
+                if (!$this->dataLoader->canAccess('card', $values->card)) {
+                    throw new ErrorException('User can not access this card.');
+                }
+                break;
+            case 'addBank':
+                if ($values->bank_account === 0 and $values->var_symbol === '') {
+                    $form->addError('Doplňte bankovní účet nebo variabilní symbol.');
+                    return false;
+                } else {
+                    if ($values->bank_account !== 0) {
+                        if (!$this->dataLoader->canAccess('bank_account', $values->bank_account)) {
+                            throw new ErrorException('User can not access this bank account.');
+                        }
+                    }
+                    if ($values->var_symbol !== '') {
+                        if (!$this->isVarSymbolCorrect($values->var_symbol)) {
+                            $form->addError('Variabilní symbol není ve správném formátu.');
+                            return false;
+                        }
+                    }
+                }
+                break;
+            default:
+                Debugger::barDump($this->getParameter("action"));
+                throw new ErrorException('Wrong type of payment.');
+        }
+
+        if (!$values->today and !$this->isDateExist($values->date)) {
+            $form->addError('Nesprávné datum.');
+            return false;
+        }
+
+        for ($i = 0; $i < $itemCount; $i++) {
+            $currentCategory = 'category'.$i;
+            $categoryId = $values->$currentCategory;
+            if ($categoryId != 0) {
+                if (!$this->dataLoader->canAccess('category', $categoryId)) {
+                    throw new ErrorException('User can not access this category.');
+                }
+            }
+            $currentMember = 'member'.$i;
+            $memberId = $values->$currentMember;
+            if ($memberId != 0) {
+                if (!$this->dataLoader->canAccess('member', $memberId)) {
+                    throw new ErrorException('User can not access this member.');
+                }
+            }
+        }
+
+        if ($itemCount == 1) {
+            if (!$this->isPriceCorrect($values->total_price)) {
+                $form->addError('Nesprávná cena.');
+                return false;
+            }
+
+        } else {
+            $toCount = null;
+            $amountTotalPrice = 0;
+            $amountPrices = 0;
+            if ($values->count_total_price) {
+                $toCount = -1;
+            } else {
+                if (!$this->isPriceCorrect($values->total_price)) {
+                    $form->addError('Nesprávná celková cena.');
+                    return false;
+                } else {
+                    $amountTotalPrice += $values->total_price;
+                }
+            }
+            for ($i = 0; $i < $itemCount; $i ++) {
+                $correct_price = 'price'.$i;
+                $correct_count_price = 'count_price'.$i;
+
+                if ($values->$correct_count_price) {
+                    if ($toCount !== null) {
+                        Debugger::barDump("HERE");
+                        $form->addError('Dopočítat můžete pouze cenu jedné položky, nebo celého dokladu.');
+                        return false;
+                    }
+                } else {
+                    if (!$this->isPriceCorrect($values->$correct_price)) {
+                        $form->addError('Nesprávná celková cena '.($i + 1).". položky.");
+                        return false;
+                    } else {
+                        $amountPrices += $values->$correct_price;
+                    }
+                }
+            }
+
+            // the difference between total price and sum of prices can not be higher than 5
+            if ($amountTotalPrice < $amountPrices - 5 and $toCount !== -1 and $toCount !== null) {
+                $form->addError('Celková cena nesmí být menší, než ceny jednotlivých položek.');
+                return false;
+            } elseif ($toCount === null) {
+                if (abs($amountTotalPrice - $amountPrices) > 5) {
+                    $form->addError('Celková cena a součet cen položek se moc liší.
+                        Zkontrolujte ceny nebo označte "Spočítat celkovou cenu automaticky".');
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     public function addInvoiceFormSucceeded(Form $form, \stdClass $values): void
     {
-        if (!$this->controlDate($values->date)) {
-            $form->addError('Nesprávné datum.');
-        } else {
+        Debugger::barDump($values);
+        $itemCount = $this->itemCount;
+
+        $isFormCorrect = $this->isFormCorrect($form, $values, $itemCount);
+
+        if ($isFormCorrect) {
             $this->flashMessage("Doklad byl úspěšně přidaný.");
             $this->redirect("this");
         }
