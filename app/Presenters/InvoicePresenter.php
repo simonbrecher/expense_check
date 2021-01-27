@@ -81,10 +81,11 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $form->addText('description', 'Poznámka:');
 
         for ($i = 0; $i < $itemCount; $i++) {
+            $form->addMyHtml("<br>");
 
             $categories = $this->dataLoader->getAllCategories();
 
-            $radio = $form->addMyRadioList('category'.$i, 'Utraceno za:', $categories)
+            $form->addMyRadioList('category'.$i, 'Utraceno za:', $categories)
                 ->setRequired('Doplňte, za co byla položka utracená.')
                 ->setDefaultValue(0);
 
