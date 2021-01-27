@@ -77,4 +77,31 @@ class DataLoader
             return $category->name;
         }
     }
+
+    /** return dictionary of all id(s) and var_symbol(s) from card for current user */
+    public function getUserAllCardsVS() {
+        $cards = $this->database->table("card")->where("user_id = ", $this->user->id);
+        $varSymbols = [];
+        foreach ($cards as $card) {
+            $cardNumber = $card->public_card_num;
+            $varSymbols[$card->id] = $this->getVSFromCardNumber($cardNumber);
+        }
+//        Debugger::barDump($varSymbols);
+        return $varSymbols;
+    }
+
+    /** return dictionary of all id(s) and var_symbol(s) from card for current user */
+    public function getUserAllBankAccountNumbers() {
+        $bankAccounts = $this->database->table("bank_account")->where("user_id = ", $this->user->id);
+        $varSymbols = [];
+        foreach ($bankAccounts as $bankAccount) {
+            $varSymbols[$bankAccount->id] = $bankAccount->number_account;
+        }
+//        Debugger::barDump($varSymbols);
+        return $varSymbols;
+    }
+
+    private function getVSFromCardNumber($cardNumber) {
+        return substr($cardNumber, -4);
+    }
 }

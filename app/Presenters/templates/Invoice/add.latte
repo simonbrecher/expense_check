@@ -1,3 +1,12 @@
 {block content}
 
-<p>Invoice.add</p>
+<br>
+
+<div>
+    <a n:href="Invoice:addCash" style="float:left; border:1px solid black">Přidat doklad placený v hotovosti</a>
+    <a n:href="Invoice:addCard" style="float:left; border:1px solid black">Přidat doklad placený kartou</a>
+    <a n:href="Invoice:addBank" style="float:left; border:1px solid black">Přidat doklad placený bankovním převodem</a>
+</div>
+
+<br><br><br>
+<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
