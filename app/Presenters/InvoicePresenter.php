@@ -47,7 +47,7 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $form = new MyForm;
         $form->values->paidBy = $paidBy;
 
-        $itemCount = 2;
+        $itemCount = 1;
         $form->values->itemCount = $itemCount;
 
         $form->getElementPrototype()->setAttribute('autocomplete', 'off');
@@ -73,29 +73,39 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
             $bankAccounts = $this->dataLoader->getUserAllBankAccountNumbers();
             $form->addRadioList('bank_account', 'Bankovní účet:', $bankAccounts)
                 ->setRequired('Doplňte číslo bankovního účtu.');
+            $form->addText('var_symbol', 'Variabilní symbol:');
+        }
+
+        $form->addText('total_price', $itemCount == 1 ? 'Cena:' : 'Celková cena:')
+            ->setRequired('Doplňte datum platby');
+        if ($itemCount > 1) {
+            $form->addCheckbox('count_total_price', 'Dopočítat celkovou cenu');
         }
 
         $form->addText('date', 'Datum platby:')
             ->setRequired('Doplňte datum platby');
+        $form->addCheckbox('today', 'Zaplaceno dnes');
 
         $form->addText('description', 'Poznámka:');
 
         for ($i = 0; $i < $itemCount; $i++) {
-            $form->addMyHtml("<br>");
+            $form->addMyHtml("-------------------------------   ");
 
             $categories = $this->dataLoader->getAllCategories();
 
             $form->addMyRadioList('category'.$i, 'Utraceno za:', $categories)
-                ->setRequired('Doplňte, za co byla položka utracená.')
-                ->setDefaultValue(0);
+                ->setRequired('Doplňte, za co byla položka utracená.');
 
             $members = $this->dataLoader->getAllMembers();
             $form->addMyRadioList('member'.$i, 'Utraceno pro:', $members)
                 ->setRequired('Doplňte, pro kterého člena rodiny byla položka utracená.')
                 ->setDefaultValue(0);
 
-            $form->addText('amount'.$i, 'Cena v kč:')
-                ->setRequired('Doplňte cenu položky.');
+            if ($itemCount > 1) {
+                $form->addText('amount'.$i, 'Cena v kč:')
+                    ->setRequired('Doplňte cenu položky.');
+                $form->addCheckbox('count_price'.$i, 'Dopočítat cenu položky');
+            }
         }
 
         $form->addSubmit('send', 'Přidat doklad');

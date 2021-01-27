@@ -25,13 +25,21 @@ class DataLoader
         $this->user = $user;
     }
 
+    public function idExists(string $table, int $id) {
+        return $this->database->table($table)->offsetExists($id);
+    }
+
     /**
      * If the current user can access data from $table with $id without any admin powers.
      * No users are admins yet.
+     * false if id does not exist.
      * For database 01.02
      */
     public function canAccess(string $table, int $id)
     {
+        if (!$this->idExists($table, $id)) {
+            return false;
+        }
         switch($table) {
             case 'db_version':
                 return false;
@@ -168,7 +176,6 @@ class DataLoader
         }
         return $dictionary;
     }
-
 
     /** return dictionary of all id(s) and var_symbol(s) from card for current user */
     public function getAllMembers()
