@@ -18,13 +18,19 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
 {
     /* @var Model\DataLoader */
     private $dataLoader;
+    /* @var Model\DataSender */
+    private $dataSender;
+
+    private $paidBy;
 
     // temporary
     private $itemCount;
 
-    public  function __construct(Model\DataLoader $dataLoader)
+    public  function __construct(Model\DataLoader $dataLoader, Model\DataSender $dataSender)
     {
         $this->dataLoader = $dataLoader;
+        $this->dataSender = $dataSender;
+        $this->dataSender->setDataLoader($this->dataLoader);
     }
 
     public function startup()
@@ -34,6 +40,7 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
             $this->redirect("Sign:in");
         } else {
             $this->dataLoader->setUser($this->getUser());
+            $this->dataSender->setUser($this->getUser());
         }
     }
 
@@ -65,7 +72,11 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
             case "addBank":
                 $paidBy = "bank";
                 break;
+            default:
+                throw new ErrorException('Wrong paidBy: '.$this->getParameter("action"));
         }
+
+        $this->paidBy = $paidBy;
 
         if ($paidBy === 'card') {
             $cards = $this->dataLoader->getUserAllCardsVS();
@@ -92,8 +103,6 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $form->addText('date', 'Datum platby:');
         $form->addCheckbox('today', 'Zaplaceno dnes');
 
-        $form->addTextArea('description', 'Poznámka:')->setMaxLength(50);
-
         for ($i = 0; $i < $itemCount; $i++) {
             $form->addMyHtml("-------------------------------");
 
@@ -111,6 +120,9 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
                 $form->addText('price'.$i, 'Cena v kč:');
                 $form->addCheckbox('count_price'.$i, 'Dopočítat cenu položky automaticky');
             }
+
+            $form->addTextArea('description'.$i, $itemCount == 1 ? 'Název:' : 'Název položky:')
+                ->setMaxLength(50);
         }
 
         $form->addSubmit('send', 'Přidat doklad');
@@ -150,24 +162,24 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
     // to be finished
     private function isCounterBankAccountCorrect(string $bankAccountNumber, string $bankCode)
     {
-        return $bankAccountNumber !== 'a' and $bankAccountNumber !== 'a';
+        return $bankAccountNumber !== 'a' and $bankCode !== 'a';
     }
 
-    private function isFormCorrect(Form $form, \stdClass $values, int $itemCount): bool
+    private function isFormCorrect(Form $form, Nette\Utils\ArrayHash $values, int $itemCount): bool
     {
         if ($itemCount <= 0) {
             throw new ErrorException('Wrong $itemcount.');
         }
 
-        switch($this->getParameter("action")) {
-            case 'addCash':
+        switch($values->paidby) {
+            case 'cash':
                 break;
-            case 'addCard':
+            case 'card':
                 if (!$this->dataLoader->canAccess('card', $values->card)) {
                     throw new ErrorException('User can not access this card.');
                 }
                 break;
-            case 'addBank':
+            case 'bank':
                 if (($values->counter_account_number === '' or $values->counter_account_bank_code === '')
                         and $values->var_symbol === '') {
                     $form->addError('Doplňte čislo protiúčtu a bankovní kód protiúčtu účet nebo variabilní symbol.');
@@ -273,11 +285,9 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         return true;
     }
 
-    private function countDataForAddinvoiceForm(Form $form): Nette\Utils\ArrayHash
+    private function countDataForAddInvoiceForm(Nette\Utils\ArrayHash $values): Nette\Utils\ArrayHash
     {
         $itemCount = $this->itemCount;
-
-        $values = $form->values;
 
         if ($values->today) {
             $now = date('d.m.Y', time());
@@ -348,20 +358,26 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         return $values;
     }
 
-    public function addInvoiceFormSucceeded(Form $form, \stdClass $values): void
+    public function addInvoiceFormSucceeded(Form $form, Nette\Utils\ArrayHash $values): void
     {
-        Debugger::barDump($form->values);
         $itemCount = $this->itemCount;
+
+        $values->offsetSet('paidby', $this->paidBy);
+        $values->offsetSet('item_count', $itemCount);
 
         $isFormCorrect = $this->isFormCorrect($form, $values, $itemCount);
 
         if ($isFormCorrect) {
-            $form->values = $this->countDataForAddinvoiceForm($form);
+            $values = $this->countDataForAddInvoiceForm($values);
 
-            Debugger::barDump($form->values);
+            $wasDatabaseSuccessful = $this->dataSender->sendAddinvoiceForm($values);
 
-            $this->flashMessage("Doklad byl úspěšně přidaný.");
-            $this->redirect("this");
+            if ($wasDatabaseSuccessful) {
+                $this->flashMessage("Doklad byl úspěšně přidaný.", "success");
+                $this->redirect("this");
+            } else {
+                $form->addError("Bohužel se nám nepodařilo doklad uložit do databáze.");
+            }
         }
     }
 }

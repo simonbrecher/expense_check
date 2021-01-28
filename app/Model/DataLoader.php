@@ -25,6 +25,11 @@ class DataLoader
         $this->user = $user;
     }
 
+    public function table(string $table): Nette\Database\Table\Selection
+    {
+        return $this->database->table($table);
+    }
+
     public function idExists(string $table, int $id) {
         return $this->database->table($table)->offsetExists($id);
     }
