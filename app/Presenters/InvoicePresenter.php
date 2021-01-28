@@ -144,8 +144,7 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         if (strlen($string) == 0 or strlen($string) > 11) {
             return false;
         }
-        Debugger::barDump(floatval($string));
-        return floatval($string) != 0 or $string == "0";
+        return floatval($string) > 0;
     }
 
     // to be finished
@@ -234,33 +233,33 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
                     $amountTotalPrice += $values->total_price;
                 }
             }
-            for ($i = 0; $i < $itemCount; $i ++) {
-                $correct_price = 'price'.$i;
-                $correct_count_price = 'count_price'.$i;
+            for ($i = 0; $i < $itemCount; $i++) {
+                $correctPrice = 'price'.$i;
+                $correctCountPrice = 'count_price'.$i;
 
-                if ($values->$correct_count_price) {
+                if ($values->$correctCountPrice) {
                     if ($toCount !== null) {
-                        Debugger::barDump("HERE");
                         $form->addError('Dopočítat můžete pouze cenu jedné položky, nebo celého dokladu.');
                         return false;
                     } else {
                         $toCount = $i;
                     }
                 } else {
-                    if (!$this->isPriceCorrect($values->$correct_price)) {
+                    if (!$this->isPriceCorrect($values->$correctPrice)) {
                         $form->addError('Nesprávná cena '.($i + 1).". položky.");
                         return false;
                     } else {
-                        $amountPrices += $values->$correct_price;
+                        $amountPrices += $values->$correctPrice;
                     }
                 }
             }
 
-            Debugger::barDump($toCount);
-
             // the difference between total price and sum of prices can not be higher than 5
-            if ($amountTotalPrice < $amountPrices - 5 and $toCount !== -1 and $toCount !== null) {
+            if ($amountTotalPrice < $amountPrices and $toCount !== -1) {
                 $form->addError('Celková cena nesmí být menší, než ceny jednotlivých položek.');
+                return false;
+            } elseif ($amountTotalPrice == $amountPrices and $toCount !== null) {
+                $form->addError('Vypočítaná cena položky nesmí nulovou hodnotu.');
                 return false;
             } elseif ($toCount === null) {
                 if (abs($amountTotalPrice - $amountPrices) > 5) {
@@ -274,14 +273,93 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         return true;
     }
 
+    private function countDataForAddinvoiceForm(Form $form): Nette\Utils\ArrayHash
+    {
+        $itemCount = $this->itemCount;
+
+        $values = $form->values;
+
+        if ($values->today) {
+            $now = date('d.m.Y', time());
+            $values->date = $now;
+        }
+        for ($i = 0; $i < $itemCount; $i++) {
+            $correctCategoryId = 'category'.$i;
+            if ($values->$correctCategoryId === 0) {
+                $values->$correctCategoryId = null;
+            }
+            $correctMemberId = 'member'.$i;
+            if ($values->$correctMemberId === 0) {
+                $values->$correctMemberId = null;
+            }
+        }
+
+        if ($itemCount == 1) {
+            $values->price0 = $values->total_price;
+        } else {
+            $toCount = null;
+            if ($values->count_total_price) {
+                $toCount = -1;
+            } else {
+                for ($i = 0; $i < $itemCount; $i++) {
+                    $correctCountPriceId = 'count_price'.$i;
+                    if ($values->$correctCountPriceId) {
+                        $toCount = $i;
+                        break;
+                    }
+                }
+            }
+            $totalPrice = $values->count_total_price ? 0 : $values->total_price;
+            $itemSumPrice = 0;
+            for ($i = 0; $i < $itemCount; $i++) {
+                $correctCountPriceId = 'count_price'.$i;
+                if (!$values->$correctCountPriceId) {
+                    $correctPriceId = 'price'.$i;
+                    $itemSumPrice += $values->$correctPriceId;
+                }
+            }
+            if ($values->total_price !== null) {
+                $values->total_price = floatval($values->total_price);
+            }
+            for ($i = 0; $i < $itemCount; $i++) {
+                $correctPriceId = 'price'.$i;
+                if ($values->$correctPriceId !== null) {
+                    $values->$correctPriceId = floatval($values->$correctPriceId);
+                }
+            }
+
+            // count nothing, but make sure the item prices sum up to total price
+            if ($toCount === null) {
+                $multiplier = $totalPrice / $itemSumPrice;
+                for ($i = 0; $i < $itemCount; $i++) {
+                    $correctPriceId = 'price'.$i;
+                    $values->$correctPriceId *= $multiplier;
+                }
+            // count total price
+            } elseif ($toCount === -1) {
+                $values->total_price = $itemSumPrice;
+            // count item price
+            } else {
+                $correctPriceId = 'price'.$toCount;
+                $values->$correctPriceId = $totalPrice - $itemSumPrice;
+            }
+        }
+
+        return $values;
+    }
+
     public function addInvoiceFormSucceeded(Form $form, \stdClass $values): void
     {
-        Debugger::barDump($values);
+        Debugger::barDump($form->values);
         $itemCount = $this->itemCount;
 
         $isFormCorrect = $this->isFormCorrect($form, $values, $itemCount);
 
         if ($isFormCorrect) {
+            $form->values = $this->countDataForAddinvoiceForm($form);
+
+            Debugger::barDump($form->values);
+
             $this->flashMessage("Doklad byl úspěšně přidaný.");
             $this->redirect("this");
         }
