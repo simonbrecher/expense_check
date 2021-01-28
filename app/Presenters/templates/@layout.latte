@@ -4,10 +4,22 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
 
+	<link rel="stylesheet" href="{$basePath}/stat/layout.css" />
+
 	<title>{ifset title}{include title|stripHtml} | {/ifset}Myfin</title>
 </head>
 
 <body>
+
+<header class="header-site">
+
+	<div class="header-heading">Myfin - evidence financí pro rodinu.</div>
+
+</header>
+
+<div class="site-container">
+
+<div class="site-wrapper">
 
 <div>
 	<a n:href="Homepage:default" style="float:left; border:1px solid black">Hlavní stránka</a>
@@ -18,6 +30,12 @@
 <br>
 
 	{include content}
+
+<hr />
+
+</div>
+
+</div>
 
 {*	{block scripts}*}
 {*	<script src="https://nette.github.io/resources/js/3/netteForms.min.js"></script>*}

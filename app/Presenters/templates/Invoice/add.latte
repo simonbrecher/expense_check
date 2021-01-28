@@ -9,4 +9,4 @@
 </div>
 
 <br><br><br>
-<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+<div n:foreach="$flashes as $flash" class="flash-{$flash->type}">{$flash->message}</div>

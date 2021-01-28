@@ -69,12 +69,12 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
 
         if ($paidBy === 'card') {
             $cards = $this->dataLoader->getUserAllCardsVS();
-            $form->addMyRadioList('card', 'Platební karta:', $cards)
+            $form->addSelect('card', 'Platební karta:', $cards)
                 ->setRequired('Doplňte variabilní kód platební karty.');
 
         } elseif ($paidBy === "bank") {
             $bankAccounts = $this->dataLoader->getUserAllBankAccountNumbers();
-            $form->addMyRadioList('bank_account', 'Bankovní účet:', $bankAccounts)
+            $form->addSelect('bank_account', 'Bankovní účet:', $bankAccounts)
                 ->setRequired('Doplňte číslo bankovního účtu.');
             $form->addText('var_symbol', 'Variabilní symbol:')
                 ->setMaxLength(10);
@@ -98,11 +98,11 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
 
             $categories = $this->dataLoader->getAllCategories();
 
-            $form->addMyRadioList('category'.$i, 'Utraceno za:', $categories)
+            $form->addSelect('category'.$i, 'Utraceno za:', $categories)
                 ->setRequired('Doplňte, za co byla položka utracená.');
 
             $members = $this->dataLoader->getAllMembers();
-            $form->addMyRadioList('member'.$i, 'Utraceno pro:', $members)
+            $form->addSelect('member'.$i, 'Utraceno pro:', $members)
                 ->setRequired('Doplňte, pro kterého člena rodiny byla položka utracená.')
                 ->setDefaultValue(0);
 
@@ -143,6 +143,7 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         if (strlen($string) == 0 or strlen($string) > 11) {
             return false;
         }
+        Debugger::barDump(floatval($string));
         return floatval($string) != 0 or $string == "0";
     }
 
@@ -234,16 +235,20 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
                         Debugger::barDump("HERE");
                         $form->addError('Dopočítat můžete pouze cenu jedné položky, nebo celého dokladu.');
                         return false;
+                    } else {
+                        $toCount = $i;
                     }
                 } else {
                     if (!$this->isPriceCorrect($values->$correct_price)) {
-                        $form->addError('Nesprávná celková cena '.($i + 1).". položky.");
+                        $form->addError('Nesprávná cena '.($i + 1).". položky.");
                         return false;
                     } else {
                         $amountPrices += $values->$correct_price;
                     }
                 }
             }
+
+            Debugger::barDump($toCount);
 
             // the difference between total price and sum of prices can not be higher than 5
             if ($amountTotalPrice < $amountPrices - 5 and $toCount !== -1 and $toCount !== null) {
