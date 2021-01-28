@@ -73,9 +73,10 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
                 ->setRequired('Doplňte variabilní kód platební karty.');
 
         } elseif ($paidBy === "bank") {
-            $bankAccounts = $this->dataLoader->getUserAllBankAccountNumbers();
-            $form->addSelect('bank_account', 'Bankovní účet:', $bankAccounts)
-                ->setRequired('Doplňte číslo bankovního účtu.');
+            $form->addText('counter_account_number', 'Číslo protiúčtu:')
+                ->setMaxLength(17);
+            $form->addText('counter_account_bank_code', 'Kód banky protiúčtu:')
+                ->setMaxLength(4);
             $form->addText('var_symbol', 'Variabilní symbol:')
                 ->setMaxLength(10);
         }
@@ -147,6 +148,12 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         return floatval($string) != 0 or $string == "0";
     }
 
+    // to be finished
+    private function isCounterBankAccountCorrect(string $bankAccountNumber, string $bankCode)
+    {
+        return $bankAccountNumber !== 'a' and $bankAccountNumber !== 'a';
+    }
+
     private function isFormCorrect(Form $form, \stdClass $values, int $itemCount): bool
     {
         if ($itemCount <= 0) {
@@ -162,14 +169,15 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
                 }
                 break;
             case 'addBank':
-                if ($values->bank_account === 0 and $values->var_symbol === '') {
-                    $form->addError('Doplňte bankovní účet nebo variabilní symbol.');
+                if (($values->counter_account_number === '' or $values->counter_account_bank_code === '')
+                        and $values->var_symbol === '') {
+                    $form->addError('Doplňte čislo protiúčtu a bankovní kód protiúčtu účet nebo variabilní symbol.');
                     return false;
                 } else {
-                    if ($values->bank_account !== 0) {
-                        if (!$this->dataLoader->canAccess('bank_account', $values->bank_account)) {
-                            throw new ErrorException('User can not access this bank account.');
-                        }
+                    if (!$this->isCounterBankAccountCorrect($values->counter_account_number,
+                            $values->counter_account_bank_code)) {
+                        $form->addError('Doplňte správé číslo protiúčtu a bankovní kód protiúčtu.');
+                        return false;
                     }
                     if ($values->var_symbol !== '') {
                         if (!$this->isVarSymbolCorrect($values->var_symbol)) {

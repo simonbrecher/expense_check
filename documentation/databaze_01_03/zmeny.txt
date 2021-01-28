@@ -1,0 +1,3 @@
+Oprava chyb:
+- přejmenovaný sloupec invoice_id v payment na invoice_head_id.
+- Přidané pole counter_account_number a counter_account_bank_code do invoice_head.
