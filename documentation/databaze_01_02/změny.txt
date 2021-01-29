@@ -1,1 +1,0 @@
-Opravená chyba z verze 01.01 - přidané pole a cizí klíč family_id do category.
