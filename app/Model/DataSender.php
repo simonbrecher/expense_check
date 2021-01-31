@@ -10,17 +10,10 @@ use Tracy\Debugger;
 
 class DataSender
 {
-    /** @var Nette\Database\Context */
-    private $database;
     /** @var Nette\Security\User */
     private $user;
     /** @var DataLoader */
     private $dataLoader;
-
-    public function __construct(Nette\Database\Context $database)
-    {
-        $this->database = $database;
-    }
 
     /** I don't know how to use getUser() by framework. */
     public function setUser(Nette\Security\User $user)

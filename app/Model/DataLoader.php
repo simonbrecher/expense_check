@@ -4,9 +4,15 @@ declare(strict_types=1);
 namespace App\Model;
 
 use Nette;
+use Exception;
 
 use Tracy\Debugger;
 
+/**
+ * DataLoader class for database version 01.05.
+ *
+ * FOR ONE FAMILY VERSION ONLY
+ */
 class DataLoader
 {
     /** @var Nette\Database\Context */
@@ -25,187 +31,139 @@ class DataLoader
         $this->user = $user;
     }
 
+    /**
+     * Get table from database.
+     * Shorter than $this->database->table
+     * No difference yet.
+     *
+     * FOR ONE FAMILY VERSION ONLY
+     */
     public function table(string $table): Nette\Database\Table\Selection
     {
         return $this->database->table($table);
     }
 
-    public function idExists(string $table, int $id) {
+    /**
+     * Get all data from table for current user.
+     * Used for viewing data for a user, for example all invoice_head for a user,
+     * or for forms' data.
+     *
+     * Supported tables:
+     * category, consumer (whole table)
+     * payment_channel, bank_account, cash_account, card, invoice_head, payment (by user_id)
+     * invoice_item (by invoice_head_id)
+     *
+     * FOR ONE FAMILY VERSION ONLY
+     */
+    public function userTable(string $table): Nette\Database\Table\Selection
+    {
+        $wholeTable = ['category', 'comsumer'];
+        $byUserId = ['payment_channel', 'bank_account', 'card', 'invoice_head', 'payment'];
+        $byInvoiceHeadId = ['invoice_item'];
+
+        if (in_array($table, $wholeTable)) {
+            return $this->table($table);
+        } elseif (in_array($table, $byUserId)) {
+            return $this->table($table)->where('user_id', $this->user->id);
+        } elseif (in_array($table, $byInvoiceHeadId)) {
+            $invoiceHeadsSelection = $this->userTable('invoice_head');
+            $invoiceHeadsIdArray = Convertor::columnToArray($invoiceHeadsSelection, 'id');
+            return $this->table($table)->where('invoice_head_id', $invoiceHeadsIdArray);
+        } else {
+            throw new Exception('Tryed to access unknown table by DataLoader->userTable: '.$table);
+        }
+    }
+
+    /** If id in table exists. For whole table. */
+    private function idExists(string $table, int $id): bool
+    {
         return $this->database->table($table)->offsetExists($id);
     }
 
     /**
-     * If the current user can access data from $table with $id without any admin powers.
-     * No users are admins yet.
-     * false if id does not exist.
-     * For database 01.02
+     * If user can access id in table.
+     * Used for checking form data.
+     *
+     * Throw error if the id does not exist.
+     *
+     * Supported tables:
+     * category, consumer (always true)
+     * bank_account, card, cash_account, invoice_head, payment, payment_channel (by user_id)
+     * invoice_item (by invoice_head_id)
+     * cash_account_balance (by cash_account_id)
+     *
+     * FOR ONE FAMILY ONLY
      */
-    public function canAccess(string $table, int $id)
+    public function canAccess(string $table, int $id): bool
     {
-        if (!$this->idExists($table, $id)) {
-            return false;
-        }
-        switch($table) {
-            case 'db_version':
-                return false;
-            case 'bank':
-            case 'family':
-                return true;
-            case 'ba_import':
-                $bank_account_id = $this->database->table($table)->wherePrimary($id)
-                    ->fetch()->bank_account_id;
-                return $this->canAccess('bank_account', $bank_account_id);
-            case 'cash_account_balance':
-                $cash_account_id = $this->database->table($table)->wherePrimary($id)
-                    ->fetch()->cash_account_id;
-                return $this->canAccess('cash_account', $cash_account_id);
-            case 'user':
-                return $this->user->id == $id;
-            case 'payment':
-                $payment = $this->database->table($table)->wherePrimary($id)->fetch();
-                if ($payment->bank_account_id !== null) {
-                    return $this->canAccess('bank_account', $payment->bank_account_id);
-                } elseif ($payment->bank_account_id !== null) {
-                    return $this->canAccess('cash_account', $payment->cash_account_id);
-                } else {
-                    return false;
-                }
-            case 'invoice_item':
-                $invoice_head_id = $this->database->table($table)->wherePrimary($id)
-                    ->fetch()->invoice_head_id;
-                return $this->canAccess('invoice_head', $invoice_head_id);
-            case 'category':
-            case 'member':
-                $family_id = $this->database->table($table)->wherePrimary($id)
-                    ->fetch()->family_id;
-                $user_family_id = $this->database->table($table)->wherePrimary($this->user->id)
-                    ->fetch()->family_id;
-                return $family_id == $user_family_id;
-            case 'order':
-            case 'card':
-            case 'bank_account':
-            case 'cash_account':
-            case 'invoice_head':
-            $user_id = $this->database->table($table)->wherePrimary($id)
-                ->fetch()->user_id;
-            return $user_id == $this->user->id;
-            default:
-                return false;
-        }
-    }
+        $alwaysTrueTables = ['category', 'consumer'];
+        $byUserId = ['bank_account', 'card', 'cash_account', 'invoice_head', 'payment', 'payment_channel'];
+        // the table to which an important foreign key is pointing
+        $byOtherId = ['invoice_item' => 'invoice_head', 'cash_account_balance' => 'cash_account'];
+        $supportedTables = array_merge($alwaysTrueTables, $byUserId, array_keys($byOtherId));
 
-    /** get table invoice_head */
-    public function getInvoiceHead()
-    {
-        return $this->database->table("invoice_head");
-    }
-
-    /** get invoice_item(s) by invoice_head_id */
-    public function getInvoiceItem(int $invoice_head_id)
-    {
-        $invoice_items = $this->database->table("invoice_item")
-                            ->where("invoice_head_id = ", $invoice_head_id);
-        return $invoice_items;
-    }
-
-    /** get user name by id */
-    public function getUserName(int $userId)
-    {
-        $user = $this->database->table("user")->where("id = ", $userId)->fetch();
-        return $user->name;
-    }
-
-    /** get card card_name by id */
-    public function getCardName(int $cardId)
-    {
-        $card = $this->database->table("card")->where("id = ", $cardId)->fetch();
-        return $card->card_name;
-    }
-
-    /** get member name by id */
-    public function getMemberName($memberId)
-    {
-        if ($memberId === null) {
-            return "Všichni";
+        if (!in_array($table, $supportedTables)) {
+            throw new Exception( 'Asked if user can access non-supported table by method '.
+                'DataLoader->canAccess: '.$table);
+        } elseif (!$this->idExists($table, $id)) {
+            throw new Exception('Asked if user can access non-existing id: '.$table.", ".$id);
+        } elseif (in_array($table, $alwaysTrueTables)) {
+            return true;
+        } elseif (in_array($table, $byUserId)) {
+            return $this->table($table)->get($id)->user_id == $this->user->id;
+        } elseif (in_array($table, array_keys($byOtherId))) {
+            $foreignKey = $byOtherId[$table].'_id';
+            // value of id for next recursion (id in new table, where the foreign key points)
+            $newId = $this->table($table)->get($id)->$foreignKey;
+            // name of table for new recursion (where the foreign key points)
+            $newTable = $byOtherId[$table];
+            // whether can access this table/id iff can access table/id where the foreign key is pointing
+            return $this->canAccess($newTable, $newId);
         } else {
-            $member = $this->database->table("member")->where("id = ", $memberId)->fetch();
-            return $member->name;
+            throw new Exception('Unexpected error in DataLoader->canAccess. Table: '.$table);
         }
     }
 
-    /** get card category_name by id */
-    public function getCategoryName($categoryId)
+    // TODO: check if the column exists
+    /** Get data to view by table and id. Not for null case. */
+    public function getForViewById(string $table, string $column, int $id): string
     {
-        if ($categoryId === null) {
-            return "Nezařazeno";
-        } else {
-            $category = $this->database->table("category")->where("id = ", $categoryId)->fetch();
-            return $category->name;
+        return $this->table($table)->get($id)->$column;
+    }
+
+    // TODO: check if the column exists
+    /**
+     * Get parameters for select control in form.
+     * @param mixed|null $nullValue - null if id can not be null, else $table->$columnValue for $table->id === null
+     * @return array($table->id => $table->$column, ...)
+     * iff $table->id === null, array key is 0, because null can not be an array index.
+     */
+    public function getFormSelectDict(string $table, string $column, $nullValue=null): array
+    {
+        $array = [];
+        if ($nullValue !== null) {
+            // id === null, but null can not be an array index
+            $array[0] = $nullValue;
         }
-    }
 
-    /** return dictionary of all id(s) and var_symbol(s) from card for current user */
-    public function getUserAllCardsVS()
-    {
-        $cards = $this->database->table("card")->where("user_id = ", $this->user->id);
-        $varSymbols = [];
-        foreach ($cards as $card) {
-            $cardNumber = $card->public_card_num;
-            $varSymbols[$card->id] = $this->getVSFromCardNumber($cardNumber);
+        foreach ($this->userTable($table) as $row) {
+            $array[$row->id] = $row->$column;
         }
-        return $varSymbols;
+
+        return $array;
     }
 
-    /** return dictionary of all id(s) and var_symbol(s) from card for current user */
-    public function getUserAllBankAccountNumbers()
+    public function test()
     {
-        $bankAccounts = $this->database->table("bank_account")->where("user_id = ", $this->user->id);
-        // Not null, because otherwise it coultn't be set as default value
-        $bankAccountNumbers = [0 => "Neuvedeno"];
-        foreach ($bankAccounts as $bankAccount) {
-            $bankAccountNumbers[$bankAccount->id] = $bankAccount->number_account;
-        }
-        return $bankAccountNumbers;
-    }
+        $table = $this->userTable('card');
+//        Convertor::ds($table);
 
-    /** return dictionary of all id(s) and var_symbol(s) from card for current user */
-    public function getAllCategories()
-    {
-        $familyId = $this->getUserFamily();
-        $categories = $this->database->table("category")->where("family_id = ", $familyId);
-        // Not null, because otherwise it coultn't be set as default value
-        $dictionary = [0 => "Nezařazeno"];
-        foreach ($categories as $category) {
-            if (!$category->is_cash_account_balance) {
-                $dictionary[$category->id] = $category->name;
-            }
-        }
-        return $dictionary;
-    }
+//        $result = $this->canAccess('invoice_item', 2);
+//        Debugger::barDump($result);
+//
+//        $result = $this->getForViewById('bank_account', 'number', 2);
+//        Debugger::barDump($result);
 
-    /** return dictionary of all id(s) and var_symbol(s) from card for current user */
-    public function getAllMembers()
-    {
-        $familyId = $this->getUserFamily();
-        $members = $this->database->table("member")->where("family_id = ", $familyId);
-        /** It will be changed to null after the form is used,
-         *  but it has to ve 0 now, otherwise it could not be set as default value for radiolist.
-         */
-        $dictionary = [0 => "Všichni"];
-        foreach ($members as $member) {
-            $dictionary[$member->id] = $member->name;
-        }
-        return $dictionary;
-    }
-
-    /** return family_id for current user */
-    public function getUserFamily()
-    {
-        return $this->database->table('user')->wherePrimary($this->user->id)->fetch()->family_id;
-    }
-
-    private function getVSFromCardNumber(string $cardNumber)
-    {
-        return substr($cardNumber, -4);
+        Debugger::barDump($this->getFormSelectDict('category', 'name', 'Nezařazeno'));
     }
 }
