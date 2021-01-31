@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
 
-	<link rel="stylesheet" href="{$basePath}/stat/layout.css" />
+	<link rel="stylesheet" href="{$basePath}/stat/layout.css?2" />
 
 	<title>{ifset title}{include title|stripHtml} | {/ifset}Myfin</title>
 </head>
@@ -22,10 +22,10 @@
 <div class="site-wrapper">
 
 <div>
-	<a n:href="Homepage:default" style="float:left; border:1px solid black">Hlavní stránka</a>
-	<a n:href="Invoice:show" style="float:left; border:1px solid black">Vypsat doklady</a>
-	<a n:href="Invoice:add" style="float:left; border:1px solid black">Přidat doklad</a>
-	<a n:href="Sign:out" style="float:left; border:1px solid black">Odhlásit se</a>
+	<a n:href="Homepage:default" class="basic-div">Hlavní stránka</a>
+	<a n:href="Invoice:show" class="basic-div">Vypsat doklady</a>
+	<a n:href="Invoice:add 1" class="basic-div">Přidat doklad</a>
+	<a n:href="Sign:out" class="basic-div">Odhlásit se</a>
 </div>
 <br>
 

@@ -23,17 +23,18 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
 
     private $paidBy;
 
-    // temporary
-    private $itemCount;
+    // TODO: Make javascript infused form.
 
     public  function __construct(Model\DataLoader $dataLoader, Model\DataSender $dataSender)
     {
+        parent::__construct();
+
         $this->dataLoader = $dataLoader;
         $this->dataSender = $dataSender;
         $this->dataSender->setDataLoader($this->dataLoader);
     }
 
-    public function startup()
+    public function startup(): void
     {
         parent::startup();
         if (!$this->getUser()->isLoggedIn()) {
@@ -44,10 +45,30 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         }
     }
 
-    public function renderShow()
+    public function renderAdd(int $itemCount): void
+    {
+        $this->template->itemCount = intval($this->getParameters()['itemCount']);
+    }
+
+    public function renderAddCash(int $itemCount): void
+    {
+        $this->template->itemCount = intval($this->getParameters()['itemCount']);
+    }
+
+    public function renderAddCard(int $itemCount): void
+    {
+        $this->template->itemCount = intval($this->getParameters()['itemCount']);
+    }
+
+    public function renderAddBank(int $itemCount): void
+    {
+        $this->template->itemCount = intval($this->getParameters()['itemCount']);
+    }
+
+    public function renderShow(): void
     {
         /** @var Nette\Database\Context */
-        $invoice_heads = $this->dataLoader->getInvoiceHead();
+        $invoice_heads = $this->dataLoader->userTable('invoice_head');
 
         $this->template->dataLoader = $this->dataLoader;
         $this->template->invoice_heads = $invoice_heads;
@@ -57,8 +78,7 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
     {
         $form = new MyForm;
 
-        $itemCount = 2;
-        $this->itemCount = $itemCount;
+        $itemCount = intval($this->getParameters()['itemCount']);
 
         $form->getElementPrototype()->setAttribute('autocomplete', 'off');
 
@@ -79,7 +99,7 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $this->paidBy = $paidBy;
 
         if ($paidBy === 'card') {
-            $cards = $this->dataLoader->getUserAllCardsVS();
+            $cards = $this->dataLoader->getFormSelectDict('card', 'number', 'neuvedeno');
             $form->addSelect('card', 'Platební karta:', $cards)
                 ->setRequired('Doplňte variabilní kód platební karty.');
 
@@ -92,33 +112,31 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
                 ->setMaxLength(10);
         }
 
-        if ($itemCount == 1) {
-            $form->addText('total_price', $itemCount == 1 ? 'Cena:' : 'Celková cena:')
-                ->setRequired('Doplňte datum platby.');
-        } else {
-            $form->addText('total_price', $itemCount == 1 ? 'Cena:' : 'Celková cena:');
-            $form->addCheckbox('count_total_price', 'Dopočítat celkovou cenu automaticky');
-        }
-
         $form->addText('date', 'Datum platby:');
         $form->addCheckbox('today', 'Zaplaceno dnes');
 
         for ($i = 0; $i < $itemCount; $i++) {
-            $form->addMyHtml("-------------------------------");
+            if ($i != 0) {
+                $form->addMyHtml("");
+                $form->addMyHtml("");
+            }
 
-            $categories = $this->dataLoader->getAllCategories();
+            $categories = $this->dataLoader->getFormSelectDict('category', 'name', 'Neuvedeno');
 
-            $form->addSelect('category'.$i, 'Utraceno za:', $categories)
-                ->setRequired('Doplňte, za co byla položka utracená.');
+            $form->addSelect('category'.$i, 'Kategorie:', $categories)
+                ->setRequired('Doplňte kategorii položky.');
 
-            $members = $this->dataLoader->getAllMembers();
-            $form->addSelect('member'.$i, 'Utraceno pro:', $members)
-                ->setRequired('Doplňte, pro kterého člena rodiny byla položka utracená.')
+            $consumers = $this->dataLoader->getFormSelectDict('consumer', 'name', 'Všichni');
+            $form->addSelect('consumer'.$i, 'Spotřebitel:', $consumers)
+                ->setRequired('Doplňte spotřebitele položky.')
                 ->setDefaultValue(0);
 
-            if ($itemCount > 1) {
-                $form->addText('price'.$i, 'Cena v kč:');
-                $form->addCheckbox('count_price'.$i, 'Dopočítat cenu položky automaticky');
+            if ($i == 0) {
+                $form->addText('total_price', 'Celková cena:')
+                    ->setRequired('Doplňte celkovou cenu.');
+            } else {
+                $form->addText('price'.$i, 'Cena položky:')
+                    ->setRequired('Doplňte cenu '.($i + 1).' položky.');
             }
 
             $form->addTextArea('description'.$i, $itemCount == 1 ? 'Název:' : 'Název položky:')
@@ -160,14 +178,14 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
     }
 
     // to be finished
-    private function isCounterBankAccountCorrect(string $bankAccountNumber, string $bankCode)
+    private function isCounterBankAccountCorrect(string $bankAccountNumber, string $bankCode): bool
     {
         return $bankAccountNumber !== 'a' and $bankCode !== 'a';
     }
 
     private function isFormCorrect(Form $form, Nette\Utils\ArrayHash $values, int $itemCount): bool
     {
-        if ($itemCount <= 0) {
+        if ($itemCount <= 0 or $itemCount > 100) {
             throw new ErrorException('Wrong $itemcount.');
         }
 
@@ -216,69 +234,41 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
                     throw new ErrorException('User can not access this category.');
                 }
             }
-            $currentMember = 'member'.$i;
-            $memberId = $values->$currentMember;
-            if ($memberId != 0) {
-                if (!$this->dataLoader->canAccess('member', $memberId)) {
-                    throw new ErrorException('User can not access this member.');
+            $currentConsumer = 'consumer'.$i;
+            $consumerId = $values->$currentConsumer;
+            if ($consumerId != 0) {
+                if (!$this->dataLoader->canAccess('consumer', $consumerId)) {
+                    throw new ErrorException('User can not access this consumer.');
                 }
             }
         }
 
-        if ($itemCount == 1) {
-            if (!$this->isPriceCorrect($values->total_price)) {
-                $form->addError('Nesprávná cena.');
-                return false;
-            }
-
+        if ($this->isPriceCorrect($values->total_price)) {
+            $values->offsetSet('total_price', intval($values->total_price));
         } else {
-            $toCount = null;
-            $amountTotalPrice = 0;
-            $amountPrices = 0;
-            if ($values->count_total_price) {
-                $toCount = -1;
-            } else {
-                if (!$this->isPriceCorrect($values->total_price)) {
-                    $form->addError('Nesprávná celková cena.');
-                    return false;
+            $form->addError('Nesprávná cena.');
+            return false;
+        }
+        if ($itemCount > 1) {
+            for ($i = 1; $i < $itemCount; $i++) {
+                $correctPriceId = 'price'.$i;
+                if ($this->isPriceCorrect($values->$correctPriceId)) {
+                    $values->offsetSet($correctPriceId, intval($values->$correctPriceId));
                 } else {
-                    $amountTotalPrice += $values->total_price;
-                }
-            }
-            for ($i = 0; $i < $itemCount; $i++) {
-                $correctPrice = 'price'.$i;
-                $correctCountPrice = 'count_price'.$i;
-
-                if ($values->$correctCountPrice) {
-                    if ($toCount !== null) {
-                        $form->addError('Dopočítat můžete pouze cenu jedné položky, nebo celého dokladu.');
-                        return false;
-                    } else {
-                        $toCount = $i;
-                    }
-                } else {
-                    if (!$this->isPriceCorrect($values->$correctPrice)) {
-                        $form->addError('Nesprávná cena '.($i + 1).". položky.");
-                        return false;
-                    } else {
-                        $amountPrices += $values->$correctPrice;
-                    }
-                }
-            }
-
-            // the difference between total price and sum of prices can not be higher than 5
-            if ($amountTotalPrice < $amountPrices and $toCount !== -1) {
-                $form->addError('Celková cena nesmí být menší, než ceny jednotlivých položek.');
-                return false;
-            } elseif ($amountTotalPrice == $amountPrices and $toCount !== null) {
-                $form->addError('Vypočítaná cena položky nesmí nulovou hodnotu.');
-                return false;
-            } elseif ($toCount === null) {
-                if (abs($amountTotalPrice - $amountPrices) > 5) {
-                    $form->addError('Celková cena a součet cen položek se moc liší.
-                        Zkontrolujte ceny nebo označte "Spočítat celkovou cenu automaticky".');
+                    $form->addError('Nesprávná cena '.($i + 1).". položky.");
                     return false;
                 }
+            }
+        }
+        if ($itemCount > 1) {
+            $priceSum = 0;
+            for ($i = 1; $i < $itemCount; $i++) {
+                $correctPriceId = 'price'.$i;
+                $priceSum += $values->$correctPriceId;
+            }
+            if ($priceSum >= $values->total_price) {
+                $form->addError("Celková cena musí být vyšší, než součet cen položek.");
+                return false;
             }
         }
 
@@ -287,72 +277,33 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
 
     private function countDataForAddInvoiceForm(Nette\Utils\ArrayHash $values): Nette\Utils\ArrayHash
     {
-        $itemCount = $this->itemCount;
+        $itemCount = intval($this->getParameters()['itemCount']);
 
         if ($values->today) {
-            $now = date('d.m.Y', time());
+            $now = date('Y-m-d', time());
             $values->date = $now;
+        } else {
+            $values->date = date('Y-m-d', strtotime($values->date));
         }
+
         for ($i = 0; $i < $itemCount; $i++) {
             $correctCategoryId = 'category'.$i;
-            if ($values->$correctCategoryId === 0) {
-                $values->$correctCategoryId = null;
+            if ($values->$correctCategoryId == 0) {
+                $values->offsetSet($correctCategoryId, null);
             }
-            $correctMemberId = 'member'.$i;
-            if ($values->$correctMemberId === 0) {
-                $values->$correctMemberId = null;
+            $correctConsumerId = 'consumer'.$i;
+            if ($values->$correctConsumerId == 0) {
+                $values->offsetSet($correctConsumerId, null);
             }
         }
 
-        if ($itemCount == 1) {
-            $values->price0 = $values->total_price;
-        } else {
-            $toCount = null;
-            if ($values->count_total_price) {
-                $toCount = -1;
-            } else {
-                for ($i = 0; $i < $itemCount; $i++) {
-                    $correctCountPriceId = 'count_price'.$i;
-                    if ($values->$correctCountPriceId) {
-                        $toCount = $i;
-                        break;
-                    }
-                }
-            }
-            $totalPrice = $values->count_total_price ? 0 : $values->total_price;
-            $itemSumPrice = 0;
-            for ($i = 0; $i < $itemCount; $i++) {
-                $correctCountPriceId = 'count_price'.$i;
-                if (!$values->$correctCountPriceId) {
-                    $correctPriceId = 'price'.$i;
-                    $itemSumPrice += $values->$correctPriceId;
-                }
-            }
-            if ($values->total_price !== null) {
-                $values->total_price = floatval($values->total_price);
-            }
-            for ($i = 0; $i < $itemCount; $i++) {
+        if ($itemCount > 1) {
+            $priceSum = 0;
+            for ($i = 1; $i < $itemCount; $i++) {
                 $correctPriceId = 'price'.$i;
-                if ($values->$correctPriceId !== null) {
-                    $values->$correctPriceId = floatval($values->$correctPriceId);
-                }
+                $priceSum += $values->$correctPriceId;
             }
-
-            // count nothing, but make sure the item prices sum up to total price
-            if ($toCount === null) {
-                $multiplier = $totalPrice / $itemSumPrice;
-                for ($i = 0; $i < $itemCount; $i++) {
-                    $correctPriceId = 'price'.$i;
-                    $values->$correctPriceId *= $multiplier;
-                }
-            // count total price
-            } elseif ($toCount === -1) {
-                $values->total_price = $itemSumPrice;
-            // count item price
-            } else {
-                $correctPriceId = 'price'.$toCount;
-                $values->$correctPriceId = $totalPrice - $itemSumPrice;
-            }
+            $values->offsetSet('price0', $values->total_price - $priceSum);
         }
 
         return $values;
@@ -360,7 +311,7 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
 
     public function addInvoiceFormSucceeded(Form $form, Nette\Utils\ArrayHash $values): void
     {
-        $itemCount = $this->itemCount;
+        $itemCount = intval($this->getParameters()['itemCount']);
 
         $values->offsetSet('paidby', $this->paidBy);
         $values->offsetSet('item_count', $itemCount);

@@ -66,14 +66,14 @@ class DataSender
                 $invoice_item['invoice_head_id'] = $invoice_head_id;
                 $correctCategoryId = 'category'.$i;
                 $invoice_item['category_id'] = $values->$correctCategoryId;
-                $correctMemberId = 'member'.$i;
-                $invoice_item['member_id'] = $values->$correctMemberId;
+                $correctConsumerId = 'consumer'.$i;
+                $invoice_item['consumer_id'] = $values->$correctConsumerId;
                 $correctPriceId = 'price'.$i;
                 // make error after first item
-                if ($i == 0) {
-                    $invoice_item['amount'] = $values->$correctPriceId;
-                }
-//                $invoice_item['amount'] = $values->$correctPriceId;
+//                if ($i == 0) {
+//                    $invoice_item['amount'] = $values->$correctPriceId;
+//                }
+                $invoice_item['amount'] = $values->$correctPriceId;
                 $correctDescriptionId = 'description'.$i;
                 $invoice_item['description'] = $values->$correctDescriptionId;
 
@@ -86,10 +86,11 @@ class DataSender
 
 
         } catch (Exception $exception) {
+            Debugger::barDump($exception);
             $this->removeAddedData($added);
             return false;
         }
 
-        return false;
+        return true;
     }
 }

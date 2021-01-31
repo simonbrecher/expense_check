@@ -57,7 +57,7 @@ class DataLoader
      */
     public function userTable(string $table): Nette\Database\Table\Selection
     {
-        $wholeTable = ['category', 'comsumer'];
+        $wholeTable = ['category', 'consumer'];
         $byUserId = ['payment_channel', 'bank_account', 'card', 'invoice_head', 'payment'];
         $byInvoiceHeadId = ['invoice_item'];
 
@@ -70,7 +70,7 @@ class DataLoader
             $invoiceHeadsIdArray = Convertor::columnToArray($invoiceHeadsSelection, 'id');
             return $this->table($table)->where('invoice_head_id', $invoiceHeadsIdArray);
         } else {
-            throw new Exception('Tryed to access unknown table by DataLoader->userTable: '.$table);
+            throw new Exception('Tried to access unknown table by DataLoader->userTable: '.$table);
         }
     }
 

@@ -1,26 +1,26 @@
 {block content}
 
 <br><br><br>
-{foreach $invoice_heads as $i}
+{foreach $invoice_heads as $invoice_head}
     <div>
-        {if $i->is_paidbycash}
-            <div style="float:left; border:1px solid black">Placeno v hotovosti</div>
-            {var $userName = $dataLoader->getUserName($i->user_id)}
-            <div style="float:left; border:1px solid black">Uživatel: {$userName}</div>
-            <div style="float:left; border:1px solid black">Datum: {$i->d_issue|date:'j. n. Y'}</div>
-        {elseif $i->is_paidbycard}
-            <div style="float:left; border:1px solid black">Placeno kartou</div>
-            {var $userName = $dataLoader->getUserName($i->user_id)}
-            <div style="float:left; border:1px solid black">Uživatel: {$userName}</div>
-            {var $cardName = $dataLoader->getCardName($i->card_id)}
-            <div style="float:left; border:1px solid black">Karta: {$cardName}</div>
-            <div style="float:left; border:1px solid black">Datum: {$i->d_issue|date:'j. n. Y'}</div>
-            <div style="float:left; border:1px solid black">Variabilní symbol: {$i->var_symbol}</div>
-        {elseif $i->is_paidbycash}
-            <div style="float:left; border:1px solid black">Placeno bankovním převodem</div>
-            {var $userName = $dataLoader->getUserName($i->user_id)}
-            <div style="float:left; border:1px solid black">Uživatel: {$userName}</div>
-            <div style="float:left; border:1px solid black">Datum: {$i->d_issue|date:'j. n. Y'}</div>
+        {if $invoice_head->is_paidbycash}
+            <div class="basic-div">Placeno v hotovosti</div>
+            {var $userName = $dataLoader->getForViewById('user', 'name', $invoice_head->user_id)}
+            <div class="basic-div">Uživatel: {$userName}</div>
+            <div class="basic-div">Datum: {$invoice_head->d_issue|date:'j. n. Y'}</div>
+        {elseif $invoice_head->is_paidbycard}
+            <div class="basic-div">Placeno kartou</div>
+            {var $userName = $dataLoader->getForViewById('user', 'name', $invoice_head->user_id)}
+            <div class="basic-div">Uživatel: {$userName}</div>
+            {var $cardName = $dataLoader->getForViewById('card', 'name', $invoice_head->card_id)}
+            <div class="basic-div">Karta: {$cardName}</div>
+            <div class="basic-div">Datum: {$invoice_head->d_issue|date:'j. n. Y'}</div>
+            <div class="basic-div">Variabilní symbol: {$invoice_head->var_symbol}</div>
+        {elseif $invoice_head->is_paidbycash}
+            <div class="basic-div">Placeno bankovním převodem</div>
+            {var $userName = $dataLoader->getForViewById('user', 'name', $invoice_head->user_id)}
+            <div class="basic-div">Uživatel: {$userName}</div>
+            <div class="basic-div">Datum: {$invoice_head->d_issue|date:'j. n. Y'}</div>
         {else}
             {* ERROR *}
         {/if}
@@ -29,14 +29,14 @@
     <br><br>
 
     <div>
-        {var $invoice_items = $dataLoader->getInvoiceItem($i->id)}
-        {foreach $invoice_items as $i2}
-            {var $categoryName = $dataLoader->getCategoryName($i2->category_id)}
-            <div style="float:left; border:1px solid black">Kategorie: {$categoryName}</div>
-            {var $memberName = $dataLoader->getMemberName($i2->member_id)}
-            <div style="float:left; border:1px solid black">Koupeno pro: {$memberName}</div>
-            <div style="float:left; border:1px solid black">Množství: {$i2->amount}</div>
-            <div style="float:left; border:1px solid black">Popis: {$i2->description}</div>
+        {var $invoice_items = $dataLoader->table('invoice_item')->where('invoice_head_id', $invoice_head->id)}
+        {foreach $invoice_items as $invoice_item}
+            {var $categoryName = $dataLoader->getForViewById('category', 'name', $invoice_item->category_id)}
+            <div class="basic-div">Kategorie: {$categoryName}</div>
+            {var $consumerName = $dataLoader->getForViewById('consumer', 'name', $invoice_item->consumer_id)}
+            <div class="basic-div">Koupeno pro: {$consumerName}</div>
+            <div class="basic-div">Množství: {$invoice_item->amount}</div>
+            <div class="basic-div">Popis: {$invoice_item->description}</div>
 
             <br><br>
         {/foreach}
