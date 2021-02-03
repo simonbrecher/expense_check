@@ -4,22 +4,13 @@ hr {clear: both; border: none; height: 0; font-size: 0; margin: 0;}
 body {margin: 0; background-color: #F6F6F6;}
 body, input, textarea {font-family: 'Open Sans', Arial; font-size: 15px;}
 
-.header-site { border-top: 1px solid #328ADC; height: 80px; background-color: #328ADC;}
+.header-site { border-top: 1px solid #328ADC; height: 80px; background-color: #328adc;}
 .header-heading { width: 600px; margin: 17px auto 0 auto; font-size: 35px; text-align: center; color: #FFF;}
 .site-container { width: 1100px; margin: 0 auto; padding: 22px 26px; background-color: #FFF;}
 
 
-
-
-
-
-
         /** forms */
 .error { border: 3px solid #F00; padding: 5px 25px; color: #F00;}
-
-
-
-
 
 
         /** flash messages */
@@ -30,3 +21,16 @@ body, input, textarea {font-family: 'Open Sans', Arial; font-size: 15px;}
 
         /** view database */
 .basic-div { border: 1px solid #000; padding: 2px; float: left; margin-right: 2px;}
+
+
+
+.invoice-head { border: 1px solid #000; float: left;}
+.invoice-head-row { border: 1px solid #F00; float: left; min-width: 1000px;}
+.invoice-head-element { float: left; margin: 2px;}
+
+.invoice-item { border: 1px solid #000; float: left; margin-top: 5px;}
+.invoice-item-row { border: 1px solid #F00; float: left; min-width: 1000px;}
+.invoice-item-element { float: left; margin: 2px;}
+
+.invoice-button-row { border: 1px solid #F00; float: left; min-width: 1000px; margin-top: 5px;}
+.invoice-button-element { float: left; margin: 2px;}

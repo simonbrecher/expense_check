@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
 
-	<link rel="stylesheet" href="{$basePath}/stat/layout.css?2" />
+	<link rel="stylesheet" href="{$basePath}/stat/layout.css?{php echo rand(1, 10**9);}" />
 
 	<title>{ifset title}{include title|stripHtml} | {/ifset}Myfin</title>
 </head>
@@ -24,7 +24,7 @@
 <div>
 	<a n:href="Homepage:default" class="basic-div">Hlavní stránka</a>
 	<a n:href="Invoice:show" class="basic-div">Vypsat doklady</a>
-	<a n:href="Invoice:add 1" class="basic-div">Přidat doklad</a>
+	<a n:href="Invoice:add" class="basic-div">Přidat doklad</a>
 	<a n:href="Sign:out" class="basic-div">Odhlásit se</a>
 </div>
 <br>
@@ -37,8 +37,8 @@
 
 </div>
 
-{*	{block scripts}*}
-{*	<script src="https://nette.github.io/resources/js/3/netteForms.min.js"></script>*}
-{*	{/block}*}
+	{block scripts}
+	<script src="https://nette.github.io/resources/js/3/netteForms.min.js"></script>
+	{/block}
 </body>
 </html>
