@@ -11,24 +11,24 @@ namespace Tester;
 
 
 /**
- * Single blog case.
+ * Single test case.
  */
 class TestCase
 {
 	/** @internal */
 	public const
 		LIST_METHODS = 'nette-tester-list-methods',
-		METHOD_PATTERN = '#^blog[A-Z0-9_]#';
+		METHOD_PATTERN = '#^test[A-Z0-9_]#';
 
 	/** @var bool */
 	private $handleErrors = false;
 
-	/** @var callable|null|false */
+	/** @var callable|false|null */
 	private $prevErrorHandler = false;
 
 
 	/**
-	 * Runs the blog case.
+	 * Runs the test case.
 	 */
 	public function run(): void
 	{
@@ -59,8 +59,8 @@ class TestCase
 
 
 	/**
-	 * Runs the blog method.
-	 * @param  array  $args  blog method parameters (dataprovider bypass)
+	 * Runs the test method.
+	 * @param  array  $args  test method parameters (dataprovider bypass)
 	 */
 	public function runTest(string $method, array $args = null): void
 	{
@@ -89,7 +89,9 @@ class TestCase
 		if ($args === null) {
 			$defaultParams = [];
 			foreach ($method->getParameters() as $param) {
-				$defaultParams[$param->getName()] = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
+				$defaultParams[$param->getName()] = $param->isDefaultValueAvailable()
+					? $param->getDefaultValue()
+					: null;
 			}
 
 			foreach ((array) $info['dataprovider'] as $i => $provider) {
@@ -99,7 +101,9 @@ class TestCase
 				}
 
 				foreach ($res as $k => $set) {
-					$data["$i-$k"] = is_string(key($set)) ? array_merge($defaultParams, $set) : $set;
+					$data["$i-$k"] = is_string(key($set))
+						? array_merge($defaultParams, $set)
+						: $set;
 				}
 			}
 
@@ -121,7 +125,9 @@ class TestCase
 					$this->silentTearDown();
 				}
 
-				return $this->prevErrorHandler ? ($this->prevErrorHandler)(...func_get_args()) : false;
+				return $this->prevErrorHandler
+					? ($this->prevErrorHandler)(...func_get_args())
+					: false;
 			});
 		}
 
@@ -153,7 +159,8 @@ class TestCase
 				$this->tearDown();
 
 			} catch (AssertException $e) {
-				throw $e->setMessage(sprintf('%s in %s(%s)%s',
+				throw $e->setMessage(sprintf(
+					'%s in %s(%s)%s',
 					$e->origMessage,
 					$method->getName(),
 					substr(Dumper::toLine($params), 1, -1),
@@ -180,7 +187,7 @@ class TestCase
 
 
 	/**
-	 * This method is called before a blog is executed.
+	 * This method is called before a test is executed.
 	 * @return void
 	 */
 	protected function setUp()
@@ -189,7 +196,7 @@ class TestCase
 
 
 	/**
-	 * This method is called after a blog is executed.
+	 * This method is called after a test is executed.
 	 * @return void
 	 */
 	protected function tearDown()

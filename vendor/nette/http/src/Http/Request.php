@@ -61,9 +61,17 @@ class Request implements IRequest
 	private $rawBodyCallback;
 
 
-	public function __construct(UrlScript $url, array $post = null, array $files = null, array $cookies = null,
-		array $headers = null, string $method = null, string $remoteAddress = null, string $remoteHost = null, callable $rawBodyCallback = null)
-	{
+	public function __construct(
+		UrlScript $url,
+		array $post = null,
+		array $files = null,
+		array $cookies = null,
+		array $headers = null,
+		string $method = null,
+		string $remoteAddress = null,
+		string $remoteHost = null,
+		callable $rawBodyCallback = null
+	) {
 		$this->url = $url;
 		$this->post = (array) $post;
 		$this->files = (array) $files;
@@ -76,7 +84,10 @@ class Request implements IRequest
 	}
 
 
-	/** @return static */
+	/**
+	 * Returns a clone with a different URL.
+	 * @return static
+	 */
 	public function withUrl(UrlScript $url)
 	{
 		$dolly = clone $this;
@@ -86,7 +97,7 @@ class Request implements IRequest
 
 
 	/**
-	 * Returns URL object.
+	 * Returns the URL of the request.
 	 */
 	public function getUrl(): UrlScript
 	{
@@ -131,16 +142,18 @@ class Request implements IRequest
 
 	/**
 	 * Returns uploaded file.
-	 * @return FileUpload|array|null
+	 * @param  string|string[]  $key
+	 * @return ?FileUpload
 	 */
-	public function getFile(string $key)
+	public function getFile($key)
 	{
-		return $this->files[$key] ?? null;
+		$res = Nette\Utils\Arrays::get($this->files, $key, null);
+		return $res instanceof FileUpload ? $res : null;
 	}
 
 
 	/**
-	 * Returns uploaded files.
+	 * Returns tree of upload files in a normalized structure, with each leaf an instance of Nette\Http\FileUpload.
 	 */
 	public function getFiles(): array
 	{
@@ -149,7 +162,7 @@ class Request implements IRequest
 
 
 	/**
-	 * Returns variable provided to the script via HTTP cookies.
+	 * Returns a cookie or `null` if it does not exist.
 	 * @return mixed
 	 */
 	public function getCookie(string $key)
@@ -162,7 +175,7 @@ class Request implements IRequest
 
 
 	/**
-	 * Returns variables provided to the script via HTTP cookies.
+	 * Returns all cookies.
 	 */
 	public function getCookies(): array
 	{
@@ -174,7 +187,7 @@ class Request implements IRequest
 
 
 	/**
-	 * Returns HTTP request method (GET, POST, HEAD, PUT, ...). The method is case-sensitive.
+	 * Returns the HTTP method with which the request was made (GET, POST, HEAD, PUT, ...).
 	 */
 	public function getMethod(): string
 	{
@@ -183,7 +196,7 @@ class Request implements IRequest
 
 
 	/**
-	 * Checks if the request method is the given one.
+	 * Checks the HTTP method with which the request was made. The parameter is case-insensitive.
 	 */
 	public function isMethod(string $method): bool
 	{
@@ -192,8 +205,7 @@ class Request implements IRequest
 
 
 	/**
-	 * Return the value of the HTTP header. Pass the header name as the
-	 * plain, HTTP-specified header name (e.g. 'Accept-Encoding').
+	 * Returns an HTTP header or `null` if it does not exist. The parameter is case-insensitive.
 	 */
 	public function getHeader(string $header): ?string
 	{
@@ -206,7 +218,7 @@ class Request implements IRequest
 
 
 	/**
-	 * Returns all HTTP headers.
+	 * Returns all HTTP headers as associative array.
 	 */
 	public function getHeaders(): array
 	{
@@ -215,7 +227,7 @@ class Request implements IRequest
 
 
 	/**
-	 * Returns referrer.
+	 * What URL did the user come from? Beware, it is not reliable at all.
 	 */
 	public function getReferer(): ?UrlImmutable
 	{
@@ -235,16 +247,16 @@ class Request implements IRequest
 
 
 	/**
-	 * Is the request sent from the same origin?
+	 * Is the request coming from the same site and is initiated by clicking on a link?
 	 */
 	public function isSameSite(): bool
 	{
-		return isset($this->cookies['nette-samesite']);
+		return isset($this->cookies[Helpers::STRICT_COOKIE_NAME]);
 	}
 
 
 	/**
-	 * Is AJAX request?
+	 * Is it an AJAX request?
 	 */
 	public function isAjax(): bool
 	{
@@ -283,7 +295,7 @@ class Request implements IRequest
 
 
 	/**
-	 * Parse Accept-Language header and returns preferred language.
+	 * Returns the most preferred language by browser. Uses the `Accept-Language` header. If no match is reached, it returns `null`.
 	 * @param  string[]  $langs  supported languages
 	 */
 	public function detectLanguage(array $langs): ?string

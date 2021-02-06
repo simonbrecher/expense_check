@@ -34,6 +34,9 @@ class ConnectionPanel implements Tracy\IBarPanel
 	/** @var bool */
 	public $disabled = false;
 
+	/** @var float */
+	public $performanceScale = 0.25;
+
 	/** @var float logged time */
 	private $totalTime = 0;
 
@@ -43,14 +46,18 @@ class ConnectionPanel implements Tracy\IBarPanel
 	/** @var array */
 	private $queries = [];
 
+	/** @var Tracy\BlueScreen */
+	private $blueScreen;
 
-	public function __construct(Connection $connection)
+
+	public function __construct(Connection $connection, Tracy\BlueScreen $blueScreen)
 	{
-		$connection->onQuery[] = [$this, 'logQuery'];
+		$connection->onQuery[] = \Closure::fromCallable([$this, 'logQuery']);
+		$this->blueScreen = $blueScreen;
 	}
 
 
-	public function logQuery(Connection $connection, $result): void
+	private function logQuery(Connection $connection, $result): void
 	{
 		if ($this->disabled) {
 			return;
@@ -58,10 +65,12 @@ class ConnectionPanel implements Tracy\IBarPanel
 		$this->count++;
 
 		$source = null;
-		$trace = $result instanceof \PDOException ? $result->getTrace() : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+		$trace = $result instanceof \PDOException
+			? $result->getTrace()
+			: debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 		foreach ($trace as $row) {
 			if (
-				(isset($row['file']) && is_file($row['file']) && !Tracy\Debugger::getBluescreen()->isCollapsed($row['file']))
+				(isset($row['file']) && is_file($row['file']) && !$this->blueScreen->isCollapsed($row['file']))
 				&& ($row['class'] ?? '') !== self::class
 				&& !is_a($row['class'] ?? '', Connection::class, true)
 			) {
@@ -112,7 +121,6 @@ class ConnectionPanel implements Tracy\IBarPanel
 
 	public function getPanel(): ?string
 	{
-		$this->disabled = true;
 		if (!$this->count) {
 			return null;
 		}
@@ -121,11 +129,15 @@ class ConnectionPanel implements Tracy\IBarPanel
 		foreach ($this->queries as $query) {
 			[$connection, $sql, $params, , , , $error] = $query;
 			$explain = null;
-			$command = preg_match('#\s*\(?\s*(SELECT|INSERT|UPDATE|DELETE)\s#iA', $sql, $m) ? strtolower($m[1]) : null;
+			$command = preg_match('#\s*\(?\s*(SELECT|INSERT|UPDATE|DELETE)\s#iA', $sql, $m)
+				? strtolower($m[1])
+				: null;
 			if (!$error && $this->explain && $command === 'select') {
 				try {
-					$cmd = is_string($this->explain) ? $this->explain : 'EXPLAIN';
-					$explain = $connection->queryArgs("$cmd $sql", $params)->fetchAll();
+					$cmd = is_string($this->explain)
+						? $this->explain
+						: 'EXPLAIN';
+					$explain = (new Nette\Database\ResultSet($connection, "$cmd $sql", $params))->fetchAll();
 				} catch (\PDOException $e) {
 				}
 			}
@@ -138,6 +150,7 @@ class ConnectionPanel implements Tracy\IBarPanel
 			$name = $this->name;
 			$count = $this->count;
 			$totalTime = $this->totalTime;
+			$performanceScale = $this->performanceScale;
 			require __DIR__ . '/templates/ConnectionPanel.panel.phtml';
 		});
 	}

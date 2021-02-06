@@ -22,6 +22,7 @@ final class ClassType
 {
 	use Nette\SmartObject;
 	use Traits\CommentAware;
+	use Traits\AttributeAware;
 
 	public const
 		TYPE_CLASS = 'class',
@@ -365,7 +366,9 @@ final class ClassType
 	{
 		$this->consts = [];
 		foreach ($consts as $k => $v) {
-			$const = $v instanceof Constant ? $v : (new Constant($k))->setValue($v);
+			$const = $v instanceof Constant
+				? $v
+				: (new Constant($k))->setValue($v);
 			$this->consts[$const->getName()] = $const;
 		}
 		return $this;
@@ -431,7 +434,9 @@ final class ClassType
 	 */
 	public function addProperty(string $name, $value = null): Property
 	{
-		return $this->properties[$name] = (new Property($name))->setValue($value);
+		return $this->properties[$name] = func_num_args() > 1
+			? (new Property($name))->setValue($value)
+			: new Property($name);
 	}
 
 

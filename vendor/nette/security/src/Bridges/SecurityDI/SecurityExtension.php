@@ -31,7 +31,7 @@ class SecurityExtension extends Nette\DI\CompilerExtension
 	public function getConfigSchema(): Nette\Schema\Schema
 	{
 		return Expect::structure([
-			'debugger' => Expect::bool(interface_exists(\Tracy\IBarPanel::class)),
+			'debugger' => Expect::bool(),
 			'users' => Expect::arrayOf(
 				Expect::anyOf(
 					Expect::string(), // user => password
@@ -44,6 +44,13 @@ class SecurityExtension extends Nette\DI\CompilerExtension
 			),
 			'roles' => Expect::arrayOf('string|array|null'), // role => parent(s)
 			'resources' => Expect::arrayOf('string|null'), // resource => parent
+			'authentication' => Expect::structure([
+				'storage' => Expect::anyOf('session', 'cookie')->default('session'),
+				'expiration' => Expect::string()->dynamic(),
+				'cookieName' => Expect::string(),
+				'cookieDomain' => Expect::string(),
+				'cookieSamesite' => Expect::anyOf('Lax', 'Strict', 'None'),
+			]),
 		]);
 	}
 
@@ -57,24 +64,36 @@ class SecurityExtension extends Nette\DI\CompilerExtension
 		$builder->addDefinition($this->prefix('passwords'))
 			->setFactory(Nette\Security\Passwords::class);
 
-		$builder->addDefinition($this->prefix('userStorage'))
+		$auth = $config->authentication;
+		$storage = $builder->addDefinition($this->prefix('userStorage'))
+			->setType(Nette\Security\UserStorage::class)
+			->setFactory([
+				'session' => Nette\Bridges\SecurityHttp\SessionStorage::class,
+				'cookie' => Nette\Bridges\SecurityHttp\CookieStorage::class,
+			][$auth->storage]);
+
+		if ($auth->storage === 'cookie') {
+			if ($auth->cookieDomain === 'domain') {
+				$auth->cookieDomain = $builder::literal('$this->getByType(Nette\Http\IRequest::class)->getUrl()->getDomain(2)');
+			}
+			$storage->addSetup('setCookieParameters', [$auth->cookieName, $auth->cookieDomain, $auth->cookieSamesite]);
+		}
+
+		$builder->addDefinition($this->prefix('legacyUserStorage')) // deprecated
 			->setType(Nette\Security\IUserStorage::class)
 			->setFactory(Nette\Http\UserStorage::class);
 
 		$user = $builder->addDefinition($this->prefix('user'))
 			->setFactory(Nette\Security\User::class);
 
-		if ($this->debugMode && $config->debugger) {
-			$user->addSetup('@Tracy\Bar::addPanel', [
-				new Nette\DI\Definitions\Statement(Nette\Bridges\SecurityTracy\UserPanel::class),
-			]);
+		if ($auth->expiration) {
+			$user->addSetup('setExpiration', [$auth->expiration]);
 		}
 
 		if ($config->users) {
 			$usersList = $usersRoles = $usersData = [];
 			foreach ($config->users as $username => $data) {
 				$data = is_array($data) ? $data : ['password' => $data];
-				$this->validateConfig(['password' => null, 'roles' => null, 'data' => []], $data, $this->prefix("security.users.$username"));
 				$usersList[$username] = $data['password'];
 				$usersRoles[$username] = $data['roles'] ?? null;
 				$usersData[$username] = $data['data'] ?? [];
@@ -91,7 +110,7 @@ class SecurityExtension extends Nette\DI\CompilerExtension
 
 		if ($config->roles || $config->resources) {
 			$authorizator = $builder->addDefinition($this->prefix('authorizator'))
-				->setType(Nette\Security\IAuthorizator::class)
+				->setType(Nette\Security\Authorizator::class)
 				->setFactory(Nette\Security\Permission::class);
 
 			foreach ($config->roles as $role => $parents) {
@@ -109,6 +128,21 @@ class SecurityExtension extends Nette\DI\CompilerExtension
 		if ($this->name === 'security') {
 			$builder->addAlias('user', $this->prefix('user'));
 			$builder->addAlias('nette.userStorage', $this->prefix('userStorage'));
+		}
+	}
+
+
+	public function beforeCompile()
+	{
+		$builder = $this->getContainerBuilder();
+
+		if (
+			$this->debugMode &&
+			($this->config->debugger ?? $builder->getByType(\Tracy\Bar::class))
+		) {
+			$builder->getDefinition($this->prefix('user'))->addSetup('@Tracy\Bar::addPanel', [
+				new Nette\DI\Definitions\Statement(Nette\Bridges\SecurityTracy\UserPanel::class),
+			]);
 		}
 	}
 }

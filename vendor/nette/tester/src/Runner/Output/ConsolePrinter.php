@@ -48,8 +48,12 @@ class ConsolePrinter implements Tester\Runner\OutputHandler
 	private $symbols;
 
 
-	public function __construct(Runner $runner, bool $displaySkipped = false, string $file = 'php://output', bool $ciderMode = false)
-	{
+	public function __construct(
+		Runner $runner,
+		bool $displaySkipped = false,
+		string $file = 'php://output',
+		bool $ciderMode = false
+	) {
 		$this->runner = $runner;
 		$this->displaySkipped = $displaySkipped;
 		$this->file = fopen($file, 'w');
@@ -121,7 +125,7 @@ class ConsolePrinter implements Tester\Runner\OutputHandler
 		fwrite($this->file, !$this->count ? "No tests found\n" :
 			"\n\n" . $this->buffer . "\n"
 			. ($this->results[Test::FAILED] ? Dumper::color('white/red') . 'FAILURES!' : Dumper::color('white/green') . 'OK')
-			. " ($this->count blog" . ($this->count > 1 ? 's' : '') . ', '
+			. " ($this->count test" . ($this->count > 1 ? 's' : '') . ', '
 			. ($this->results[Test::FAILED] ? $this->results[Test::FAILED] . ' failure' . ($this->results[Test::FAILED] > 1 ? 's' : '') . ', ' : '')
 			. ($this->results[Test::SKIPPED] ? $this->results[Test::SKIPPED] . ' skipped, ' : '')
 			. ($this->count !== $run ? ($this->count - $run) . ' not run, ' : '')

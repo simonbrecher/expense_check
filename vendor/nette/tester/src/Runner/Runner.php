@@ -17,7 +17,7 @@ use Tester\Environment;
  */
 class Runner
 {
-	/** @var string[]  paths to blog files/directories */
+	/** @var string[]  paths to test files/directories */
 	public $paths = [];
 
 	/** @var string[] */

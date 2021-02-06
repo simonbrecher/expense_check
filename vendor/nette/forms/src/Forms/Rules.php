@@ -36,11 +36,11 @@ class Rules implements \IteratorAggregate
 	/** @var array */
 	private $toggles = [];
 
-	/** @var IControl */
+	/** @var Control */
 	private $control;
 
 
-	public function __construct(IControl $control)
+	public function __construct(Control $control)
 	{
 		$this->control = $control;
 	}
@@ -137,7 +137,7 @@ class Rules implements \IteratorAggregate
 	 * Adds a validation condition on specified control a returns new branch.
 	 * @return static     new branch
 	 */
-	public function addConditionOn(IControl $control, $validator, $arg = null)
+	public function addConditionOn(Control $control, $validator, $arg = null)
 	{
 		$rule = new Rule;
 		$rule->control = $control;
@@ -189,7 +189,7 @@ class Rules implements \IteratorAggregate
 	{
 		$this->rules[] = $rule = new Rule;
 		$rule->control = $this->control;
-		$rule->validator = function (IControl $control) use ($filter): bool {
+		$rule->validator = function (Control $control) use ($filter): bool {
 			$control->setValue($filter($control->getValue()));
 			return true;
 		};
@@ -249,7 +249,11 @@ class Rules implements \IteratorAggregate
 			}
 
 			$success = $this->validateRule($rule);
-			if ($success && $rule->branch && !$rule->branch->validate($rule->validator === Form::BLANK ? false : $emptyOptional)) {
+			if (
+				$success
+				&& $rule->branch
+				&& !$rule->branch->validate($rule->validator === Form::BLANK ? false : $emptyOptional)
+			) {
 				return false;
 
 			} elseif (!$success && !$rule->branch) {
@@ -277,7 +281,7 @@ class Rules implements \IteratorAggregate
 	{
 		$args = is_array($rule->arg) ? $rule->arg : [$rule->arg];
 		foreach ($args as &$val) {
-			$val = $val instanceof IControl ? $val->getValue() : $val;
+			$val = $val instanceof Control ? $val->getValue() : $val;
 		}
 		return $rule->isNegative
 			xor self::getCallback($rule)($rule->control, is_array($rule->arg) ? $args : $args[0]);
@@ -310,7 +314,9 @@ class Rules implements \IteratorAggregate
 			$rule->isNegative = true;
 			$rule->validator = ~$rule->validator;
 			if (!$rule->branch) {
-				$name = strncmp($rule->validator, ':', 1) ? $rule->validator : 'Form:' . strtoupper($rule->validator);
+				$name = strncmp($rule->validator, ':', 1)
+					? $rule->validator
+					: 'Form:' . strtoupper($rule->validator);
 				trigger_error("Negative validation rules such as ~$name are deprecated.", E_USER_DEPRECATED);
 			}
 			if (isset(self::NEG_RULES[$rule->validator])) {
@@ -321,7 +327,9 @@ class Rules implements \IteratorAggregate
 		}
 
 		if (!is_callable($this->getCallback($rule))) {
-			$validator = is_scalar($rule->validator) ? " '$rule->validator'" : '';
+			$validator = is_scalar($rule->validator)
+				? " '$rule->validator'"
+				: '';
 			throw new Nette\InvalidArgumentException("Unknown validator$validator for control '{$rule->control->name}'.");
 		}
 	}
@@ -330,10 +338,8 @@ class Rules implements \IteratorAggregate
 	private static function getCallback(Rule $rule)
 	{
 		$op = $rule->validator;
-		if (is_string($op) && strncmp($op, ':', 1) === 0) {
-			return [Validator::class, 'validate' . ltrim($op, ':')];
-		} else {
-			return $op;
-		}
+		return is_string($op) && strncmp($op, ':', 1) === 0
+			? [Validator::class, 'validate' . ltrim($op, ':')]
+			: $op;
 	}
 }

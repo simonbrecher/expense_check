@@ -24,7 +24,7 @@ bdump(get_defined_vars());
 
 bdump($arr, 'The Array');
 
-bdump('<a href="#">blog</a>', 'String');
+bdump('<a href="#">test</a>', 'String');
 
 
 if (Debugger::$productionMode) {

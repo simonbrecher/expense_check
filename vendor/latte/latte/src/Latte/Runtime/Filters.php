@@ -11,6 +11,7 @@ namespace Latte\Runtime;
 
 use Latte;
 use Latte\Engine;
+use Latte\RuntimeException;
 
 
 /**
@@ -164,7 +165,7 @@ class Filters
 
 		$json = json_encode($s, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 		if ($error = json_last_error()) {
-			throw new \RuntimeException(json_last_error_msg(), $error);
+			throw new Latte\RuntimeException(json_last_error_msg(), $error);
 		}
 
 		return str_replace([']]>', '<!', '</'], [']]\u003E', '\u003C!', '<\/'], $json);
@@ -202,9 +203,7 @@ class Filters
 	 */
 	public static function stripHtml(FilterInfo $info, $s): string
 	{
-		if (!in_array($info->contentType, [null, 'html', 'xhtml', 'htmlAttr', 'xhtmlAttr', 'xml', 'xmlAttr'], true)) {
-			trigger_error('Filter |stripHtml used with incompatible type ' . strtoupper($info->contentType), E_USER_WARNING);
-		}
+		$info->validate([null, 'html', 'xhtml', 'htmlAttr', 'xhtmlAttr', 'xml', 'xmlAttr'], __FUNCTION__);
 		$info->contentType = Engine::CONTENT_TEXT;
 		return html_entity_decode(strip_tags((string) $s), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 	}
@@ -217,9 +216,8 @@ class Filters
 	 */
 	public static function stripTags(FilterInfo $info, $s): string
 	{
-		if (!in_array($info->contentType, [null, 'html', 'xhtml', 'htmlAttr', 'xhtmlAttr', 'xml', 'xmlAttr'], true)) {
-			trigger_error('Filter |stripTags used with incompatible type ' . strtoupper($info->contentType), E_USER_WARNING);
-		}
+		$info->contentType = $info->contentType ?? 'html';
+		$info->validate(['html', 'xhtml', 'htmlAttr', 'xhtmlAttr', 'xml', 'xmlAttr'], __FUNCTION__);
 		return strip_tags((string) $s);
 	}
 
@@ -236,7 +234,7 @@ class Filters
 			$info->contentType = $dest;
 			return $conv($s);
 		} else {
-			trigger_error('Filters: unable to convert content type ' . strtoupper($source) . ' to ' . strtoupper($dest), E_USER_WARNING);
+			throw new RuntimeException('Filters: unable to convert content type ' . strtoupper($source) . ' to ' . strtoupper($dest));
 			return $s;
 		}
 	}
@@ -283,7 +281,9 @@ class Filters
 				'xhtmlComment' => 'escapeHtmlComment',
 			],
 		];
-		return isset($table[$source][$dest]) ? [self::class, $table[$source][$dest]] : null;
+		return isset($table[$source][$dest])
+			? [self::class, $table[$source][$dest]]
+			: null;
 	}
 
 
@@ -393,6 +393,7 @@ class Filters
 
 	/**
 	 * Join array of text or HTML elements with a string.
+	 * @param  string[]  $arr
 	 * @return string text|HTML
 	 */
 	public static function implode(array $arr, string $glue = ''): string
@@ -453,7 +454,7 @@ class Filters
 			if (abs($bytes) < 1024 || $unit === end($units)) {
 				break;
 			}
-			$bytes = $bytes / 1024;
+			$bytes /= 1024;
 		}
 		return round($bytes, $precision) . ' ' . $unit;
 	}
@@ -461,8 +462,8 @@ class Filters
 
 	/**
 	 * Performs a search and replace.
-	 * @param string|array $search
-	 * @param string|array $replacement
+	 * @param  string|string[]  $search
+	 * @param  string|string[]  $replacement
 	 */
 	public static function replace(FilterInfo $info, $subject, $search, $replacement = ''): string
 	{
@@ -525,19 +526,19 @@ class Filters
 	 * Truncates string to maximal length.
 	 * @return string plain text
 	 */
-	public static function truncate($s, $maxLen, $append = "\u{2026}"): string
+	public static function truncate($s, $length, $append = "\u{2026}"): string
 	{
 		$s = (string) $s;
-		if (self::strLength($s) > $maxLen) {
-			$maxLen = $maxLen - self::strLength($append);
-			if ($maxLen < 1) {
+		if (self::strLength($s) > $length) {
+			$length -= self::strLength($append);
+			if ($length < 1) {
 				return $append;
 
-			} elseif (preg_match('#^.{1,' . $maxLen . '}(?=[\s\x00-/:-@\[-`{-~])#us', $s, $matches)) {
+			} elseif (preg_match('#^.{1,' . $length . '}(?=[\s\x00-/:-@\[-`{-~])#us', $s, $matches)) {
 				return $matches[0] . $append;
 
 			} else {
-				return self::substring($s, 0, $maxLen) . $append;
+				return self::substring($s, 0, $length) . $append;
 			}
 		}
 		return $s;
@@ -607,13 +608,14 @@ class Filters
 
 	private static function strLength(string $s): int
 	{
-		return function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen(utf8_decode($s));
+		return function_exists('mb_strlen')
+			? mb_strlen($s, 'UTF-8')
+			: strlen(utf8_decode($s));
 	}
 
 
 	/**
 	 * Strips whitespace.
-	 * @return string
 	 */
 	public static function trim(FilterInfo $info, $s, string $charlist = " \t\n\r\0\x0B\u{A0}"): string
 	{
@@ -629,24 +631,24 @@ class Filters
 	/**
 	 * Pad a string to a certain length with another string.
 	 */
-	public static function padLeft($s, int $length, string $pad = ' '): string
+	public static function padLeft($s, int $length, string $append = ' '): string
 	{
 		$s = (string) $s;
 		$length = max(0, $length - self::strLength($s));
-		$padLen = self::strLength($pad);
-		return str_repeat($pad, (int) ($length / $padLen)) . self::substring($pad, 0, $length % $padLen) . $s;
+		$l = self::strLength($append);
+		return str_repeat($append, (int) ($length / $l)) . self::substring($append, 0, $length % $l) . $s;
 	}
 
 
 	/**
 	 * Pad a string to a certain length with another string.
 	 */
-	public static function padRight($s, int $length, string $pad = ' '): string
+	public static function padRight($s, int $length, string $append = ' '): string
 	{
 		$s = (string) $s;
 		$length = max(0, $length - self::strLength($s));
-		$padLen = self::strLength($pad);
-		return $s . str_repeat($pad, (int) ($length / $padLen)) . self::substring($pad, 0, $length % $padLen);
+		$l = self::strLength($append);
+		return $s . str_repeat($append, (int) ($length / $l)) . self::substring($append, 0, $length % $l);
 	}
 
 
@@ -670,12 +672,12 @@ class Filters
 	 * Chunks items by returning an array of arrays with the given number of items.
 	 * @param  array|\Traversable  $list
 	 */
-	public static function batch($list, int $size, $rest = null): \Generator
+	public static function batch($list, int $length, $rest = null): \Generator
 	{
 		$batch = [];
 		foreach ($list as $key => $value) {
 			$batch[$key] = $value;
-			if (count($batch) >= $size) {
+			if (count($batch) >= $length) {
 				yield $batch;
 				$batch = [];
 			}
@@ -683,12 +685,40 @@ class Filters
 
 		if ($batch) {
 			if ($rest !== null) {
-				while (count($batch) < $size) {
+				while (count($batch) < $length) {
 					$batch[] = $rest;
 				}
 			}
 			yield $batch;
 		}
+	}
+
+
+	/**
+	 * Sorts an array.
+	 * @param  mixed[]  $array
+	 * @return mixed[]
+	 */
+	public static function sort(array $array): array
+	{
+		sort($array);
+		return $array;
+	}
+
+
+	/**
+	 * Returns value clamped to the inclusive range of min and max.
+	 * @param  int|float  $value
+	 * @param  int|float  $min
+	 * @param  int|float  $max
+	 * @return int|float
+	 */
+	public static function clamp($value, $min, $max)
+	{
+		if ($min > $max) {
+			throw new \InvalidArgumentException("Minimum ($min) is not less than maximum ($max).");
+		}
+		return min(max($value, $min), $max);
 	}
 
 
@@ -719,7 +749,9 @@ class Filters
 				foreach ($value as $k => $v) {
 					if ($v != null) { // intentionally ==, skip nulls & empty string
 						//  composite 'style' vs. 'others'
-						$tmp[] = $v === true ? $k : (is_string($k) ? $k . ':' . $v : $v);
+						$tmp[] = $v === true
+							? $k
+							: (is_string($k) ? $k . ':' . $v : $v);
 					}
 				}
 				if ($tmp === null) {
@@ -743,5 +775,24 @@ class Filters
 				. $q;
 		}
 		return $s;
+	}
+
+
+	public static function checkTagSwitch(string $orig, $new): void
+	{
+		if (
+			!is_string($new)
+			|| !preg_match('~' . Latte\Parser::RE_TAG_NAME . '$~DA', $new)
+		) {
+			throw new Latte\RuntimeException('Invalid tag name ' . var_export($new, true));
+		}
+
+		$new = strtolower($new);
+		if (
+			$new === 'style' || $new === 'script'
+			|| isset(Latte\Helpers::$emptyElements[strtolower($orig)]) !== isset(Latte\Helpers::$emptyElements[$new])
+		) {
+			throw new Latte\RuntimeException("Forbidden tag <$orig> change to <$new>.");
+		}
 	}
 }

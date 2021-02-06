@@ -22,7 +22,6 @@ class Session
 	/** Default file lifetime */
 	private const DEFAULT_FILE_LIFETIME = 3 * Nette\Utils\DateTime::HOUR;
 
-	/** @var array default configuration */
 	private const SECURITY_OPTIONS = [
 		'referer_check' => '',    // must be disabled because PHP implementation is invalid
 		'use_cookies' => 1,       // must be enabled to prevent Session Hijacking and Fixation
@@ -40,7 +39,8 @@ class Session
 
 	/** @var array default configuration */
 	private $options = [
-		'cookie_lifetime' => 0,   // until the browser is closed
+		'cookie_samesite' => IResponse::SAME_SITE_LAX,
+		'cookie_lifetime' => 0,   // for a maximum of 3 hours or until the browser is closed
 		'gc_maxlifetime' => self::DEFAULT_FILE_LIFETIME, // 3 hours
 	];
 
@@ -96,7 +96,7 @@ class Session
 			Nette\Utils\Callback::invokeSafe('session_start', [['read_and_close' => $this->readAndClose]], function (string $message) use (&$e): void {
 				$e = new Nette\InvalidStateException($message);
 			});
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 		}
 
 		if ($e) {
@@ -325,13 +325,25 @@ class Session
 	public function setOptions(array $options)
 	{
 		$normalized = [];
+		$allowed = ini_get_all('session', false) + ['read_and_close' => 1, 'session.cookie_samesite' => 1]; // for PHP < 7.3
+
 		foreach ($options as $key => $value) {
 			if (!strncmp($key, 'session.', 8)) { // back compatibility
 				$key = substr($key, 8);
 			}
-			$key = strtolower(preg_replace('#(.)(?=[A-Z])#', '$1_', $key)); // camelCase -> snake_case
-			$normalized[$key] = $value;
+			$normKey = strtolower(preg_replace('#(.)(?=[A-Z])#', '$1_', $key)); // camelCase -> snake_case
+
+			if (!isset($allowed["session.$normKey"])) {
+				$hint = substr((string) Nette\Utils\Helpers::getSuggestion(array_keys($allowed), "session.$normKey"), 8);
+				if ($key !== $normKey) {
+					$hint = preg_replace_callback('#_(.)#', function ($m) { return strtoupper($m[1]); }, $hint); // snake_case -> camelCase
+				}
+				throw new Nette\InvalidStateException("Invalid session configuration option '$key'" . ($hint ? ", did you mean '$hint'?" : '.'));
+			}
+
+			$normalized[$normKey] = $value;
 		}
+
 		if (!empty($normalized['read_and_close'])) {
 			if (session_status() === PHP_SESSION_ACTIVE) {
 				throw new Nette\InvalidStateException('Cannot configure "read_and_close" for already started session.');
@@ -366,17 +378,9 @@ class Session
 	{
 		$special = ['cache_expire' => 1, 'cache_limiter' => 1, 'save_path' => 1, 'name' => 1];
 		$cookie = $origCookie = session_get_cookie_params();
-		$allowed = ini_get_all('session', false) + ['session.cookie_samesite' => 1]; // for PHP < 7.3
 
 		foreach ($config as $key => $value) {
-			if (!isset($allowed["session.$key"])) {
-				$hint = substr((string) Nette\Utils\Helpers::getSuggestion(array_keys($allowed), "session.$key"), 8);
-				[$altKey, $altHint] = array_map(function ($s) {
-					return preg_replace_callback('#_(.)#', function ($m) { return strtoupper($m[1]); }, $s); // snake_case -> camelCase
-				}, [$key, (string) $hint]);
-				throw new Nette\InvalidStateException("Invalid session configuration option '$key' or '$altKey'" . ($hint ? ", did you mean '$hint' or '$altHint'?" : '.'));
-
-			} elseif ($value === null || ini_get("session.$key") == $value) { // intentionally ==
+			if ($value === null || ini_get("session.$key") == $value) { // intentionally ==
 				continue;
 
 			} elseif (strncmp($key, 'cookie_', 7) === 0) {
@@ -387,13 +391,12 @@ class Session
 					throw new Nette\InvalidStateException("Unable to set 'session.$key' to value '$value' when session has been started" . ($this->started ? '.' : ' by session.auto_start or session_start().'));
 				}
 				if (isset($special[$key])) {
-					$key = "session_$key";
-					$key($value);
+					("session_$key")($value);
 
 				} elseif (function_exists('ini_set')) {
 					ini_set("session.$key", (string) $value);
 
-				} elseif (ini_get("session.$key") != $value) { // intentionally !=
+				} else {
 					throw new Nette\NotSupportedException("Unable to set 'session.$key' to '$value' because function ini_set() is disabled.");
 				}
 			}
@@ -424,12 +427,12 @@ class Session
 
 	/**
 	 * Sets the amount of time (like '20 minutes') allowed between requests before the session will be terminated,
-	 * null means "until the browser is closed".
+	 * null means "for a maximum of 3 hours or until the browser is closed".
 	 * @return static
 	 */
 	public function setExpiration(?string $time)
 	{
-		if (empty($time)) {
+		if ($time === null) {
 			return $this->setOptions([
 				'gc_maxlifetime' => self::DEFAULT_FILE_LIFETIME,
 				'cookie_lifetime' => 0,
@@ -449,13 +452,17 @@ class Session
 	 * Sets the session cookie parameters.
 	 * @return static
 	 */
-	public function setCookieParameters(string $path, string $domain = null, bool $secure = null, string $samesite = null)
-	{
+	public function setCookieParameters(
+		string $path,
+		string $domain = null,
+		bool $secure = null,
+		string $sameSite = null
+	) {
 		return $this->setOptions([
 			'cookie_path' => $path,
 			'cookie_domain' => $domain,
 			'cookie_secure' => $secure,
-			'cookie_samesite' => $samesite,
+			'cookie_samesite' => $sameSite,
 		]);
 	}
 
@@ -463,6 +470,7 @@ class Session
 	/** @deprecated */
 	public function getCookieParameters(): array
 	{
+		trigger_error(__METHOD__ . '() is deprecated.', E_USER_DEPRECATED);
 		return session_get_cookie_params();
 	}
 
@@ -500,9 +508,14 @@ class Session
 	{
 		$cookie = session_get_cookie_params();
 		$this->response->setCookie(
-			session_name(), session_id(),
+			session_name(),
+			session_id(),
 			$cookie['lifetime'] ? $cookie['lifetime'] + time() : 0,
-			$cookie['path'], $cookie['domain'], $cookie['secure'], $cookie['httponly'], $cookie['samesite'] ?? null
+			$cookie['path'],
+			$cookie['domain'],
+			$cookie['secure'],
+			$cookie['httponly'],
+			$cookie['samesite'] ?? null
 		);
 	}
 }

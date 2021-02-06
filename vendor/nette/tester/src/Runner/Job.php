@@ -13,7 +13,7 @@ use Tester\Helpers;
 
 
 /**
- * Single blog job.
+ * Single test job.
  */
 class Job
 {
@@ -37,7 +37,7 @@ class Job
 	/** @var PhpInterpreter */
 	private $interpreter;
 
-	/** @var string[]  environment variables for blog */
+	/** @var string[]  environment variables for test */
 	private $envVars;
 
 	/** @var resource|null */
@@ -84,7 +84,7 @@ class Job
 
 
 	/**
-	 * Runs single blog.
+	 * Runs single test.
 	 * @param  int  $flags  self::RUN_ASYNC | self::RUN_COLLECT_ERRORS
 	 */
 	public function run(int $flags = 0): void
@@ -95,11 +95,9 @@ class Job
 
 		$args = [];
 		foreach ($this->test->getArguments() as $value) {
-			if (is_array($value)) {
-				$args[] = Helpers::escapeArg("--$value[0]=$value[1]");
-			} else {
-				$args[] = Helpers::escapeArg($value);
-			}
+			$args[] = is_array($value)
+				? Helpers::escapeArg("--$value[0]=$value[1]")
+				: Helpers::escapeArg($value);
 		}
 
 		$this->proc = proc_open(
@@ -142,7 +140,7 @@ class Job
 
 
 	/**
-	 * Checks if the blog is still running.
+	 * Checks if the test is still running.
 	 */
 	public function isRunning(): bool
 	{
@@ -164,7 +162,9 @@ class Job
 			fclose($this->stderr);
 		}
 		$code = proc_close($this->proc);
-		$this->exitCode = $code === self::CODE_NONE ? $status['exitcode'] : $code;
+		$this->exitCode = $code === self::CODE_NONE
+			? $status['exitcode']
+			: $code;
 
 		if ($this->interpreter->isCgi() && count($tmp = explode("\r\n\r\n", $this->test->stdout, 2)) >= 2) {
 			[$headers, $this->test->stdout] = $tmp;

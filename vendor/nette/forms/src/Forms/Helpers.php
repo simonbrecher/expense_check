@@ -62,10 +62,14 @@ class Helpers
 	private static function sanitize(int $type, $value)
 	{
 		if ($type === Form::DATA_TEXT) {
-			return is_scalar($value) ? Strings::normalizeNewLines($value) : null;
+			return is_scalar($value)
+				? Strings::normalizeNewLines($value)
+				: null;
 
 		} elseif ($type === Form::DATA_LINE) {
-			return is_scalar($value) ? Strings::trim(strtr((string) $value, "\r\n", '  ')) : null;
+			return is_scalar($value)
+				? Strings::trim(strtr((string) $value, "\r\n", '  '))
+				: null;
 
 		} elseif ($type === Form::DATA_FILE) {
 			return $value instanceof Nette\Http\FileUpload ? $value : null;
@@ -96,12 +100,18 @@ class Helpers
 	{
 		$payload = [];
 		foreach ($rules as $rule) {
-			if (!is_string($op = $rule->validator)) {
-				if (!Nette\Utils\Callback::isStatic($op)) {
+			if (!$rule->canExport()) {
+				if ($rule->branch) {
 					continue;
 				}
+				break;
+			}
+
+			$op = $rule->validator;
+			if (!is_string($op)) {
 				$op = Nette\Utils\Callback::toString($op);
 			}
+
 			if ($rule->branch) {
 				$item = [
 					'op' => ($rule->isNegative ? '~' : '') . $op,
@@ -115,7 +125,7 @@ class Helpers
 				}
 			} else {
 				$msg = Validator::formatMessage($rule, false);
-				if ($msg instanceof Nette\Utils\IHtmlString) {
+				if ($msg instanceof Nette\HtmlStringable) {
 					$msg = html_entity_decode(strip_tags((string) $msg), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 				}
 				$item = ['op' => ($rule->isNegative ? '~' : '') . $op, 'msg' => $msg];
@@ -124,10 +134,14 @@ class Helpers
 			if (is_array($rule->arg)) {
 				$item['arg'] = [];
 				foreach ($rule->arg as $key => $value) {
-					$item['arg'][$key] = $value instanceof IControl ? ['control' => $value->getHtmlName()] : $value;
+					$item['arg'][$key] = $value instanceof Control
+						? ['control' => $value->getHtmlName()]
+						: $value;
 				}
 			} elseif ($rule->arg !== null) {
-				$item['arg'] = $rule->arg instanceof IControl ? ['control' => $rule->arg->getHtmlName()] : $rule->arg;
+				$item['arg'] = $rule->arg instanceof Control
+					? ['control' => $rule->arg->getHtmlName()]
+					: $rule->arg;
 			}
 
 			$payload[] = $item;
@@ -136,8 +150,12 @@ class Helpers
 	}
 
 
-	public static function createInputList(array $items, array $inputAttrs = null, array $labelAttrs = null, $wrapper = null): string
-	{
+	public static function createInputList(
+		array $items,
+		array $inputAttrs = null,
+		array $labelAttrs = null,
+		$wrapper = null
+	): string {
 		[$inputAttrs, $inputTag] = self::prepareAttrs($inputAttrs, 'input');
 		[$labelAttrs, $labelTag] = self::prepareAttrs($labelAttrs, 'label');
 		$res = '';
@@ -156,7 +174,7 @@ class Helpers
 			$res .= ($res === '' && $wrapperEnd === '' ? '' : $wrapper)
 				. $labelTag . $label->attributes() . '>'
 				. $inputTag . $input->attributes() . (Html::$xhtml ? ' />' : '>')
-				. ($caption instanceof Nette\Utils\IHtmlString ? $caption : htmlspecialchars((string) $caption, ENT_NOQUOTES, 'UTF-8'))
+				. ($caption instanceof Nette\HtmlStringable ? $caption : htmlspecialchars((string) $caption, ENT_NOQUOTES, 'UTF-8'))
 				. '</label>'
 				. $wrapperEnd;
 		}

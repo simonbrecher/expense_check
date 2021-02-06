@@ -12,6 +12,7 @@ namespace Tester;
 
 /**
  * Data provider helpers.
+ * @internal
  */
 class DataProvider
 {
@@ -21,7 +22,7 @@ class DataProvider
 	public static function load(string $file, string $query = ''): array
 	{
 		if (!is_file($file)) {
-			throw new \Exception("Missing data-provider file '$file'.");
+			throw new \Exception("Missing data provider file '$file'.");
 		}
 
 		if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
@@ -32,13 +33,13 @@ class DataProvider
 			if ($data instanceof \Traversable) {
 				$data = iterator_to_array($data);
 			} elseif (!is_array($data)) {
-				throw new \Exception("Data provider file '$file' did not return array or Traversable.");
+				throw new \Exception("Data provider '$file' did not return array or Traversable.");
 			}
 
 		} else {
 			$data = @parse_ini_file($file, true); // @ is escalated to exception
 			if ($data === false) {
-				throw new \Exception("Cannot parse data-provider file '$file'.");
+				throw new \Exception("Cannot parse data provider file '$file'.");
 			}
 		}
 
@@ -100,7 +101,6 @@ class DataProvider
 
 
 	/**
-	 * @internal
 	 * @throws \Exception
 	 */
 	public static function parseAnnotation(string $annotation, string $file): array

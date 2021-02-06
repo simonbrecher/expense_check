@@ -23,6 +23,7 @@ final class Property
 	use Traits\NameAware;
 	use Traits\VisibilityAware;
 	use Traits\CommentAware;
+	use Traits\AttributeAware;
 
 	/** @var mixed */
 	private $value;
@@ -44,6 +45,7 @@ final class Property
 	public function setValue($val): self
 	{
 		$this->value = $val;
+		$this->initialized = true;
 		return $this;
 	}
 
@@ -106,6 +108,6 @@ final class Property
 
 	public function isInitialized(): bool
 	{
-		return $this->initialized;
+		return $this->initialized || $this->value !== null;
 	}
 }

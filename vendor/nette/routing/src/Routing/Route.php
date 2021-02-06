@@ -11,6 +11,7 @@ namespace Nette\Routing;
 
 use Nette;
 use Nette\Utils\Strings;
+use function array_key_exists, is_array, count, strlen;
 
 
 /**
@@ -42,17 +43,17 @@ class Route implements Router
 		PATH = 2,
 		RELATIVE = 3;
 
-	/** fixity types - how to handle default value? {@link Route::$metadata} */
+	/** fixity types - has default value and is: */
 	private const
-		OPTIONAL = 0,
-		PATH_OPTIONAL = 1,
+		IN_QUERY = 0,
+		IN_PATH = 1, // in brackets is default value = null
 		CONSTANT = 2;
 
 	/** @var array */
 	protected $defaultMeta = [
 		'#' => [ // default style for path parameters
 			self::PATTERN => '[^/]+',
-			self::FILTER_OUT => [__CLASS__, 'param2path'],
+			self::FILTER_OUT => [self::class, 'param2path'],
 		],
 	];
 
@@ -104,7 +105,9 @@ class Route implements Router
 		if ($this->type === self::HOST) {
 			$host = $url->getHost();
 			$path = '//' . $host . $url->getPath();
-			$parts = ip2long($host) ? [$host] : array_reverse(explode('.', $host));
+			$parts = ip2long($host)
+				? [$host]
+				: array_reverse(explode('.', $host));
 			$re = strtr($re, [
 				'/%basePath%/' => preg_quote($url->getBasePath(), '#'),
 				'%tld%' => preg_quote($parts[0], '#'),
@@ -144,7 +147,7 @@ class Route implements Router
 
 		// 2) CONSTANT FIXITY
 		foreach ($this->metadata as $name => $meta) {
-			if (!isset($params[$name]) && isset($meta[self::FIXITY]) && $meta[self::FIXITY] !== self::OPTIONAL) {
+			if (!isset($params[$name]) && isset($meta[self::FIXITY]) && $meta[self::FIXITY] !== self::IN_QUERY) {
 				$params[$name] = null; // cannot be overwriten in 3) and detected by isset() in 4)
 			}
 		}
@@ -212,7 +215,9 @@ class Route implements Router
 			}
 
 			if (is_scalar($params[$name])) {
-				$params[$name] = $params[$name] === false ? '0' : (string) $params[$name];
+				$params[$name] = $params[$name] === false
+					? '0'
+					: (string) $params[$name];
 			}
 
 			if (isset($meta[self::FIXITY])) {
@@ -235,7 +240,10 @@ class Route implements Router
 				$params[$name] = $meta[self::FILTER_OUT]($params[$name]);
 			}
 
-			if (isset($meta[self::PATTERN]) && !preg_match("#(?:{$meta[self::PATTERN]})\\z#A", rawurldecode((string) $params[$name]))) {
+			if (
+				isset($meta[self::PATTERN])
+				&& !preg_match("#(?:{$meta[self::PATTERN]})$#DA", rawurldecode((string) $params[$name]))
+			) {
 				return null; // pattern not match
 			}
 		}
@@ -271,17 +279,15 @@ class Route implements Router
 			} elseif ($name[0] === '?') { // "foo" parameter
 				continue;
 
-			} elseif (isset($params[$name]) && $params[$name] != '') { // intentionally ==
+			} elseif (isset($params[$name]) && $params[$name] !== '') {
 				$required = count($brackets); // make this level required
 				$url = $params[$name] . $url;
 				unset($params[$name]);
 
 			} elseif (isset($metadata[$name][self::FIXITY])) { // has default value?
-				if ($required === null && !$brackets) { // auto-optional
-					$url = '';
-				} else {
-					$url = $metadata[$name][self::DEFAULT] . $url;
-				}
+				$url = $required === null && !$brackets // auto-optional
+					? ''
+					: $metadata[$name][self::DEFAULT] . $url;
 
 			} else {
 				return null; // missing parameter '$name'
@@ -299,7 +305,9 @@ class Route implements Router
 
 		} else {
 			$host = $refUrl->getHost();
-			$parts = ip2long($host) ? [$host] : array_reverse(explode('.', $host));
+			$parts = ip2long($host)
+				? [$host]
+				: array_reverse(explode('.', $host));
 			$url = strtr($url, [
 				'/%basePath%/' => $refUrl->getBasePath(),
 				'%tld%' => $parts[0],
@@ -318,7 +326,7 @@ class Route implements Router
 
 		$sep = ini_get('arg_separator.input');
 		$query = http_build_query($params, '', $sep ? $sep[0] : '&');
-		if ($query != '') { // intentionally ==
+		if ($query !== '') {
 			$url .= '?' . $query;
 		}
 
@@ -352,14 +360,16 @@ class Route implements Router
 
 			if (array_key_exists(self::VALUE, $meta)) {
 				if (is_scalar($meta[self::VALUE])) {
-					$metadata[$name][self::VALUE] = $meta[self::VALUE] === false ? '0' : (string) $meta[self::VALUE];
+					$metadata[$name][self::VALUE] = $meta[self::VALUE] === false
+						? '0'
+						: (string) $meta[self::VALUE];
 				}
 				$metadata[$name]['fixity'] = self::CONSTANT;
 			}
 		}
 
 		if (strpbrk($mask, '?<>[]') === false) {
-			$this->re = '#' . preg_quote($mask, '#') . '/?\z#A';
+			$this->re = '#' . preg_quote($mask, '#') . '/?$#DA';
 			$this->sequence = [$mask];
 			$this->metadata = $metadata;
 			return;
@@ -381,11 +391,13 @@ class Route implements Router
 				$meta = ($metadata[$name] ?? []) + ($this->defaultMeta['?' . $name] ?? []);
 
 				if (array_key_exists(self::VALUE, $meta)) {
-					$meta[self::FIXITY] = self::OPTIONAL;
+					$meta[self::FIXITY] = self::IN_QUERY;
 				}
 
 				unset($meta[self::PATTERN]);
-				$meta[self::FILTER_TABLE_OUT] = empty($meta[self::FILTER_TABLE]) ? null : array_flip($meta[self::FILTER_TABLE]);
+				$meta[self::FILTER_TABLE_OUT] = empty($meta[self::FILTER_TABLE])
+					? null
+					: array_flip($meta[self::FILTER_TABLE]);
 
 				$metadata[$name] = $meta;
 				if ($param !== '') {
@@ -432,7 +444,9 @@ class Route implements Router
 
 			if ($name[0] === '?') { // "foo" parameter
 				$name = substr($name, 1);
-				$re = $pattern ? '(?:' . preg_quote($name, '#') . "|$pattern)$re" : preg_quote($name, '#') . $re;
+				$re = $pattern
+					? '(?:' . preg_quote($name, '#') . "|$pattern)$re"
+					: preg_quote($name, '#') . $re;
 				$sequence[1] = $name . $sequence[1];
 				continue;
 			}
@@ -440,16 +454,18 @@ class Route implements Router
 			// pattern, condition & metadata
 			$meta = ($metadata[$name] ?? []) + ($this->defaultMeta[$name] ?? $this->defaultMeta['#']);
 
-			if ($pattern == '' && isset($meta[self::PATTERN])) {
+			if ($pattern === '' && isset($meta[self::PATTERN])) {
 				$pattern = $meta[self::PATTERN];
 			}
 
 			if ($default !== '') {
 				$meta[self::VALUE] = substr($default, 1);
-				$meta[self::FIXITY] = self::PATH_OPTIONAL;
+				$meta[self::FIXITY] = self::IN_PATH;
 			}
 
-			$meta[self::FILTER_TABLE_OUT] = empty($meta[self::FILTER_TABLE]) ? null : array_flip($meta[self::FILTER_TABLE]);
+			$meta[self::FILTER_TABLE_OUT] = empty($meta[self::FILTER_TABLE])
+				? null
+				: array_flip($meta[self::FILTER_TABLE]);
 			if (array_key_exists(self::VALUE, $meta)) {
 				if (isset($meta[self::FILTER_TABLE_OUT][$meta[self::VALUE]])) {
 					$meta[self::DEFAULT] = $meta[self::FILTER_TABLE_OUT][$meta[self::VALUE]];
@@ -470,13 +486,13 @@ class Route implements Router
 				if (!isset($meta[self::VALUE])) {
 					$meta[self::VALUE] = $meta[self::DEFAULT] = null;
 				}
-				$meta[self::FIXITY] = self::PATH_OPTIONAL;
+				$meta[self::FIXITY] = self::IN_PATH;
 
 			} elseif (isset($meta[self::FIXITY])) {
 				if ($autoOptional) {
 					$re = '(?:' . $re . ')?';
 				}
-				$meta[self::FIXITY] = self::PATH_OPTIONAL;
+				$meta[self::FIXITY] = self::IN_PATH;
 
 			} else {
 				$autoOptional = false;
@@ -490,7 +506,7 @@ class Route implements Router
 		}
 
 		$this->aliases = $aliases;
-		$this->re = '#' . $re . '/?\z#A';
+		$this->re = '#' . $re . '/?$#DA';
 		$this->metadata = $metadata;
 		$this->sequence = $sequence;
 	}

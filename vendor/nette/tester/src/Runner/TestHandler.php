@@ -16,7 +16,7 @@ use Tester\TestCase;
 
 
 /**
- * Default blog behavior.
+ * Default test behavior.
  */
 class TestHandler
 {
@@ -167,7 +167,7 @@ class TestHandler
 		if (!preg_match('#\[([^[]*)]#', (string) strrchr($job->getTest()->stdout, '['), $m)) {
 			return $test->withResult(Test::FAILED, "Cannot list TestCase methods in file '{$test->getFile()}'. Do you call TestCase::run() in it?");
 		} elseif (!strlen($m[1])) {
-			return $test->withResult(Test::SKIPPED, "TestCase in file '{$test->getFile()}' does not contain blog methods.");
+			return $test->withResult(Test::SKIPPED, "TestCase in file '{$test->getFile()}' does not contain test methods.");
 		}
 
 		return array_map(function (string $method) use ($test): Test {
@@ -186,7 +186,9 @@ class TestHandler
 			return $job->getTest()->withResult(Test::SKIPPED, trim($message));
 
 		} elseif ($job->getExitCode() !== $code) {
-			$message = $job->getExitCode() !== Job::CODE_FAIL ? "Exited with error code {$job->getExitCode()} (expected $code)" : '';
+			$message = $job->getExitCode() !== Job::CODE_FAIL
+				? "Exited with error code {$job->getExitCode()} (expected $code)"
+				: '';
 			return $job->getTest()->withResult(Test::FAILED, trim($message . "\n" . $job->getTest()->stdout));
 		}
 		return null;
@@ -233,7 +235,9 @@ class TestHandler
 	private function getAnnotations(string $file): array
 	{
 		$annotations = Helpers::parseDocComment(file_get_contents($file));
-		$testTitle = isset($annotations[0]) ? preg_replace('#^TEST:\s*#i', '', $annotations[0]) : null;
+		$testTitle = isset($annotations[0])
+			? preg_replace('#^TEST:\s*#i', '', $annotations[0])
+			: null;
 		return [$annotations, $testTitle];
 	}
 }

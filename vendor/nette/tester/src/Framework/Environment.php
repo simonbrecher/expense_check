@@ -104,17 +104,20 @@ class Environment
 		ini_set('html_errors', '0');
 		ini_set('log_errors', '0');
 
-		set_exception_handler([__CLASS__, 'handleException']);
+		set_exception_handler([self::class, 'handleException']);
 
 		set_error_handler(function (int $severity, string $message, string $file, int $line): ?bool {
-			if (in_array($severity, [E_RECOVERABLE_ERROR, E_USER_ERROR], true) || ($severity & error_reporting()) === $severity) {
+			if (
+				in_array($severity, [E_RECOVERABLE_ERROR, E_USER_ERROR], true)
+				|| ($severity & error_reporting()) === $severity
+			) {
 				self::handleException(new \ErrorException($message, 0, $severity, $file, $line));
 			}
 			return false;
 		});
 
 		register_shutdown_function(function (): void {
-			Assert::$onFailure = [__CLASS__, 'handleException'];
+			Assert::$onFailure = [self::class, 'handleException'];
 
 			$error = error_get_last();
 			register_shutdown_function(function () use ($error): void {
@@ -125,7 +128,7 @@ class Environment
 					}
 				} elseif (self::$checkAssertions && !Assert::$counter) {
 					self::removeOutputBuffers();
-					echo "\n", Dumper::color('white/red', 'Error: This blog forgets to execute an assertion.'), "\n";
+					echo "\n", Dumper::color('white/red', 'Error: This test forgets to execute an assertion.'), "\n";
 					self::exit(Runner\Job::CODE_FAIL);
 				} elseif (!getenv(self::RUNNER) && self::$exitCode !== Runner\Job::CODE_SKIP) {
 					echo "\n", (self::$exitCode ? Dumper::color('white/red', 'FAILURE') : Dumper::color('white/green', 'OK')), "\n";
@@ -148,7 +151,7 @@ class Environment
 
 
 	/**
-	 * Skips this blog.
+	 * Skips this test.
 	 */
 	public static function skip(string $message = ''): void
 	{
@@ -173,7 +176,7 @@ class Environment
 
 
 	/**
-	 * Returns current blog annotations.
+	 * Returns current test annotations.
 	 */
 	public static function getTestAnnotations(): array
 	{
@@ -210,17 +213,26 @@ class Environment
 	public static function loadData(): array
 	{
 		if (isset($_SERVER['argv']) && ($tmp = preg_filter('#--dataprovider=(.*)#Ai', '$1', $_SERVER['argv']))) {
-			[$query, $file] = explode('|', reset($tmp), 2);
-
-		} else {
-			$annotations = self::getTestAnnotations();
-			if (!isset($annotations['dataprovider'])) {
-				throw new \Exception('Missing annotation @dataProvider.');
+			[$key, $file] = explode('|', reset($tmp), 2);
+			$data = DataProvider::load($file);
+			if (!array_key_exists($key, $data)) {
+				throw new \Exception("Missing dataset '$key' from data provider '$file'.");
 			}
-			$provider = (array) $annotations['dataprovider'];
-			[$file, $query] = DataProvider::parseAnnotation($provider[0], $annotations['file']);
+			return $data[$key];
 		}
+
+		$annotations = self::getTestAnnotations();
+		if (!isset($annotations['dataprovider'])) {
+			throw new \Exception('Missing annotation @dataProvider.');
+		}
+		$provider = (array) $annotations['dataprovider'];
+		[$file, $query] = DataProvider::parseAnnotation($provider[0], $annotations['file']);
+
 		$data = DataProvider::load($file, $query);
+		if (!$data) {
+			throw new \Exception("No datasets from data provider '$file'" . ($query ? " for query '$query'" : '') . '.');
+		}
+
 		return reset($data);
 	}
 

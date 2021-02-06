@@ -26,10 +26,10 @@
 	},
 	"bin": ["src/tester"],
 	"scripts": {
-		"phpstan": "phpstan analyse --level 5 src",
+		"phpstan": "phpstan analyse",
 		"tester": "tester tests -s"
 	},
 	"extra": {
-		"branch-alias": { "dev-master": "2.4-dev" }
+		"branch-alias": { "dev-master": "2.3-dev" }
 	}
 }

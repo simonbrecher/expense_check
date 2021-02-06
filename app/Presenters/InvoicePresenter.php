@@ -86,7 +86,6 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $date->addConditionOn($form['isToday'], $form::BLANK)
                 ->addRule($form::FILLED, 'Datum musí být vyplněné.');
 
-
         for ($i = 0; $i < $form->values->maxItemCount; $i++) {
             $categories = $this->dataLoader->getFormSelectDict('category', 'name', 'Neuvedeno');
 

@@ -93,7 +93,7 @@ class Test
 	public function withArguments(array $args): self
 	{
 		if ($this->hasResult()) {
-			throw new \LogicException('Cannot change arguments of blog which already has a result.');
+			throw new \LogicException('Cannot change arguments of test which already has a result.');
 		}
 
 		$me = clone $this;
@@ -114,7 +114,7 @@ class Test
 	public function withResult(int $result, ?string $message): self
 	{
 		if ($this->hasResult()) {
-			throw new \LogicException("Result of blog is already set to $this->result with message '$this->message'.");
+			throw new \LogicException("Result of test is already set to $this->result with message '$this->message'.");
 		}
 
 		$me = clone $this;

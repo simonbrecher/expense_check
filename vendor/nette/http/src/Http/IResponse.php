@@ -147,6 +147,12 @@ interface IResponse
 		511 => 'Network Authentication Required',
 	];
 
+	/** SameSite cookie */
+	public const
+		SAME_SITE_LAX = 'Lax',
+		SAME_SITE_STRICT = 'Strict',
+		SAME_SITE_NONE = 'None';
+
 	/**
 	 * Sets HTTP response code.
 	 * @return static
@@ -204,10 +210,18 @@ interface IResponse
 
 	/**
 	 * Sends a cookie.
-	 * @param  string|int|\DateTimeInterface $expire  time, value 0 means "until the browser is closed"
+	 * @param  string|int|\DateTimeInterface $expire  time, value null means "until the browser session ends"
 	 * @return static
 	 */
-	function setCookie(string $name, string $value, $expire, string $path = null, string $domain = null, bool $secure = null, bool $httpOnly = null);
+	function setCookie(
+		string $name,
+		string $value,
+		$expire,
+		string $path = null,
+		string $domain = null,
+		bool $secure = null,
+		bool $httpOnly = null
+	);
 
 	/**
 	 * Deletes a cookie.

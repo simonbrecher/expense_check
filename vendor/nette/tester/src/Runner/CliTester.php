@@ -92,14 +92,14 @@ class CliTester
 		echo <<<'XX'
  _____ ___  ___ _____ ___  ___
 |_   _/ __)( __/_   _/ __)| _ )
-  |_| \___ /___) |_| \___ |_|_\  v2.3.3
+  |_| \___ /___) |_| \___ |_|_\  v2.3.5
 
 
 XX;
 
 		$cmd = new CommandLine(<<<'XX'
 Usage:
-    tester.php [options] [<blog file> | <directory>]...
+    tester [options] [<test file> | <directory>]...
 
 Options:
     -p <path>                    Specify PHP interpreter to run (default: php).
@@ -107,12 +107,12 @@ Options:
     -C                           Use system-wide php.ini.
     -l | --log <path>            Write log to file <path>.
     -d <key=value>...            Define INI entry 'key' with value 'value'.
-    -s                           Post information about skipped tests.
+    -s                           Show information about skipped tests.
     --stop-on-fail               Stop execution upon the first failure.
     -j <num>                     Run <num> jobs in parallel (default: 8).
     -o <console|tap|junit|none>  Specify output format.
     -w | --watch <path>          Watch directory.
-    -i | --info                  Post tests environment info and exit.
+    -i | --info                  Show tests environment info and exit.
     --setup <path>               Script for runner setup.
     --temp <path>                Path to temporary directory. Default by sys_get_temp_dir().
     --colors [1|0]               Enable or disable colors.
@@ -236,8 +236,14 @@ XX
 		file_put_contents($this->options['--coverage'], '');
 		$file = realpath($this->options['--coverage']);
 
+		[$engine, $version] = reset($engines);
+
 		$runner->setEnvironmentVariable(Environment::COVERAGE, $file);
-		$runner->setEnvironmentVariable(Environment::COVERAGE_ENGINE, $engine = reset($engines));
+		$runner->setEnvironmentVariable(Environment::COVERAGE_ENGINE, $engine);
+
+		if ($engine === CodeCoverage\Collector::ENGINE_XDEBUG && version_compare($version, '3.0.0', '>=')) {
+			$runner->addPhpIniOption('xdebug.mode', ltrim(ini_get('xdebug.mode') . ',coverage', ','));
+		}
 
 		if ($engine === CodeCoverage\Collector::ENGINE_PCOV && count($this->options['--coverage-src'])) {
 			$runner->addPhpIniOption('pcov.directory', Helpers::findCommonDirectory($this->options['--coverage-src']));
@@ -254,14 +260,12 @@ XX
 			echo 'Generating code coverage report... ';
 		}
 		if (filesize($file) === 0) {
-			echo 'failed. Coverage file is empty. Do you call Tester\Environment::setup() in tests?';
+			echo 'failed. Coverage file is empty. Do you call Tester\Environment::setup() in tests?' . "\n";
 			return;
 		}
-		if (pathinfo($file, PATHINFO_EXTENSION) === 'xml') {
-			$generator = new CodeCoverage\Generators\CloverXMLGenerator($file, $this->options['--coverage-src']);
-		} else {
-			$generator = new CodeCoverage\Generators\HtmlGenerator($file, $this->options['--coverage-src']);
-		}
+		$generator = pathinfo($file, PATHINFO_EXTENSION) === 'xml'
+			? new CodeCoverage\Generators\CloverXMLGenerator($file, $this->options['--coverage-src'])
+			: new CodeCoverage\Generators\HtmlGenerator($file, $this->options['--coverage-src']);
 		$generator->render($file);
 		echo round($generator->getCoveredPercent()) . "% covered\n";
 	}
@@ -297,7 +301,7 @@ XX
 			} elseif ($idle >= 60) {
 				$idle = round($idle / 60) . ' min';
 			} else {
-				$idle = $idle . ' sec';
+				$idle .= ' sec';
 			}
 			echo 'Watching ' . implode(', ', $this->options['--watch']) . " (idle for $idle) " . str_repeat('.', ++$counter % 5) . "    \r";
 			sleep(2);
