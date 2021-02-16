@@ -34,7 +34,7 @@
             {var $categoryName = $dataLoader->getForViewById('category', 'name', $invoice_item->category_id)}
             <div class="basic-div">Kategorie: {$categoryName}</div>
             {var $consumerName = $dataLoader->getForViewById('consumer', 'name', $invoice_item->consumer_id)}
-            <div class="basic-div">Koupeno pro: {$consumerName}</div>
+            <div class="basic-div">Spotřebitel: {$consumerName}</div>
             <div class="basic-div">Množství: {$invoice_item->amount}</div>
             <div class="basic-div">Popis: {$invoice_item->description}</div>
 

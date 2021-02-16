@@ -125,13 +125,23 @@ class DataLoader
     }
 
     // TODO: check if the column exists
-    /** Get data to view by table and id. Not for null case. */
-    public function getForViewById(string $table, string $column, int $id): string
+    // TODO: check if the id can be accessed by current user
+    /**
+     * Get data to view by table and id. Not for null case.
+     * @param int|null $id
+     */
+    public function getForViewById(string $table, string $column, $id): string
     {
+        if ($table == 'category' and $id === null) {
+            return 'Neuvedeno';
+        } elseif ($table == 'consumer' and $id === null) {
+            return 'Všichni';
+        }
         return $this->table($table)->get($id)->$column;
     }
 
     // TODO: check if the column exists
+    // TODO: check if the id can be accessed by current user
     /**
      * Get parameters for select control in form.
      * @param mixed|null $nullValue - null if id can not be null, else $table->$columnValue for $table->id === null

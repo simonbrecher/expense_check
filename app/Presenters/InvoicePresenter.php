@@ -19,10 +19,14 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
     private $dataLoader;
     /* @var Model\DataSender */
     private $dataSender;
+    /* @var int */
+    private const MAX_ITEM_COUNT = 5;
 
-    public  function __construct(Model\DataLoader $dataLoader, Model\DataSender $dataSender)
+    public function __construct(Model\DataLoader $dataLoader, Model\DataSender $dataSender)
     {
         parent::__construct();
+
+        Debugger::barDump('HERE');
 
         $this->dataLoader = $dataLoader;
         $this->dataSender = $dataSender;
@@ -49,14 +53,33 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $this->template->invoice_heads = $invoice_heads;
     }
 
+    private function getAddInvoiceSection(): Nette\Http\SessionSection
+    {
+        $section = $this->session->getSection('addInvoice');
+
+        if (!isset($section->itemCount)) {
+            $section->itemCount = 1;
+        }
+
+        return $section;
+    }
+
+    public function renderAdd(): void
+    {
+        $section = $this->getAddInvoiceSection();
+
+        $this->template->maxItemCount = self::MAX_ITEM_COUNT;
+        $this->template->itemCount = $section->itemCount;
+    }
+
     protected function createComponentAddInvoice(): Form
     {
         $form = new Form;
 
         $form->getElementPrototype()->setAttribute('autocomplete', 'off');
 
-        $form->addHidden('maxItemCount', 4);
-        $form->addHidden('itemCount', 1);
+        $section = $this->getAddInvoiceSection();
+        $form->addHidden('itemCount', $section->itemCount);
 
         $paidByChoices = ['cash' => 'V hotovosti', 'card' => 'Kartou', 'bank' => 'Bankovním převodem'];
         $form->addSelect('paidBy', 'Typ platby', $paidByChoices)
@@ -86,24 +109,26 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $date->addConditionOn($form['isToday'], $form::BLANK)
                 ->addRule($form::FILLED, 'Datum musí být vyplněné.');
 
-        for ($i = 0; $i < $form->values->maxItemCount; $i++) {
-            $categories = $this->dataLoader->getFormSelectDict('category', 'name', 'Neuvedeno');
+//        for ($i = 0; $i < self::MAX_ITEM_COUNT; $i++) {
+        for ($i = 0; $i < self::MAX_ITEM_COUNT; $i++) {
+            $container = $form->addContainer($i);
 
-            $form->addSelect('category'.$i, 'Kategorie:', $categories);
+            $categories = $this->dataLoader->getFormSelectDict('category', 'name', 'Neuvedeno');
+            $container->addSelect('category', 'Kategorie:', $categories);
 
             $consumers = $this->dataLoader->getFormSelectDict('consumer', 'name', 'Všichni');
-            $form->addSelect('consumer'.$i, 'Spotřebitel:', $consumers);
+            $container->addSelect('consumer', 'Spotřebitel:', $consumers);
             
             if ($i == 0) {
                 $form->addText('totalPrice', 'Celková cena:')
                     ->addRule($form::FILLED, 'Doplňte celkovou cenu.');
             } else {
-                $form->addText('price'.$i, 'Cena položky:')
+                $container->addText('price', 'Cena položky:')
                     ->addCondition($form::FILLED, 'Doplňte cenu '.($i + 1).' položky.');
             }
 
-            $form->addText('description'.$i, $i == 0 ? 'Název:' : 'Název položky:')
-                ->setMaxLength(50);
+            $container->addText('description', $i == 0 ? 'Název:' : 'Název položky:')
+                ->setMaxLength(35);
         }
 
         $form->addSubmit('removeItem', 'Odebrat položku')->setValidationScope([])
@@ -111,9 +136,11 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
         $form->addSubmit('addItem', 'Přidat položku')->setValidationScope([])
             ->onClick[] = [$this, 'changeItemCount'];
 
+        // TODO: remove fake setValidationScope
+//        $form->addSubmit('send', 'Uložit doklad')->setValidationScope([$form['itemCount']]);
         $form->addSubmit('send', 'Uložit doklad');
 
-        for ($i = 0; $i < $form->values->maxItemCount; $i++) {
+        for ($i = 0; $i < self::MAX_ITEM_COUNT; $i++) {
             $form->getComponent('paidBy')
                 ->addConditionOn($form['itemCount'], $form::MIN, $i + 1)
                     ->toggle('item'.$i);
@@ -127,159 +154,66 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
     public function changeItemCount(Nette\Forms\Controls\Button $button, $data): void
     {
         $form = $button->getForm();
+        $section = $this->getAddInvoiceSection();
         if ($button->getName() == 'addItem') {
-            if ($data->itemCount < $data->maxItemCount) {
-                $form->getComponent('itemCount')->setValue($data->itemCount + 1);
+            if ($section->itemCount < self::MAX_ITEM_COUNT) {
+                $section->itemCount ++;
             }
         } else {
-            if ($data->itemCount > 1) {
-                $form->getComponent('itemCount')->setValue($data->itemCount - 1);
+            if ($section->itemCount > 1) {
+                $section->itemCount --;
             }
         }
+        $form->getComponent('itemCount')->setValue($section->itemCount);
+    }
+
+    private function isDateExist($date): bool
+    {
+        $dt = DateTime::createFromFormat("d.m.Y", $date);
+        return $dt !== false && !array_sum($dt::getLastErrors());
     }
 
     public function validateAddInvoice(Form $form): void
     {
-        $values = $form->getValues();
-    }
+        if ($form['send']->isSubmittedBy()) {
+            $values = $form->getValues();
 
-//    private function isFormCorrect(Form $form, Nette\Utils\ArrayHash $values, int $itemCount): bool
-//    {
-//        if ($itemCount <= 0 or $itemCount > 100) {
-//            throw new ErrorException('Wrong $itemcount.');
-//        }
-//
-//        switch($values->paidby) {
-//            case 'cash':
-//                break;
-//            case 'card':
-//                if (!$this->dataLoader->canAccess('card', $values->card)) {
-//                    throw new ErrorException('User can not access this card.');
-//                }
-//                break;
-//            case 'bank':
-//                if (($values->counter_account_number === '' or $values->counter_account_bank_code === '')
-//                        and $values->var_symbol === '') {
-//                    $form->addError('Doplňte čislo protiúčtu a bankovní kód protiúčtu účet nebo variabilní symbol.');
-//                    return false;
-//                } else {
-//                    if (!$this->isCounterBankAccountCorrect($values->counter_account_number,
-//                            $values->counter_account_bank_code)) {
-//                        $form->addError('Doplňte správé číslo protiúčtu a bankovní kód protiúčtu.');
-//                        return false;
-//                    }
-//                    if ($values->var_symbol !== '') {
-//                        if (!$this->isVarSymbolCorrect($values->var_symbol)) {
-//                            $form->addError('Variabilní symbol není ve správném formátu.');
-//                            return false;
-//                        }
-//                    }
-//                }
-//                break;
-//            default:
-//                Debugger::barDump($this->getParameter("action"));
-//                throw new ErrorException('Wrong type of payment.');
-//        }
-//
-//        if (!$values->is_today and !$this->isDateExist($values->date)) {
-//            $form->addError('Nesprávné datum.');
-//            return false;
-//        }
-//
-//        for ($i = 0; $i < $itemCount; $i++) {
-//            $currentCategory = 'category'.$i;
-//            $categoryId = $values->$currentCategory;
-//            if ($categoryId != 0) {
-//                if (!$this->dataLoader->canAccess('category', $categoryId)) {
-//                    throw new ErrorException('User can not access this category.');
-//                }
+            Debugger::barDump($values);
+
+//            $itemCount = (int) $values->itemCount;
+//            if ($itemCount < 1 or $itemCount > self::MAX_ITEM_COUNT) {
+//                $form->addError('Nesprávný počet položek.');
 //            }
-//            $currentConsumer = 'consumer'.$i;
-//            $consumerId = $values->$currentConsumer;
-//            if ($consumerId != 0) {
-//                if (!$this->dataLoader->canAccess('consumer', $consumerId)) {
-//                    throw new ErrorException('User can not access this consumer.');
-//                }
-//            }
-//        }
-//
-//        if ($this->isPriceCorrect($values->total_price)) {
-//            $values->offsetSet('total_price', intval($values->total_price));
-//        } else {
-//            $form->addError('Nesprávná cena.');
-//            return false;
-//        }
-//        if ($itemCount > 1) {
-//            for ($i = 1; $i < $itemCount; $i++) {
-//                $correctPriceId = 'price'.$i;
-//                if ($this->isPriceCorrect($values->$correctPriceId)) {
-//                    $values->offsetSet($correctPriceId, intval($values->$correctPriceId));
-//                } else {
-//                    $form->addError('Nesprávná cena '.($i + 1).". položky.");
-//                    return false;
-//                }
-//            }
-//        }
-//        if ($itemCount > 1) {
-//            $priceSum = 0;
-//            for ($i = 1; $i < $itemCount; $i++) {
-//                $correctPriceId = 'price'.$i;
-//                $priceSum += $values->$correctPriceId;
-//            }
-//            if ($priceSum >= $values->total_price) {
-//                $form->addError("Celková cena musí být vyšší, než součet cen položek.");
-//                return false;
-//            }
-//        }
-//
-//        return true;
-//    }
-//
-//    private function countDataForAddInvoiceForm(Nette\Utils\ArrayHash $values): Nette\Utils\ArrayHash
-//    {
-//        $itemCount = intval($this->getParameters()['itemCount']);
-//
-//        if ($values->is_today) {
-//            $now = date('Y-m-d', time());
-//            $values->date = $now;
-//        } else {
-//            Debugger::barDump(strtotime($values->date));
-//            Debugger::barDump($values->date);
-//            $values->date = date('Y-m-d', strtotime($values->date));
-//        }
-//
-//        for ($i = 0; $i < $itemCount; $i++) {
-//            $correctCategoryId = 'category'.$i;
-//            if ($values->$correctCategoryId == 0) {
-//                $values->offsetSet($correctCategoryId, null);
-//            }
-//            $correctConsumerId = 'consumer'.$i;
-//            if ($values->$correctConsumerId == 0) {
-//                $values->offsetSet($correctConsumerId, null);
-//            }
-//        }
-//
-//        if ($itemCount > 1) {
-//            $priceSum = 0;
-//            for ($i = 1; $i < $itemCount; $i++) {
-//                $correctPriceId = 'price'.$i;
-//                $priceSum += $values->$correctPriceId;
-//            }
-//            $values->offsetSet('price0', $values->total_price - $priceSum);
-//        } else {
-//            $values->offsetSet('price0', $values->total_price);
-//        }
-//
-//        return $values;
-//    }
+
+            switch ($values->paidBy) {
+                case 'cash':
+
+                    break;
+                case 'card':
+
+                    break;
+                case 'bank':
+
+                    break;
+                default:
+                    $form->addError('Nesprávný typ platby.');
+            }
+
+            if (!$values->isToday) {
+                if (!$this->isDateExist($values->date)) {
+                    $form->addError('Nesprávné datum.');
+                }
+            }
+        }
+    }
 
     public function addInvoiceFormSucceeded(Form $form, Nette\Utils\ArrayHash $values): void
     {
 //        $itemCount = intval($this->getParameters()['itemCount']);
 
-        Debugger::barDump('HERE addInvoiceFormSucceded');
-
-        Debugger::barDump($values);
+//        Debugger::barDump('HERE addInvoiceFormSucceded');
+//
+//        Debugger::barDump($values);
 
 //        Debugger::barDump("TEST");
 //        Debugger::barDump($form->getHttpData());
