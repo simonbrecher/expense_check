@@ -3,15 +3,7 @@
 
 namespace App\Presenters;
 
-use Nette;
-
-class HomepagePresenter extends Nette\Application\UI\Presenter
+class HomepagePresenter extends BasePresenter
 {
-    public function startup()
-    {
-        parent::startup();
-        if (!$this->getUser()->isLoggedIn()) {
-            $this->redirect("Sign:in");
-        }
-    }
+
 }

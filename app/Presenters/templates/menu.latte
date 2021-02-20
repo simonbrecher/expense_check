@@ -1,0 +1,16 @@
+{var $menu = [
+'Homepage' => 'Homepage',
+'Consumption' => 'Výdaje',
+'Invoice' => 'Doklady',
+'BankAccount' => 'Bankovní účty',
+'CashAccount' => 'Pokladna',
+'RegularPayment' => 'Příkazy',
+'Family' => 'Rodina',
+'Setting' => 'Nastavení',
+]
+}
+
+<nav n:inner-foreach="$menu as $presenterName => $caption" class="menu-container">
+    <a n:href="{$presenterName}:" class="menu-item{if $presenter->getName() == $presenterName} selected{/if}">{$caption}</a>
+</nav>
+<hr/>

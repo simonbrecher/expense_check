@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
 
-	<link rel="stylesheet" href="{$basePath}/stat/layout.css?{php echo rand(1, 10**9);}" />
+	<link rel="stylesheet" href="{$basePath}/stat/layout.css{$cssNumber}" />
 
 	<title>{ifset title}{include title|stripHtml} | {/ifset}Myfin</title>
 </head>
@@ -21,12 +21,8 @@
 
 <div class="site-wrapper">
 
-<div>
-	<a n:href="Homepage:default" class="basic-div">Hlavní stránka</a>
-	<a n:href="Invoice:show" class="basic-div">Vypsat doklady</a>
-	<a n:href="Invoice:add" class="basic-div">Přidat doklad</a>
-	<a n:href="Sign:out" class="basic-div">Odhlásit se</a>
-</div>
+	{include menu.latte}
+
 <br>
 
 	{include content}

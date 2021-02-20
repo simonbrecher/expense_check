@@ -8,6 +8,12 @@ body, input, textarea {font-family: 'Open Sans', Arial; font-size: 15px;}
 .header-heading { width: 600px; margin: 17px auto 0 auto; font-size: 35px; text-align: center; color: #FFF;}
 .site-container { width: 1100px; margin: 0 auto; padding: 22px 26px; background-color: #FFF;}
 
+        /** menu */
+.menu-container {float: left; margin-bottom: 12px;}
+.menu-item {float: left; display: block; margin-right: 12px; background-color: #46E; color: #FFF; padding: 6px 14px 8px;}
+.menu-item:last-child {margin-right: 0;}
+.menu-item:hover {background-color: #1BE;}
+.selected {background-color: #149}
 
         /** forms */
 .error { border: 3px solid #F00; padding: 5px 25px; color: #F00;}

@@ -3,55 +3,17 @@
 declare(strict_types=1);
 namespace App\Presenters;
 
-use ErrorException;
 use Nette;
 use Nette\Application\UI\Form;
 
 use DateTime;
 
-use App\Model;
-
 use Tracy\Debugger;
 
-class InvoicePresenter extends Nette\Application\UI\Presenter
+class InvoicePresenter extends BasePresenter
 {
-    /* @var Model\DataLoader */
-    private $dataLoader;
-    /* @var Model\DataSender */
-    private $dataSender;
     /* @var int */
     private const MAX_ITEM_COUNT = 5;
-
-    public function __construct(Model\DataLoader $dataLoader, Model\DataSender $dataSender)
-    {
-        parent::__construct();
-
-        Debugger::barDump('HERE');
-
-        $this->dataLoader = $dataLoader;
-        $this->dataSender = $dataSender;
-        $this->dataSender->setDataLoader($this->dataLoader);
-    }
-
-    public function startup(): void
-    {
-        parent::startup();
-        if (!$this->getUser()->isLoggedIn()) {
-            $this->redirect("Sign:in");
-        } else {
-            $this->dataLoader->setUser($this->getUser());
-            $this->dataSender->setUser($this->getUser());
-        }
-    }
-
-    public function renderShow(): void
-    {
-        /** @var Nette\Database\Context */
-        $invoice_heads = $this->dataLoader->userTable('invoice_head');
-
-        $this->template->dataLoader = $this->dataLoader;
-        $this->template->invoice_heads = $invoice_heads;
-    }
 
     private function getAddInvoiceSection(): Nette\Http\SessionSection
     {
@@ -209,31 +171,5 @@ class InvoicePresenter extends Nette\Application\UI\Presenter
 
     public function addInvoiceFormSucceeded(Form $form, Nette\Utils\ArrayHash $values): void
     {
-//        $itemCount = intval($this->getParameters()['itemCount']);
-
-//        Debugger::barDump('HERE addInvoiceFormSucceded');
-//
-//        Debugger::barDump($values);
-
-//        Debugger::barDump("TEST");
-//        Debugger::barDump($form->getHttpData());
-
-//        $values->offsetSet('paidby', $this->paidBy);
-//        $values->offsetSet('item_count', $itemCount);
-
-//        $isFormCorrect = $this->isFormCorrect($form, $values, $itemCount);
-//
-//        if ($isFormCorrect) {
-//            $values = $this->countDataForAddInvoiceForm($values);
-//
-//            $wasDatabaseSuccessful = $this->dataSender->sendAddinvoiceForm($values);
-//
-//            if ($wasDatabaseSuccessful) {
-//                $this->flashMessage("Doklad byl úspěšně přidaný.", "success");
-//                $this->redirect("this");
-//            } else {
-//                $form->addError("Bohužel se nám nepodařilo doklad uložit do databáze.");
-//            }
-//        }
     }
 }
