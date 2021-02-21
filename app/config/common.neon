@@ -21,6 +21,3 @@ services:
 	router: App\Router\RouterFactory::createRouter
 	- App\Model\Authenticator
 	- App\Model\InvoiceModel
-
-	- App\Model\DataLoader
-	- App\Model\DataSender

@@ -1,25 +1,24 @@
-hr {clear: both; border: none; height: 0; font-size: 0; margin: 0;}
+hr { clear: both; border: none; height: 0; font-size: 0; margin: 0; }
 
         /** layout */
-body {margin: 0; background-color: #F6F6F6;}
-body, input, textarea {font-family: 'Open Sans', Arial; font-size: 15px;}
+body { margin: 0; background-color: #F6F6F6; }
+body, input, textarea { font-family: 'Open Sans', Arial; font-size: 15px; }
 
-.header-site { border-top: 1px solid #328ADC; height: 80px; background-color: #328adc;}
-.header-heading { width: 600px; margin: 17px auto 0 auto; font-size: 35px; text-align: center; color: #FFF;}
-.site-container { width: 1100px; margin: 0 auto; padding: 22px 26px; background-color: #FFF;}
+.header-site { border-top: 1px solid #38D; height: 60px; background-color: #38D; }
+.header-heading { width: 600px; margin: 15px auto 0 auto; font-size: 26px; text-align: center; color: #FFF; }
+.site-container { width: 1100px; margin: 0 auto; padding: 22px 26px; background-color: #FFF; }
 
         /** menu */
-.menu-container {float: left; margin-bottom: 12px;}
-.menu-item {float: left; display: block; margin-right: 12px; background-color: #46E; color: #FFF; padding: 6px 14px 8px;}
-.menu-item:last-child {margin-right: 0;}
-.menu-item:hover {background-color: #1BE;}
-.selected {background-color: #149}
+.menu-container { float: left; margin-bottom: 12px; }
+.menu-item { float: left; display: block; margin-right: 12px; background-color: #46E; color: #FFF; padding: 6px 14px 8px; }
+.menu-item:last-child { margin-right: 0; }
+.menu-item:hover { background-color: #1BE; }
+.selected { background-color: #149; }
 
-        /** forms */
-.error { border: 3px solid #F00; padding: 5px 25px; color: #F00;}
+/*        !** forms *!*/
+/*.error { border: 3px solid #F00; padding: 5px 25px; color: #F00; }*/
 
 
         /** flash messages */
-
-.flash-success { border: 3px solid #0F0; padding: 5px 25px; color: #0F0;}
-.flash-error { border: 3px solid #F00; padding: 5px 25px; color: #F00;}
+.flash-success { border: 3px solid #0F0; padding: 5px 25px; color: #0F0; }
+.flash-error { border: 3px solid #F00; padding: 5px 25px; color: #F00; }

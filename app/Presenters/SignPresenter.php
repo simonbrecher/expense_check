@@ -1,18 +1,16 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Presenters;
 
 use Nette;
 use Nette\Application\UI\Form;
 
-class SignPresenter extends Nette\Application\UI\Presenter
+class SignPresenter extends BasePresenter
 {
     public function actionOut(): void
     {
         $this->user->logout(true);
-        $this->redirect("Homepage:default");
+        $this->redirect("Homepage:");
     }
 
     protected function createComponentSignInForm(): Form

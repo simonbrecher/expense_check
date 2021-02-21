@@ -6,6 +6,9 @@ namespace App\Model;
 
 class InvoiceModel extends BaseModel
 {
+    public const MAX_ITEM_COUNT = 2;
+    protected const PAIDBY_TYPES = ['cash' => 'Hotovostí', 'card' => 'Kartou', 'bank' => 'Bankou'];
+
     public function getUserCategories(): array
     {
         return $this->database->table('category')->where('NOT is_cash_account_balance')
@@ -21,5 +24,10 @@ class InvoiceModel extends BaseModel
     public function getUserCards(): array
     {
         return $this->database->table('card')->fetchPairs('id', 'number');
+    }
+
+    public function getPaidbyTypes(): array
+    {
+        return self::PAIDBY_TYPES;
     }
 }

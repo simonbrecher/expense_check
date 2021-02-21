@@ -1,12 +1,21 @@
-.basic-div { border: 1px solid #000; padding: 2px; float: left; margin-right: 2px;}
+.form-title { background-color: #000; color: #FFF; margin: 5px 0 15px; padding: 12px 20px; }
 
-.invoice-head { border: 1px solid #000; float: left;}
-.invoice-head-row { border: 1px solid #F00; float: left; min-width: 1000px;}
-.invoice-head-element { float: left; margin: 2px;}
+.form-linebox { margin-bottom: 14px; padding: 12px; background-color: #EEE; }
+.form-columnbox { width: 49%; float: left; margin-right: 17px; }
+.form-linebox .form-columnbox:last-of-type { margin-right: 0; }
+.form-table { border-collapse: collapse; }
+.form-table td { padding-bottom: 10px; }
+.form-table tr td:first-child { }
+.form-table .label-cell label { background-color: #111; color: #FFF; display: block; padding: 6px 8px; min-width: 120px; }
+.form-table .control * { display: block; padding: 4px 8px; margin-left: 12px; font-size: 17px; }
+.form-table .box-style-list * { display: inline; }
+.form-table .box-style-list br { display: none; }
+.form-table .box-style-list label { padding: 4px 15px; border: 2px solid #DDD; background-color: #DDD; font-size: 15px; }
+.form-table .box-style-list label:hover { border-color: #CCC; background-color: #CCC; }
+.form-table .box-style-list label:last-child { padding: 4px 15px; }
+.form-table .box-style-list input { padding: 6px 8px; margin: 0 12px 0 0; font-size: 16px; }
+.form-table .box-style-list label.checked { border-color: #48D; background-color: #48D; color: #FFF; }
 
-.invoice-item { border: 1px solid #000; float: left; margin-top: 5px;}
-.invoice-item-row { border: 1px solid #F00; float: left; min-width: 1000px;}
-.invoice-item-element { float: left; margin: 2px;}
-
-.invoice-button-row { border: 1px solid #F00; float: left; min-width: 1000px; margin-top: 5px;}
-.invoice-button-element { float: left; margin: 2px;}
+.submit-box input { margin-right: 40px; padding: 8px 22px; font-size:17px; background-color: #282; color: #FFF; border: none; }
+.submit-box input:hover { background-color: #2D9; }
+.submit-box input:last-child { margin-right: 0; }

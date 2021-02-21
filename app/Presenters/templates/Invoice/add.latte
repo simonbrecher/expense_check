@@ -1,100 +1,60 @@
 {block content}
 
-<br>
+<link rel="stylesheet" href="{$basePath}/stat/invoice.css{$cssNumber}" />
 
-{*{form addInvoice}*}
+<div>
 
-{*<div class="invoice-head">*}
-{*    <div class="invoice-head-row">*}
-{*        <div class="invoice-head-element">{label paidBy}</div>*}
-{*        <div class="invoice-head-element">{input paidBy}</div>*}
-{*    </div>*}
-{*    *}{* CARD *}
-{*    <div class="invoice-head-row" id="card">*}
-{*        <div class="invoice-head-element">{label card}</div>*}
-{*        <div class="invoice-head-element">{input card}</div>*}
-{*    </div>*}
-{*    *}{* BANK *}
-{*    <div id="bank">*}
-{*        <div class="invoice-head-row">*}
-{*            <div class="invoice-head-element">{label counterAccountNumber}</div>*}
-{*            <div class="invoice-head-element">{input counterAccountNumber}</div>*}
-{*        </div>*}
-{*        <div class="invoice-head-row">*}
-{*            <div class="invoice-head-element">{label counterAccountBankCode}</div>*}
-{*            <div class="invoice-head-element">{input counterAccountBankCode}</div>*}
-{*        </div>*}
-{*        <div class="invoice-head-row">*}
-{*            <div class="invoice-head-element">{label varSymbol}</div>*}
-{*            <div class="invoice-head-element">{input varSymbol}</div>*}
-{*        </div>*}
-{*    </div>*}
-{*    *}{* ALL *}
-{*    <div class="invoice-head-row">*}
-{*        <div class="date" id="date">*}
-{*            <div class="invoice-head-element">{label date}</div>*}
-{*            <div class="invoice-head-element">{input date}</div>*}
-{*        </div>*}
-{*        <div class="invoice-head-element">{label isToday}</div>*}
-{*        <div class="invoice-head-element">{input isToday}</div>*}
-{*    </div>*}
-{*    <div class="invoice-head-row">*}
-{*        <div class="invoice-head-element">{label totalPrice}</div>*}
-{*        <div class="invoice-head-element">{input totalPrice}</div>*}
-{*    </div>*}
-{*    <div class="invoice-head-row">*}
-{*        <div class="invoice-head-element">{label 0-category}</div>*}
-{*        <div class="invoice-head-element">{input 0-category}</div>*}
-{*    </div>*}
-{*    <div class="invoice-head-row">*}
-{*        <div class="invoice-head-element">{label 0-consumer}</div>*}
-{*        <div class="invoice-head-element">{input 0-consumer}</div>*}
-{*    </div>*}
-{*    <div class="invoice-head-row">*}
-{*        <div class="invoice-head-element">{label 0-description}</div>*}
-{*        <div class="invoice-head-element">{input 0-description}</div>*}
-{*    </div>*}
-{*</div>*}
+{*{control addInvoiceForm}*}
 
-{*{var $itemCount = $form->values->itemCount}*}
+{form addInvoiceForm}
 
-{*<div class="invoice-button-row">*}
-{*    <div n:if="$itemCount < $maxItemCount" class="invoice-button-element">{input "addItem"}</div>*}
-{*    <div n:if="$itemCount > 1" class="invoice-button-element">{input "removeItem"}</div>*}
-{*</div>*}
+<h2 class="form-title">Vložit nový doklad.</h2>
 
-{*{for $i = 1; $i < $itemCount; $i++}*}
-{*{for $i = 1; $i < $maxItemCount; $i++}*}
-{*    <div class="invoice-item" id="item{$i}">*}
-{*        {formContainer $i}*}
-{*        <div class="invoice-item-row">*}
-{*            <div class="invoice-item-element">{label price}</div>*}
-{*            <div class="invoice-item-element">{input price}</div>*}
-{*        </div>*}
-{*        <div class="invoice-item-row">*}
-{*            <div class="invoice-item-element">{label category}</div>*}
-{*            <div class="invoice-item-element">{input category}</div>*}
-{*        </div>*}
-{*        <div class="invoice-item-row">*}
-{*            <div class="invoice-item-element">{label consumer}</div>*}
-{*            <div class="invoice-item-element">{input consumer}</div>*}
-{*        </div>*}
-{*        <div class="invoice-item-row">*}
-{*            <div class="invoice-item-element">{label description}</div>*}
-{*            <div class="invoice-item-element">{input description}</div>*}
-{*        </div>*}
-{*        {/formContainer}*}
-{*    </div>*}
-{*{/for}*}
+<div class="form-linebox">
+    <div class="form-columnbox">
+    <table class="form-table">
+        <tr n:foreach="$form->getGroup('column0')->getControls() as $input" class="form-table">
+            <td class="label-cell">{label $input /}</td>
+            <td class="control">{input $input}</td>
+            <td n:ifcontent>{inputError $input}</td>
+        </tr>
+    </table>
+    </div>
+    <div class="form-columnbox">
+    <table class="form-table">
+        {foreach $form->getGroup('column1')->getControls() as $input}
+            <tr class="form-table" n:attr="id: $form::TOGGLE_BOX_HTML_IDS[$input->name] ?? null">
+                <td class="label-cell">{label $input /}</td>
+                <td n:class="control, in_array($input->name, $form::BOX_STYLE_MULTI_CONTROLS) ? 'box-style-list' : null">{input $input}</td>
+                <td n:ifcontent>{inputError $input}</td>
+            </tr>
+        {/foreach}
+    </table>
+    </div>
+    <hr />
+</div>
 
-{*<div class="invoice-button-row">*}
-{*    <div class="invoice-button-element">{input "send"}</div>*}
-{*</div>*}
+{foreach $form['items']->components ?? array() as $item}
+    {if $iterator->odd}<div class="form-linebox">{/if}
+    <div class="form-columnbox">
+    <table class="form-table">
+        <tr n:foreach="$item->components as $input">
+            <td class="label-cell">{label $input /}</td>
+            <td class="control">{input $input}</td>
+            <td n:ifcontent>{inputError $input}</td>
+        </tr>
+    </table>
+    </div>
+    {if $iterator->even or $iterator->last}<hr /></div>{/if}
+{/foreach}
 
+<div class="form-linebox submit-box">
+    {foreach $form->getGroup('buttons')->getControls() as $button}{input $button}{/foreach}
+</div>
 
-{*{/form}*}
+{/form}
 
-{control addInvoiceForm}
+</div>
 
 <br><br><br>
 <div n:foreach="$flashes as $flash" class="flash-{$flash->type}">{$flash->message}</div>
