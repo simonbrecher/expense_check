@@ -4,172 +4,90 @@ declare(strict_types=1);
 namespace App\Presenters;
 
 use Nette;
-use Nette\Application\UI\Form;
-
-use DateTime;
+use App\Form\InvoiceForm;
 
 use Tracy\Debugger;
 
 class InvoicePresenter extends BasePresenter
 {
-    /* @var int */
+    /** @var int */
     private const MAX_ITEM_COUNT = 5;
 
-    private function getAddInvoiceSection(): Nette\Http\SessionSection
+    protected function createComponentAddInvoiceForm(): InvoiceForm
     {
-        $section = $this->session->getSection('addInvoice');
+        $form = new InvoiceForm();
 
-        if (!isset($section->itemCount)) {
-            $section->itemCount = 1;
-        }
+//        $form->getElementPrototype()->setAttribute('autocomplete', 'off');
 
-        return $section;
-    }
+        $form->addGroup('column0');
 
-    public function renderAdd(): void
-    {
-        $section = $this->getAddInvoiceSection();
+            $form->addText('price', 'Cena');
 
-        $this->template->maxItemCount = self::MAX_ITEM_COUNT;
-        $this->template->itemCount = $section->itemCount;
-    }
+            $form ->addText('description', 'Název');
 
-    protected function createComponentAddInvoice(): Form
-    {
-        $form = new Form;
+            $categories = $this->invoiceModel->getUserCategories();
+            $form->addSelect('category', 'Kategorie:', $categories)
+                    ->setPrompt('');
 
-        $form->getElementPrototype()->setAttribute('autocomplete', 'off');
+            $consumers = $this->invoiceModel->getUserConsumers();
+            $form->addSelect('consumer', 'Spotřebitel:', $consumers)
+                    ->setPrompt('');
 
-        $section = $this->getAddInvoiceSection();
-        $form->addHidden('itemCount', $section->itemCount);
+        $form->addGroup('column1');
 
-        $paidByChoices = ['cash' => 'V hotovosti', 'card' => 'Kartou', 'bank' => 'Bankovním převodem'];
-        $form->addSelect('paidBy', 'Typ platby', $paidByChoices)
-                ->addCondition($form::EQUAL, 'card')
-                    ->toggle('card')
-                ->elseCondition()
-                ->addCondition($form::EQUAL, 'bank')
-                    ->toggle('bank')
-                ->elseCondition();
+            $form->addText('date', 'Datum platby:');
 
-        // paid by card
-        $cards = $this->dataLoader->getFormSelectDict('card', 'number', 'neuvedeno');
-        $form->addSelect('card', 'Platební karta:', $cards)
-                ->addRule($form::FILLED, 'Doplňte variabilní kód platební karty.');
+            $paidByChoices = $this->invoiceModel->getPaidbyTypes();
+            $paidBy = $form->addRadioList('paidBy', 'Typ platby', $paidByChoices);
 
-        // paid by bank
-        $form->addText('counterAccountNumber', 'Číslo protiúčtu:')->setMaxLength(17);
-        $form->addText('counterAccountBankCode', 'Kód banky protiúčtu:')->setMaxLength(4);
-        $form->addText('varSymbol', 'Variabilní symbol:')->setMaxLength(10);
+            // paid by card
+            $cards = $this->invoiceModel->getUserCards();
+            $card = $form->addSelect('card', 'Platební karta:', $cards);
 
-        $date = $form->addText('date', 'Datum platby:');
+            // paid by bank
+            $bank = $form->addText('varSymbol', 'Variabilní symbol:')->setMaxLength(10);
 
-        $form->addCheckbox('isToday', 'Zaplaceno dnes')
-                ->addCondition($form::BLANK)
-                    ->toggle('date');
+            $paidBy->addCondition($form::EQUAL, 'card')->toggle($card->getHtmlId())
+                    ->elseCondition()->addCondition($form::EQUAL, 'bank')->toggle($bank->getHtmlId());
 
-        $date->addConditionOn($form['isToday'], $form::BLANK)
-                ->addRule($form::FILLED, 'Datum musí být vyplněné.');
+        $form->addGroup('buttons');
 
-//        for ($i = 0; $i < self::MAX_ITEM_COUNT; $i++) {
-        for ($i = 0; $i < self::MAX_ITEM_COUNT; $i++) {
-            $container = $form->addContainer($i);
+            $form->addSubmit('send', 'Uložit doklad');
+            $form->addSubmit('removeItem', 'Odebrat položku')->setValidationScope([]);
+            $form->addSubmit('addItem', 'Přidat položku')->setValidationScope([]);
 
-            $categories = $this->dataLoader->getFormSelectDict('category', 'name', 'Neuvedeno');
-            $container->addSelect('category', 'Kategorie:', $categories);
+        $form->addGroup('other');
 
-            $consumers = $this->dataLoader->getFormSelectDict('consumer', 'name', 'Všichni');
-            $container->addSelect('consumer', 'Spotřebitel:', $consumers);
-            
-            if ($i == 0) {
-                $form->addText('totalPrice', 'Celková cena:')
-                    ->addRule($form::FILLED, 'Doplňte celkovou cenu.');
-            } else {
-                $container->addText('price', 'Cena položky:')
-                    ->addCondition($form::FILLED, 'Doplňte cenu '.($i + 1).' položky.');
-            }
+            $form->addHidden('itemCount', 1);
 
-            $container->addText('description', $i == 0 ? 'Název:' : 'Název položky:')
-                ->setMaxLength(35);
-        }
-
-        $form->addSubmit('removeItem', 'Odebrat položku')->setValidationScope([])
-            ->onClick[] = [$this, 'changeItemCount'];
-        $form->addSubmit('addItem', 'Přidat položku')->setValidationScope([])
-            ->onClick[] = [$this, 'changeItemCount'];
-
-        // TODO: remove fake setValidationScope
-//        $form->addSubmit('send', 'Uložit doklad')->setValidationScope([$form['itemCount']]);
-        $form->addSubmit('send', 'Uložit doklad');
-
-        for ($i = 0; $i < self::MAX_ITEM_COUNT; $i++) {
-            $form->getComponent('paidBy')
-                ->addConditionOn($form['itemCount'], $form::MIN, $i + 1)
-                    ->toggle('item'.$i);
-        }
-
-        $form->onSuccess[] = [$this, 'addInvoiceFormSucceeded'];
-        $form->onValidate[] = [$this, 'validateAddInvoice'];
+        $form->onAnchor[] = [$this, 'invoiceFormAnchor'];
+        $form->onSuccess[] = [$this, 'invoiceFormSuccess'];
         return $form;
     }
 
-    public function changeItemCount(Nette\Forms\Controls\Button $button, $data): void
+    public function invoiceFormAnchor(InvoiceForm $form): void
     {
-        $form = $button->getForm();
-        $section = $this->getAddInvoiceSection();
-        if ($button->getName() == 'addItem') {
-            if ($section->itemCount < self::MAX_ITEM_COUNT) {
-                $section->itemCount ++;
-            }
-        } else {
-            if ($section->itemCount > 1) {
-                $section->itemCount --;
-            }
-        }
-        $form->getComponent('itemCount')->setValue($section->itemCount);
+        $form->createItems();
     }
 
-    private function isDateExist($date): bool
+    public function invoiceFormSuccess(InvoiceForm $form): void
     {
-        $dt = DateTime::createFromFormat("d.m.Y", $date);
-        return $dt !== false && !array_sum($dt::getLastErrors());
-    }
+        $submittedBy = $form->isSubmitted()->name;
 
-    public function validateAddInvoice(Form $form): void
-    {
-        if ($form['send']->isSubmittedBy()) {
-            $values = $form->getValues();
-
-            Debugger::barDump($values);
-
-//            $itemCount = (int) $values->itemCount;
-//            if ($itemCount < 1 or $itemCount > self::MAX_ITEM_COUNT) {
-//                $form->addError('Nesprávný počet položek.');
-//            }
-
-            switch ($values->paidBy) {
-                case 'cash':
-
-                    break;
-                case 'card':
-
-                    break;
-                case 'bank':
-
-                    break;
-                default:
-                    $form->addError('Nesprávný typ platby.');
-            }
-
-            if (!$values->isToday) {
-                if (!$this->isDateExist($values->date)) {
-                    $form->addError('Nesprávné datum.');
-                }
-            }
+        switch ($submittedBy) {
+            case 'submit':
+                $this->formSubmitted($form);
+                break;
+            case 'add':
+                $form->addItem(1);
+                break;
+            case 'remove':
+                $form->removeItem();
         }
     }
 
-    public function addInvoiceFormSucceeded(Form $form, Nette\Utils\ArrayHash $values): void
+    public function formSubmitted(InvoiceForm $form): void
     {
+
     }
 }

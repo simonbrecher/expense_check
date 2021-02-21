@@ -13,11 +13,18 @@ class BasePresenter extends Nette\Application\UI\Presenter
     /* @var Model\DataSender */
     protected $dataSender;
 
-    public  function __construct(Model\DataLoader $dataLoader, Model\DataSender $dataSender)
+    /** @var Model\InvoiceModel */
+    protected $invoiceModel;
+
+    public  function __construct(Model\DataLoader $dataLoader, Model\DataSender $dataSender, Model\InvoiceModel $invoiceModel)
+//    public  function __construct(Model\InvoiceModel $invoiceModel)
     {
         $this->dataLoader = $dataLoader;
         $this->dataSender = $dataSender;
+
         $this->dataSender->setDataLoader($this->dataLoader);
+
+        $this->invoiceModel = $invoiceModel;
     }
 
     public function startup()
@@ -28,10 +35,9 @@ class BasePresenter extends Nette\Application\UI\Presenter
         }
 
         $this->dataLoader->setUser($this->getUser());
-        Debugger::barDump('HERE1');
-//        Debugger::barDump($this->dataLoader->user);
-        Debugger::barDump('HERE');
         $this->dataSender->setUser($this->getUser());
+
+        $this->invoiceModel->setUser($this->getUser());
     }
 
     public function beforeRender()
