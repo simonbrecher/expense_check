@@ -30,28 +30,28 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '7d729199ddb6fb9affb6980c27cd954c67c0c868',
+    'reference' => '2ef835b483500ddff86b6c1dad9cfc040e83008e',
     'name' => 'nette/web-project',
   ),
   'versions' => 
   array (
     'latte/latte' => 
     array (
-      'pretty_version' => 'v2.10.1',
-      'version' => '2.10.1.0',
+      'pretty_version' => 'v2.10.3',
+      'version' => '2.10.3.0',
       'aliases' => 
       array (
       ),
-      'reference' => '0787008cc4aecb0d741a143081cb5038b4a4fd43',
+      'reference' => 'dd2c58863e830c22a2c6b85af63f37b829d255df',
     ),
     'nette/application' => 
     array (
-      'pretty_version' => 'v3.1.1',
-      'version' => '3.1.1.0',
+      'pretty_version' => 'v3.1.2',
+      'version' => '3.1.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => '891dd7d333c61687fe15cb305a30bce33fc2a748',
+      'reference' => 'f817a0b738a3190efe1e573a099d1a80797e156b',
     ),
     'nette/bootstrap' => 
     array (
@@ -109,12 +109,12 @@ private static $installed = array (
     ),
     'nette/forms' => 
     array (
-      'pretty_version' => 'v3.1.1',
-      'version' => '3.1.1.0',
+      'pretty_version' => 'v3.1.2',
+      'version' => '3.1.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => '05d14fe2ccfc9d158b5fcb4013119b52115e6db8',
+      'reference' => '54858a9eeb0c57c316a07cea5aa2fa135c6807ac',
     ),
     'nette/http' => 
     array (
@@ -213,7 +213,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '7d729199ddb6fb9affb6980c27cd954c67c0c868',
+      'reference' => '2ef835b483500ddff86b6c1dad9cfc040e83008e',
     ),
     'symfony/thanks' => 
     array (

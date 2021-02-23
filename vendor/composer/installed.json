@@ -2,17 +2,17 @@
     "packages": [
         {
             "name": "latte/latte",
-            "version": "v2.10.1",
-            "version_normalized": "2.10.1.0",
+            "version": "v2.10.3",
+            "version_normalized": "2.10.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nette/latte.git",
-                "reference": "0787008cc4aecb0d741a143081cb5038b4a4fd43"
+                "reference": "dd2c58863e830c22a2c6b85af63f37b829d255df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/latte/zipball/0787008cc4aecb0d741a143081cb5038b4a4fd43",
-                "reference": "0787008cc4aecb0d741a143081cb5038b4a4fd43",
+                "url": "https://api.github.com/repos/nette/latte/zipball/dd2c58863e830c22a2c6b85af63f37b829d255df",
+                "reference": "dd2c58863e830c22a2c6b85af63f37b829d255df",
                 "shasum": ""
             },
             "require": {
@@ -37,7 +37,7 @@
                 "nette/php-generator": "to use tag {templatePrint}",
                 "nette/utils": "to use filter |webalize"
             },
-            "time": "2021-01-26T13:15:35+00:00",
+            "time": "2021-02-22T11:17:13+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -80,34 +80,34 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/latte/issues",
-                "source": "https://github.com/nette/latte/tree/v2.10.1"
+                "source": "https://github.com/nette/latte/tree/v2.10.3"
             },
             "install-path": "../latte/latte"
         },
         {
             "name": "nette/application",
-            "version": "v3.1.1",
-            "version_normalized": "3.1.1.0",
+            "version": "v3.1.2",
+            "version_normalized": "3.1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nette/application.git",
-                "reference": "891dd7d333c61687fe15cb305a30bce33fc2a748"
+                "reference": "f817a0b738a3190efe1e573a099d1a80797e156b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/application/zipball/891dd7d333c61687fe15cb305a30bce33fc2a748",
-                "reference": "891dd7d333c61687fe15cb305a30bce33fc2a748",
+                "url": "https://api.github.com/repos/nette/application/zipball/f817a0b738a3190efe1e573a099d1a80797e156b",
+                "reference": "f817a0b738a3190efe1e573a099d1a80797e156b",
                 "shasum": ""
             },
             "require": {
                 "nette/component-model": "^3.0",
                 "nette/http": "^3.0.2",
-                "nette/routing": "~3.0.0",
+                "nette/routing": "^3.0.2",
                 "nette/utils": "^3.2.1",
                 "php": ">=7.2"
             },
             "conflict": {
-                "latte/latte": "<2.7.1 >=3.0",
+                "latte/latte": "<2.7.1 || >=3.0",
                 "nette/caching": "<3.1",
                 "nette/di": "<3.0.7",
                 "nette/forms": "<3.0",
@@ -115,7 +115,7 @@
                 "tracy/tracy": "<2.5"
             },
             "require-dev": {
-                "latte/latte": "^2.9.1",
+                "latte/latte": "^2.10.2",
                 "mockery/mockery": "^1.0",
                 "nette/di": "^v3.0",
                 "nette/forms": "^3.0",
@@ -129,7 +129,7 @@
                 "latte/latte": "Allows using Latte in templates",
                 "nette/forms": "Allows to use Nette\\Application\\UI\\Form"
             },
-            "time": "2021-01-25T01:56:04+00:00",
+            "time": "2021-02-08T05:57:00+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -174,7 +174,7 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/application/issues",
-                "source": "https://github.com/nette/application/tree/v3.1.1"
+                "source": "https://github.com/nette/application/tree/v3.1.2"
             },
             "install-path": "../nette/application"
         },
@@ -623,17 +623,17 @@
         },
         {
             "name": "nette/forms",
-            "version": "v3.1.1",
-            "version_normalized": "3.1.1.0",
+            "version": "v3.1.2",
+            "version_normalized": "3.1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nette/forms.git",
-                "reference": "05d14fe2ccfc9d158b5fcb4013119b52115e6db8"
+                "reference": "54858a9eeb0c57c316a07cea5aa2fa135c6807ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/forms/zipball/05d14fe2ccfc9d158b5fcb4013119b52115e6db8",
-                "reference": "05d14fe2ccfc9d158b5fcb4013119b52115e6db8",
+                "url": "https://api.github.com/repos/nette/forms/zipball/54858a9eeb0c57c316a07cea5aa2fa135c6807ac",
+                "reference": "54858a9eeb0c57c316a07cea5aa2fa135c6807ac",
                 "shasum": ""
             },
             "require": {
@@ -654,7 +654,7 @@
                 "phpstan/phpstan-nette": "^0.12",
                 "tracy/tracy": "^2.4"
             },
-            "time": "2021-02-04T03:32:21+00:00",
+            "time": "2021-02-11T03:49:59+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -695,7 +695,7 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/forms/issues",
-                "source": "https://github.com/nette/forms/tree/v3.1.1"
+                "source": "https://github.com/nette/forms/tree/v3.1.2"
             },
             "install-path": "../nette/forms"
         },

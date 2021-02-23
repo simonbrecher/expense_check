@@ -293,6 +293,7 @@ class ComposerStaticInit091ed5d24b4127ffc48411e34be2086f
         'Nette\\Forms\\Controls\\TextInput' => __DIR__ . '/..' . '/nette/forms/src/Forms/Controls/TextInput.php',
         'Nette\\Forms\\Controls\\UploadControl' => __DIR__ . '/..' . '/nette/forms/src/Forms/Controls/UploadControl.php',
         'Nette\\Forms\\Form' => __DIR__ . '/..' . '/nette/forms/src/Forms/Form.php',
+        'Nette\\Forms\\FormFactory' => __DIR__ . '/..' . '/nette/forms/src/Forms/FormFactory.php',
         'Nette\\Forms\\FormRenderer' => __DIR__ . '/..' . '/nette/forms/src/Forms/FormRenderer.php',
         'Nette\\Forms\\Helpers' => __DIR__ . '/..' . '/nette/forms/src/Forms/Helpers.php',
         'Nette\\Forms\\IControl' => __DIR__ . '/..' . '/nette/forms/src/compatibility.php',

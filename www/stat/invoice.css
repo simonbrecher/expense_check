@@ -7,6 +7,7 @@
 .form-table td { padding-bottom: 10px; }
 .form-table tr td:first-child { }
 .form-table .label-cell label { background-color: #111; color: #FFF; display: block; padding: 6px 8px; min-width: 120px; }
+.form-table .label-cell label:hover { background-color: #444; }
 .form-table .control * { display: block; padding: 4px 8px; margin-left: 12px; font-size: 17px; }
 .form-table .box-style-list * { display: inline; }
 .form-table .box-style-list br { display: none; }

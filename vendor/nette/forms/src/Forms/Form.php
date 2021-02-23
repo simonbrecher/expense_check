@@ -103,6 +103,9 @@ class Form extends Container implements Nette\HtmlStringable
 	/** @var bool */
 	protected $crossOrigin = false;
 
+	/** @var Nette\Http\IRequest */
+	private static $defaultHttpRequest;
+
 	/** @var mixed or null meaning: not detected yet */
 	private $submittedBy;
 
@@ -375,21 +378,6 @@ class Form extends Container implements Nette\HtmlStringable
 
 
 	/**
-	 * Returns the values submitted by the form.
-	 * @param  string|null  $returnType  'array' for array
-	 * @param  Control[]|null  $controls
-	 * @return object|array
-	 */
-	public function getValues($returnType = null, array $controls = null)
-	{
-		if ($controls === null && $this->submittedBy instanceof SubmitterControl) {
-			$controls = $this->submittedBy->getValidationScope();
-		}
-		return parent::getValues($returnType, $controls);
-	}
-
-
-	/**
 	 * Returns submitted HTTP data.
 	 * @return mixed
 	 */
@@ -422,7 +410,7 @@ class Form extends Container implements Nette\HtmlStringable
 			$this->validate();
 		}
 
-		if ($this->submittedBy instanceof SubmitterControl) {
+		if ($this->submittedBy instanceof Controls\SubmitButton) {
 			if ($this->isValid()) {
 				$this->invokeHandlers($this->submittedBy->onClick, $this->submittedBy);
 			} else {
@@ -668,20 +656,6 @@ class Form extends Container implements Nette\HtmlStringable
 	}
 
 
-	/********************* backend ****************d*g**/
-
-
-	private function getHttpRequest(): Nette\Http\IRequest
-	{
-		if (!$this->httpRequest) {
-			$factory = new Nette\Http\RequestFactory;
-			$this->httpRequest = $factory->createHttpRequest();
-			Nette\Http\Helpers::initCookie($this->httpRequest, new Nette\Http\Response);
-		}
-		return $this->httpRequest;
-	}
-
-
 	public function getToggles(): array
 	{
 		$toggles = [];
@@ -689,5 +663,51 @@ class Form extends Container implements Nette\HtmlStringable
 			$toggles = $control->getRules()->getToggleStates($toggles);
 		}
 		return $toggles;
+	}
+
+
+	/********************* backend ****************d*g**/
+
+
+	/**
+	 * Initialize standalone forms.
+	 */
+	public static function initialize(bool $reinit = false): void
+	{
+		if ($reinit) {
+			self::$defaultHttpRequest = null;
+			return;
+		} elseif (self::$defaultHttpRequest) {
+			return;
+		}
+
+		self::$defaultHttpRequest = (new Nette\Http\RequestFactory)->fromGlobals();
+
+		if (PHP_SAPI !== 'cli') {
+			if (headers_sent($file, $line)) {
+				throw new Nette\InvalidStateException(
+					'Create a form or call Nette\Forms\Form::initialize() before the headers are sent to initialize CSRF protection.'
+					. ($file ? " (output started at $file:$line)" : '') . '. '
+				);
+			}
+			Nette\Http\Helpers::initCookie(self::$defaultHttpRequest, new Nette\Http\Response);
+		}
+	}
+
+
+	/** @internal */
+	public function setHttpRequest(Nette\Http\IRequest $request)
+	{
+		$this->httpRequest = $request;
+	}
+
+
+	private function getHttpRequest(): Nette\Http\IRequest
+	{
+		if (!$this->httpRequest) {
+			self::initialize();
+			$this->httpRequest = self::$defaultHttpRequest;
+		}
+		return $this->httpRequest;
 	}
 }
