@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 
 namespace App\Presenters;
 
@@ -34,9 +35,11 @@ class InvoicePresenter extends BasePresenter
 
         $form->addGroup('column0');
 
-            $form->addText('czk_price', 'Cena:');
+            $form->addText('czk_total_price', 'Celková cena:')
+                    ->addRule($form::NUMERIC, 'Celková cena musí být číslo.')
+                    ->setRequired('Vyplňte prosím celkovou cenu.');
 
-            $form ->addText('description', 'Název:');
+            $form ->addText('description', 'Název:')->setMaxLength(35);
 
             $categories = $this->invoiceModel->getUserCategories();
             $form->addSelect('category', 'Kategorie:', $categories)
@@ -48,10 +51,13 @@ class InvoicePresenter extends BasePresenter
 
         $form->addGroup('column1');
 
-            $form->addText('date', 'Datum platby:');
+            $form->addText('date', 'Datum platby:')
+                    ->addRule($form::PATTERN, 'Formát data musí být 13.2 / 13.2.21 / 13.2.2021', $this->invoiceModel::DATE_PATTERN_FLEXIBLE)
+                    ->setRequired('Vyplňte prosím datum vystavení dokladu.');
 
             $paidByChoices = $this->invoiceModel->getPaidbyTypes();
-            $paidBy = $form->addRadioList('type_paidby', 'Typ platby', $paidByChoices);
+            $paidBy = $form->addRadioList('type_paidby', 'Typ platby', $paidByChoices)
+                            ->setRequired('Vyberte prosím typ platby.');
 
             // paid by card
             $cards = $this->invoiceModel->getUserCards();
@@ -59,16 +65,22 @@ class InvoicePresenter extends BasePresenter
                             ->setPrompt('');
 
             // paid by bank
-            $bank = $form->addText('var_symbol', 'Variabilní symbol:')->setMaxLength(10);
+            $varSymbol = $form->addText('var_symbol', 'Variabilní symbol:')->setMaxLength(10);
 
             $paidBy->addCondition($form::EQUAL, 'card')->toggle($form::TOGGLE_BOX_HTML_IDS['card_id'])
                     ->elseCondition()->addCondition($form::EQUAL, 'bank')->toggle($form::TOGGLE_BOX_HTML_IDS['var_symbol']);
 
+            $varSymbol->addConditionOn($paidBy, $form::EQUAL, 'bank')
+                        ->setRequired('Vyplňte prosím variabilní symbol.');
+
+            $card->addConditionOn($paidBy, $form::EQUAL, 'card')
+                ->setRequired('Vyberte prosím platební kartu.');
+
         $form->addGroup('buttons');
 
-            $form->addSubmit('send', 'Uložit doklad');
-            $form->addSubmit('remove', 'Odebrat položku')->setValidationScope([]);
+            $form->addSubmit('submit', 'Uložit doklad');
             $form->addSubmit('add', 'Přidat položku')->setValidationScope([]);
+            $form->addSubmit('remove', 'Odebrat položku')->setValidationScope([]);
 
         $form->onAnchor[] = [$this, 'invoiceFormAnchor'];
         $form->onSuccess[] = [$this, 'invoiceFormSuccess'];
@@ -77,25 +89,27 @@ class InvoicePresenter extends BasePresenter
 
     public function invoiceFormAnchor(InvoiceForm $form): void
     {
-        Debugger::barDump('invoiceFormAnchor');
-        $form->createItems();
+        $submittedBy = $form->isSubmitted();
+
+        if ($submittedBy) {
+            switch ($submittedBy->name) {
+                case 'add':
+                    $form->addItem();
+                    break;
+                case 'remove':
+                    $form->removeItem();
+                    break;
+                case 'submit':
+                    $form->createItems();
+            }
+        } else {
+            $form->createItems();
+        }
     }
 
     public function invoiceFormSuccess(InvoiceForm $form): void
     {
-        $submittedBy = $form->isSubmitted()->name;
-        Debugger::barDump('invoiceFormSuccess '.$submittedBy);
 
-        switch ($submittedBy) {
-            case 'send':
-                $this->formSubmitted($form);
-                break;
-            case 'add':
-                $form->addItem();
-                break;
-            case 'remove':
-                $form->removeItem();
-        }
     }
 
     public function formSubmitted(InvoiceForm $form): void

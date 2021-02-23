@@ -4,13 +4,18 @@
 'Invoice' => 'Doklady',
 'BankAccount' => 'Bankovní účty',
 'CashAccount' => 'Pokladna',
-'RegularPayment' => 'Příkazy',
+'PaymentChannel' => 'Příkazy',
 'Family' => 'Rodina',
 'Setting' => 'Nastavení',
+'Sign:out' => 'Odhlásit se'
 ]
 }
 
 <nav n:inner-foreach="$menu as $presenterName => $caption" class="menu-container">
-    <a n:href="{$presenterName}:" class="menu-item{if $presenter->getName() == $presenterName} selected{/if}">{$caption}</a>
+    {if $iterator->last}
+        <a n:href="{$presenterName}" class="menu-item">{$caption}</a>
+    {else}
+        <a n:href="{$presenterName}:" class="menu-item{if $presenter->getName() == $presenterName} selected{/if}">{$caption}</a>
+    {/if}
 </nav>
 <hr/>

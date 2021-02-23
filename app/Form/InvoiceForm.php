@@ -1,7 +1,9 @@
 <?php
 
-
+declare(strict_types=1);
 namespace App\Form;
+
+use Nette;
 
 use App\Model;
 use Tracy\Debugger;
@@ -11,7 +13,10 @@ class InvoiceForm extends BaseForm
     public const BOX_STYLE_MULTI_CONTROLS = ['type_paidby'];
     public const TOGGLE_BOX_HTML_IDS = ['var_symbol' => 'var-symbol-toggle-box', 'card_id' => 'card-id-toggle-box'];
 
+    /** @var Model\InvoiceModel */
     private $invoiceModel;
+    /** @var Nette\Forms\Controls\BaseControl | null */
+    private $focusedControl;
 
     public function __construct(Model\InvoiceModel $invoiceModel)
     {
@@ -20,33 +25,28 @@ class InvoiceForm extends BaseForm
 
     public function createItems(): void
     {
+        $this->focusedControl = $this['czk_total_price'];
         $this->addItem(0);
     }
 
     public function addItem(int $addItemCount = 1): void
     {
-        Debugger::barDump($addItemCount);
-
         $this->addGroup('other');
 
-            $itemCountComponent = $this['item_count'] ?? $this->addHidden('item_count', 0);
+            $itemCountComponent = $this['item_count'] ?? $this->addHidden('item_count');
             $itemsContainer = $this['items'] ?? $this->addContainer('items');
 
-        $oldItemCount = $itemCountComponent->value;
+        $oldItemCount = (int)$itemCountComponent->value;
         $newItemCount = max(0, min($oldItemCount + $addItemCount, $this->invoiceModel::MAX_ITEM_COUNT));
         $currentItemCount = $itemsContainer->components->count();
 
-        Debugger::barDump($oldItemCount);
-        Debugger::barDump($newItemCount);
-        Debugger::barDump($currentItemCount);
-
         if ($currentItemCount < $newItemCount) {
-            Debugger::barDump('here');
             for ($i = $currentItemCount; $i < $newItemCount; $i++) {
                 $container = $itemsContainer->addContainer($i + 1);
 
-                $container->addText('czk_price', 'Celková cena:')
-                    ->addRule($this::FILLED, 'Doplňte celkovou cenu.');
+                $container->addText('czk_price', 'Cena položky:')
+                    ->addRule($this::FILLED, 'Doplňte cenu.')
+                    ->addRule($this::NUMERIC, 'Neplatný formát ceny.');
 
                 $container->addText('description', 'Název položky:')
                     ->setMaxLength(35);
@@ -61,19 +61,27 @@ class InvoiceForm extends BaseForm
             }
         } elseif ($currentItemCount > $newItemCount) {
             for ($i = $currentItemCount; $i > $newItemCount; $i --) {
-                Debugger::barDump('here '.$i);
                 $component = $itemsContainer[$i] ?? null;
-                Debugger::barDump($component);
-                Debugger::barDump($itemsContainer->getComponents());
                 if ($component) {
                     $itemsContainer->removeComponent($component);
                 }
             }
         }
 
-        $itemCountComponent->value = $currentItemCount = $itemsContainer->components->count();
+        if ($addItemCount < 0) {
+            $this->focusedControl = null;
+        } elseif ($addItemCount > 0) {
+            $this->focusedControl = $this['items'][$newItemCount]['czk_price'];
+        }
 
-        Debugger::barDump($itemCountComponent->value);
+        $this->setFocusedControl();
+
+        $itemCountComponent->value = $currentItemCount = $itemsContainer->components->count();
+    }
+
+    private function setFocusedControl(): void
+    {
+        $this->focusedControl?->setHtmlAttribute('autofocus', true);
     }
 
     public function removeItem(): void
