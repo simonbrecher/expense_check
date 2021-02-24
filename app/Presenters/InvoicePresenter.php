@@ -67,13 +67,13 @@ class InvoicePresenter extends BasePresenter
             // paid by bank
             $varSymbol = $form->addText('var_symbol', 'Variabilní symbol:')->setMaxLength(10);
 
-            $paidBy->addCondition($form::EQUAL, 'card')->toggle($form::TOGGLE_BOX_HTML_IDS['card_id'])
-                    ->elseCondition()->addCondition($form::EQUAL, 'bank')->toggle($form::TOGGLE_BOX_HTML_IDS['var_symbol']);
+            $paidBy->addCondition($form::EQUAL, 'PAIDBY_CARD')->toggle($form::TOGGLE_BOX_HTML_IDS['card_id'])
+                    ->elseCondition()->addCondition($form::EQUAL, 'PAIDBY_BANK')->toggle($form::TOGGLE_BOX_HTML_IDS['var_symbol']);
 
-            $varSymbol->addConditionOn($paidBy, $form::EQUAL, 'bank')
+            $varSymbol->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_BANK')
                         ->setRequired('Vyplňte prosím variabilní symbol.');
 
-            $card->addConditionOn($paidBy, $form::EQUAL, 'card')
+            $card->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_CARD')
                 ->setRequired('Vyberte prosím platební kartu.');
 
         $form->addGroup('buttons');
@@ -109,7 +109,15 @@ class InvoicePresenter extends BasePresenter
 
     public function invoiceFormSuccess(InvoiceForm $form): void
     {
+        $submittedBy = $form->isSubmitted();
 
+        if ($submittedBy->name == 'submit') {
+            $values = $this->invoiceModel->constructAddInvoiceValues($form);
+
+            if ($values) {
+                $this->invoiceModel->addInvoice($values);
+            }
+        }
     }
 
     public function formSubmitted(InvoiceForm $form): void
