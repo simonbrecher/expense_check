@@ -4,69 +4,75 @@ declare(strict_types=1);
 namespace App\Model;
 
 use App\Form\InvoiceForm;
-use Tracy\Debugger;
+use Nette\Neon\Exception;
 
 class InvoiceModel extends BaseModel
 {
     public const MAX_ITEM_COUNT = 2;
     protected const PAIDBY_TYPES = ['PAIDBY_CASH' => 'Hotovostí', 'PAIDBY_CARD' => 'Kartou', 'PAIDBY_BANK' => 'Bankou'];
 
-    public function constructAddInvoiceValues(InvoiceForm $form): array|false
+    public function constructAddInvoiceValues(InvoiceForm $form): array
     {
         $values = $form->values;
 
-        Debugger::barDump('updateAddInvoiceValues');
-        Debugger::barDump($values);
-
         $head = array(
-            'date' => $this->normalizeDateFormat($values->date),
+            'user_id' => $this->user->id,
+            'd_issued' => $this->normalizeDateFormat($values->d_issued),
             'type_paidby' => $values->type_paidby,
             'card_id' => $values->type_paidby == 'PAIDBY_CARD' ? $values->card_id : null,
-            'var_symbol' => $values->type_paidby == 'PAIDBY_BANK' ? $values->var_symbol : null
+            'var_symbol' => $values->type_paidby == 'PAIDBY_BANK' ? $values->var_symbol : ''
         );
 
         $items = array();
         $firstItem = array(
-            'czk_price' => $values->czk_total_price,
+            'czk_amount' => $values->czk_total_amount,
             'description' => $values->description ?: $this->getCategoryName($values->category),
-            'category' => $values->category,
-            'consumer' => $values->consumer
+            'category_id' => $values->category,
+            'consumer_id' => $values->consumer
         );
         $items[] = $firstItem;
 
         $itemsValues = $values->items ?? array();
 
         foreach ($itemsValues as $itemValues) {
-            Debugger::barDump($itemValues);
-
             $item = array(
-                'czk_price' => $itemValues->czk_price,
+                'czk_amount' => $itemValues->czk_amount,
                 'description' => $itemValues->description ?: $this->getCategoryName($itemValues->category),
-                'category' => $values->category,
-                'consumer' => $values->consumer
+                'category_id' => $values->category,
+                'consumer_id' => $values->consumer
             );
             $items[] = $item;
 
-            $items[0]['czk_price'] -= $itemValues->czk_price;
+            $items[0]['czk_amount'] -= $itemValues->czk_amount;
         }
 
-        Debugger::barDump($head);
-        Debugger::barDump($items);
+        if ($items[0]['czk_amount'] <= 0) {
+            throw new InvalidValueException('Celková cena musí být vyšší, než ceny položek.');
+        }
 
-        return false;
+        return array('head' => $head, 'items' => $items);
     }
 
-    public function addInvoice(array $values): bool
+    public function addInvoice(InvoiceForm $form): string|null
     {
-        Debugger::barDump('addInvoice');
-        Debugger::barDump($values);
+        try {
+            $this->database->beginTransaction();
+            $values = $this->constructAddInvoiceValues($form);
 
-        return false;
+            $invoiceHead = $this->database->table('invoice_head')->insert($values['head']);
+            $invoiceHead->related('invoice_item')->insert($values['items']);
+            $this->database->commit();
+            $errorMessage = null;
+        } catch (\PDOException|InvalidValueException $exception) {
+            $this->database->rollBack();
+            $errorMessage = $exception->getMessage();
+        }
+
+        return $errorMessage;
     }
 
     public function getCategoryName(int|null $id): string
     {
-        Debugger::barDump($id);
         if ($id === null) {
             return 'Nezařazeno';
         }
@@ -94,4 +100,9 @@ class InvoiceModel extends BaseModel
     {
         return self::PAIDBY_TYPES;
     }
+}
+
+class InvalidValueException extends Exception
+{
+
 }

@@ -7,6 +7,7 @@ namespace App\Presenters;
 use App\Model;
 use App\Form\InvoiceForm;
 
+use Nette\Neon\Exception;
 use Tracy\Debugger;
 
 class InvoicePresenter extends BasePresenter
@@ -35,7 +36,7 @@ class InvoicePresenter extends BasePresenter
 
         $form->addGroup('column0');
 
-            $form->addText('czk_total_price', 'Celková cena:')
+            $form->addText('czk_total_amount', 'Celková cena:')
                     ->addRule($form::NUMERIC, 'Celková cena musí být číslo.')
                     ->setRequired('Vyplňte prosím celkovou cenu.');
 
@@ -51,7 +52,7 @@ class InvoicePresenter extends BasePresenter
 
         $form->addGroup('column1');
 
-            $form->addText('date', 'Datum platby:')
+            $form->addText('d_issued', 'Datum platby:')
                     ->addRule($form::PATTERN, 'Formát data musí být 13.2 / 13.2.21 / 13.2.2021', $this->invoiceModel::DATE_PATTERN_FLEXIBLE)
                     ->setRequired('Vyplňte prosím datum vystavení dokladu.');
 
@@ -112,11 +113,13 @@ class InvoicePresenter extends BasePresenter
         $submittedBy = $form->isSubmitted();
 
         if ($submittedBy->name == 'submit') {
-            $values = $this->invoiceModel->constructAddInvoiceValues($form);
+            $errorMessage = $this->invoiceModel->addInvoice($form);
+        }
 
-            if ($values) {
-                $this->invoiceModel->addInvoice($values);
-            }
+        if ($errorMessage !== null) {
+            $this->flashMessage($errorMessage, 'error');
+
+            Debugger::barDump($errorMessage);
         }
     }
 

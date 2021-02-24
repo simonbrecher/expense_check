@@ -25,7 +25,7 @@ class InvoiceForm extends BaseForm
 
     public function createItems(): void
     {
-        $this->focusedControl = $this['czk_total_price'];
+        $this->focusedControl = $this['czk_total_amount'];
         $this->addItem(0);
     }
 
@@ -44,7 +44,7 @@ class InvoiceForm extends BaseForm
             for ($i = $currentItemCount; $i < $newItemCount; $i++) {
                 $container = $itemsContainer->addContainer($i + 1);
 
-                $container->addText('czk_price', 'Cena položky:')
+                $container->addText('czk_amount', 'Cena položky:')
                     ->addRule($this::FILLED, 'Doplňte cenu.')
                     ->addRule($this::NUMERIC, 'Neplatný formát ceny.');
 
@@ -71,7 +71,7 @@ class InvoiceForm extends BaseForm
         if ($addItemCount < 0) {
             $this->focusedControl = null;
         } elseif ($addItemCount > 0) {
-            $this->focusedControl = $this['items'][$newItemCount]['czk_price'];
+            $this->focusedControl = $this['items'][$newItemCount]['czk_amount'];
         }
 
         $this->setFocusedControl();
