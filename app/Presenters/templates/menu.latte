@@ -7,15 +7,20 @@
 'PaymentChannel' => 'Příkazy',
 'Family' => 'Rodina',
 'Setting' => 'Nastavení',
-'Sign:out' => 'Odhlásit se'
+'User' => 'Uživatel',
 ]
 }
 
 <nav n:inner-foreach="$menu as $presenterName => $caption" class="menu-container">
-    {if $iterator->last}
-        <a n:href="{$presenterName}" class="menu-item">{$caption}</a>
+    <a n:href="{$presenterName}:" class="menu-item{if $presenter->getName() == $presenterName} selected{/if}">{$caption}</a>
+</nav>
+
+<nav class="menu-container">
+    {if $user->isLoggedIn()}
+        <a n:href="signout!" class="after-menu-item">Odhlásit se</a>
     {else}
-        <a n:href="{$presenterName}:" class="menu-item{if $presenter->getName() == $presenterName} selected{/if}">{$caption}</a>
+        <a n:href=":login" class="after-menu-item">Přihlásit se</a>
     {/if}
 </nav>
+
 <hr/>

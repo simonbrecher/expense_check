@@ -12,10 +12,8 @@ use Tracy\Debugger;
 
 class InvoicePresenter extends BasePresenter
 {
-    /** @var int */
     private const MAX_ITEM_COUNT = 5;
 
-    /** @var Model\InvoiceModel */
     public $invoiceModel;
 
     public  function __construct(Model\InvoiceModel $invoiceModel)
@@ -26,8 +24,6 @@ class InvoicePresenter extends BasePresenter
     public function startup(): void
     {
         parent::startup();
-
-        $this->invoiceModel->setUser($this->getUser());
     }
 
     protected function createComponentAddInvoiceForm(): InvoiceForm
@@ -113,13 +109,14 @@ class InvoicePresenter extends BasePresenter
         $submittedBy = $form->isSubmitted();
 
         if ($submittedBy->name == 'submit') {
+            Debugger::barDump($form->values);
             $errorMessage = $this->invoiceModel->addInvoice($form);
-        }
 
-        if ($errorMessage !== null) {
-            $this->flashMessage($errorMessage, 'error');
-
-            Debugger::barDump($errorMessage);
+            if ($errorMessage === null) {
+                $this->flashMessage('Doklad byl úspěšně uložený do databáze.', 'success');
+            } else {
+                $this->flashMessage($errorMessage, 'error');
+            }
         }
     }
 

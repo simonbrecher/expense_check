@@ -21,3 +21,4 @@ services:
 	router: App\Router\RouterFactory::createRouter
 	- App\Model\Authenticator
 	- App\Model\InvoiceModel
+	security.passwords: Nette\Security\Passwords(::PASSWORD_BCRYPT, [const: 11])

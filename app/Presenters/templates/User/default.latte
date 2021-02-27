@@ -1,0 +1,8 @@
+{block content}
+
+<p>User page</p>
+
+{if !$user->isLoggedIn()}
+    <a n:href=":signin" class="menu-item">Registrovat se</a>
+    <a n:href=":login" class="menu-item">Přihlásit se</a>
+{/if}

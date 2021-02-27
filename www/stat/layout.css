@@ -14,6 +14,9 @@ body, input, textarea { font-family: 'Open Sans', Arial; font-size: 15px; }
 .menu-item:last-child { margin-right: 0; }
 .menu-item:hover { background-color: #1BE; }
 .selected { background-color: #149; }
+.selected:hover { background-color: #149; }
+
+.after-menu-item { float: left; display: block; margin-left: 12px; background-color: #E54; color: #FFF; padding: 6px 14px 8px; }
 
         /** forms */
 .error { border: 3px solid #F00; padding: 5px 25px; color: #F00; }

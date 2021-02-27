@@ -87,7 +87,7 @@ class InvoiceModel extends BaseModel
 
     public function getUserConsumers(): array
     {
-        return $this->table('consumer')
+        return $this->table('user')
             ->fetchPairs('id', 'name');
     }
 

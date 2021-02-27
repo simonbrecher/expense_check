@@ -13,23 +13,22 @@ class BaseModel
     public const DATE_PATTERN_DD_MM_YY = '(0?[1-9]|[12][0-9]|3[01])\. ?(0?[1-9]|1[0-2])\. ?[0-9]{2}';
     public const DATE_PATTERN_DD_MM_YYYY = '(0?[1-9]|[12][0-9]|3[01])\. ?(0?[1-9]|1[0-2])\. ?20[0-9]{2}';
 
-    public const TABLES_WITH_FAMILY_ID = ['category', 'consumer', 'user'];
+    public const TABLES_WITH_FAMILY_ID = ['category', 'user'];
     public const TABLES_WITH_USER_ID = ['bank_account', 'card', 'cash_account', 'invoice_head', 'payment', 'payment_channel'];
 
-    /** @var Nette\Database\Explorer */
     protected $database;
-    /** @var Nette\Security\User */
     protected $user;
 
-    public function __construct(Nette\Database\Explorer $database)
+    public function __construct(Nette\Database\Explorer $database, Nette\Security\User $user)
     {
         $this->database = $database;
+        $this->user = $user;
     }
 
     protected function table(string $tableName): Nette\Database\Table\Selection
     {
         if (in_array($tableName, self::TABLES_WITH_FAMILY_ID)) {
-            return $this->database->table($tableName)->where('family:user.id', $this->user->id);
+            return $this->database->table($tableName)->where('family_id', $this->user->identity->family_id);
         } elseif (in_array($tableName, self::TABLES_WITH_USER_ID)) {
             return $this->database->table($tableName)->where('user_id', $this->user->id);
         } else {
@@ -54,10 +53,5 @@ class BaseModel
         }
 
         return (new \DateTime($date))->format('Y-m-d');
-    }
-
-    public function setUser(Nette\Security\User $user): void
-    {
-        $this->user = $user;
     }
 }
