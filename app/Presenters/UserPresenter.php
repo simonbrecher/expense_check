@@ -77,7 +77,7 @@ class UserPresenter extends BasePresenter
                 $form->addPassword('password', 'Heslo:')->setRequired('Zadejte prosím heslo.');
             } else {
                 $values = $this->userModel->getUserEditValues();
-                $form->setDefaultValues($values);
+                $form->setDefaults($values);
             }
 
         $form->addGroup('buttons');
