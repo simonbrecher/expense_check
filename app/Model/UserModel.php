@@ -53,7 +53,7 @@ class UserModel extends BaseModel
         }
     }
 
-    public function editUser(Nette\Utils\ArrayHash $values): void
+    public function editUser(Nette\Utils\ArrayHash $values): bool
     {
         $database = $this->database;
 
@@ -73,7 +73,7 @@ class UserModel extends BaseModel
         }
 
         try {
-            $row->update($values);
+            return $row->update($values);
         } catch (\PDOException) {
             throw new \PDOException('Nepodařilo se editovat uživatelský účet.');
         }

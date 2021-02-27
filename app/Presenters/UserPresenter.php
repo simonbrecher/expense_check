@@ -95,9 +95,13 @@ class UserPresenter extends BasePresenter
 
         if ($this->user->isLoggedIn()) {
             try {
-                $this->userModel->editUser($values);
+                $wasUpdated = $this->userModel->editUser($values);
 
-                $this->flashMessage('Uživatelský účet byl úspěšně editovaný.', 'success');
+                if ($wasUpdated) {
+                    $this->flashMessage('Uživatelský účet byl úspěšně editovaný.', 'success');
+                } else {
+                    $this->flashMessage('Nedošlo k žádné změně v nastavení uživatelského účtu.', 'info');
+                }
                 $this->redirect('User:');
             } catch (\PDOException|DupliciteUserException $exception) {
                 $this->flashMessage($exception->getMessage(), 'error');
