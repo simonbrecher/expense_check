@@ -2,7 +2,10 @@
 
 <p>User page</p>
 
-{if !$user->isLoggedIn()}
+{if $user->isLoggedIn()}
+    {*  signin pro editaci  *}
+    <a n:href=":signin" class="menu-item">Editovat uživatelský účet</a>
+{else}
     <a n:href=":signin" class="menu-item">Registrovat se</a>
     <a n:href=":login" class="menu-item">Přihlásit se</a>
 {/if}

@@ -75,11 +75,14 @@ class UserPresenter extends BasePresenter
 
             if (!$this->user->isLoggedIn()) {
                 $form->addPassword('password', 'Heslo:')->setRequired('Zadejte prosím heslo.');
+            } else {
+                $values = $this->userModel->getUserEditValues();
+                $form->setDefaultValues($values);
             }
 
         $form->addGroup('buttons');
 
-            $form->addSubmit('submit', 'Registrovat se');
+            $form->addSubmit('submit', $this->user->isLoggedIn() ? 'Editovat' : 'Registrovat se');
 
         $form->onSuccess[] = [$this, 'signinFormSuccess'];
 
@@ -90,15 +93,25 @@ class UserPresenter extends BasePresenter
     {
         $values = $form->values;
 
-        try {
-            $this->userModel->saveUser($values);
-            $this->flashMessage('Uživatelský účet byl úspěšně vytvořený. Můžete se přihlásit.', 'success');
+        if ($this->user->isLoggedIn()) {
+            try {
+                $this->userModel->editUser($values);
 
-            $this->redirect('User:');
-        } catch (DupliciteUserException $exception) {
-            $this->flashMessage($exception->getMessage(), 'error');
-        } catch (\PDOException $exception) {
-            $this->flashMessage('Uživatelský účet se nepodařilo vytvořit.', 'error');
+                $this->flashMessage('Uživatelský účet byl úspěšně editovaný.', 'success');
+                $this->redirect('User:');
+            } catch (\PDOException|DupliciteUserException $exception) {
+                $this->flashMessage($exception->getMessage(), 'error');
+            }
+
+        } else {
+            try {
+                $this->userModel->addUser($values);
+
+                $this->flashMessage('Uživatelský účet byl úspěšně vytvořený. Můžete se přihlásit.', 'success');
+                $this->redirect('User:');
+            } catch (\PDOException|DupliciteUserException $exception) {
+                $this->flashMessage($exception->getMessage(), 'error');
+            }
         }
     }
 }

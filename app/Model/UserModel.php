@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model;
 
 use Nette;
+use Tracy\Debugger;
 
 class UserModel extends BaseModel
 {
@@ -15,7 +16,12 @@ class UserModel extends BaseModel
         $this->passwords = $passwords;
     }
 
-    public function saveUser(Nette\Utils\ArrayHash $values): void
+    public function getUserEditValues(): array
+    {
+        return $this->database->table('user')->select('name, surname, username, email')->get($this->user->id)->toArray();
+    }
+
+    public function addUser(Nette\Utils\ArrayHash $values): void
     {
         $database = $this->database;
 
@@ -41,9 +47,35 @@ class UserModel extends BaseModel
                 $family = $database->table('family')->insert([]);
                 $family->related('user')->insert($data);
             $database->commit();
-        } catch (\PDOException $exception) {
+        } catch (\PDOException) {
             $this->database->rollBack();
-            throw $exception;
+            throw new \PDOException('Nepodařilo se vytvořit uživatelský účet.');
+        }
+    }
+
+    public function editUser(Nette\Utils\ArrayHash $values): void
+    {
+        $database = $this->database;
+
+        $row = $database->table('user')->get($this->user->id);
+
+        if ($row->username != $values->username) {
+            $sameUsername = $database->table('user')->where('username', $values->username)->fetch();
+            if ($sameUsername) {
+                throw new DupliciteUserException('Uživatelské jméno už existuje.');
+            }
+        }
+        if ($row->email != $values->email) {
+            $sameUsername = $database->table('email')->where('email', $values->email)->fetch();
+            if ($sameUsername) {
+                throw new DupliciteUserException('Email je už zabraný.');
+            }
+        }
+
+        try {
+            $row->update($values);
+        } catch (\PDOException) {
+            throw new \PDOException('Nepodařilo se editovat uživatelský účet.');
         }
     }
 }
