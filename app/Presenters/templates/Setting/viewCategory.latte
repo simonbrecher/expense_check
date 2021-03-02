@@ -1,0 +1,23 @@
+{block content}
+
+<h2 class="view-category-title">Kategorie</h2>
+
+<div class="view-category-wrapper">
+    <div class="category" n:foreach="$categories as $category">
+        <div class="category-columnbox">
+            <div class="category-linebox">
+                <div class="category-name">{$category->name}</div>
+                <div class="category-item">Celková cena: {$category->total_amount ?? 0}</div>
+                <div class="category-item">Počet položek: {$category->invoice_item_count}</div>
+            </div>
+            <div class="category-linebox">
+                <div class="category-description">{$category->description}</div>
+            </div>
+        </div>
+        <div class="buttons">
+            <a n:href=":addCategory $category->id" class="edit-button">Editovat</a>
+            <a n:href=":removeCategory $category->id" class="remove-button">Smazat</a>
+        </div>
+        <hr />
+    </div>
+</div>

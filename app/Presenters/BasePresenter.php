@@ -18,7 +18,7 @@ class BasePresenter extends Nette\Application\UI\Presenter
 
     public function beforeRender(): void
     {
-        $this->template->cssNumber = '?'.rand(0, 1000);
+        $this->template->cssNumber = '?'.rand(0, 10**6);
     }
 
     public function handleSignout(): void
