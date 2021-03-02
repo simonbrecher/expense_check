@@ -13,15 +13,11 @@ class InvoiceForm extends BaseForm
     public const BOX_STYLE_MULTI_CONTROLS = ['type_paidby'];
     public const TOGGLE_BOX_HTML_IDS = ['var_symbol' => 'var-symbol-toggle-box', 'card_id' => 'card-id-toggle-box'];
 
-    /** @var Model\InvoiceModel */
-    private $invoiceModel;
     /** @var Nette\Forms\Controls\BaseControl | null */
     private $focusedControl;
 
-    public function __construct(Model\InvoiceModel $invoiceModel)
-    {
-        $this->invoiceModel = $invoiceModel;
-    }
+    public function __construct(private Model\InvoiceModel $invoiceModel)
+    {}
 
     public function createItems(): void
     {

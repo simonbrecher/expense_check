@@ -16,14 +16,11 @@ class BaseModel
     public const TABLES_WITH_FAMILY_ID = ['category', 'user'];
     public const TABLES_WITH_USER_ID = ['bank_account', 'card', 'cash_account', 'invoice_head', 'payment', 'payment_channel'];
 
-    protected $database;
-    protected $user;
-
-    public function __construct(Nette\Database\Explorer $database, Nette\Security\User $user)
-    {
-        $this->database = $database;
-        $this->user = $user;
-    }
+    public function __construct(
+        protected Nette\Database\Explorer $database,
+        protected Nette\Security\User $user
+    )
+    {}
 
     protected function table(string $tableName): Nette\Database\Table\Selection
     {

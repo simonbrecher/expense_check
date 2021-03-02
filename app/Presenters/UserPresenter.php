@@ -13,12 +13,8 @@ use App\Model;
 
 class UserPresenter extends BasePresenter
 {
-    private $userModel;
-
-    public function __construct(Model\UserModel $userModel)
-    {
-        $this->userModel = $userModel;
-    }
+    public function __construct(private Model\UserModel $userModel)
+    {}
 
     public function actionLogin(): void
     {

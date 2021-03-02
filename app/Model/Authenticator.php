@@ -8,14 +8,12 @@ use Nette;
 
 class Authenticator implements Nette\Security\Authenticator
 {
-    private $database;
-    private $passwords;
 
-    public function __construct(Nette\Database\Explorer $database, Nette\Security\Passwords $passwords)
-    {
-        $this->database = $database;
-        $this->passwords = $passwords;
-    }
+    public function __construct(
+        private Nette\Database\Explorer $database,
+        private Nette\Security\Passwords $passwords
+    )
+    {}
 
     public function authenticate(string $username, string $password): Nette\Security\SimpleIdentity
     {

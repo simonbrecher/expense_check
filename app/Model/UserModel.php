@@ -8,12 +8,13 @@ use Tracy\Debugger;
 
 class UserModel extends BaseModel
 {
-    private $passwords;
-
-    public function __construct(Nette\Database\Explorer $database, Nette\Security\User $user, Nette\Security\Passwords $passwords)
+    public function __construct(
+        private Nette\Security\Passwords $passwords,
+        Nette\Database\Explorer $database,
+        Nette\Security\User $user
+    )
     {
         parent::__construct($database, $user);
-        $this->passwords = $passwords;
     }
 
     public function getUserEditValues(): array

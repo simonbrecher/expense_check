@@ -14,12 +14,8 @@ class InvoicePresenter extends BasePresenter
 {
     private const MAX_ITEM_COUNT = 5;
 
-    public $invoiceModel;
-
-    public  function __construct(Model\InvoiceModel $invoiceModel)
-    {
-        $this->invoiceModel = $invoiceModel;
-    }
+    public  function __construct(public Model\InvoiceModel $invoiceModel)
+    {}
 
     public function startup(): void
     {
