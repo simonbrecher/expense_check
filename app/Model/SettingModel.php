@@ -3,6 +3,9 @@
 
 namespace App\Model;
 
+use App\Presenters\AccessUserException;
+use Nette;
+use Tracy\Debugger;
 
 class SettingModel extends BaseModel
 {
@@ -16,6 +19,42 @@ class SettingModel extends BaseModel
     public function canAccessCategory(int $id): bool
     {
         $category = $this->database->table('category')->get($id);
-        return $category?->family_id == $this->user->identity->family_id and !$category->is_cash_account_balance;
+        if (!$category) {
+            return false;
+        } else {
+            return $category->family_id == $this->user->identity->family_id and !$category->is_cash_account_balance;
+        }
+    }
+
+    public function addCategory(Nette\Utils\ArrayHash $values): void
+    {
+        Debugger::barDump($values);
+    }
+
+    public function editCategory(Nette\Utils\ArrayHash $values, int $id): bool
+    {
+        if (!$this->canAccessCategory($id)) {
+            throw new AccessUserException('Nepodařilo se editovat kategorii.');
+        }
+
+        $row = $this->table('category')->get($id);
+
+        if ($row->name != $values->name) {
+            $sameName = $this->table('category')->where('name', $values->name)->fetch();
+            if ($sameName) {
+                throw new DupliciteUserException('Jméno je už zabrané.');
+            }
+        }
+
+        try {
+            return $row->update($values);
+        } catch (\PDOException) {
+            throw new \PDOException('Nepodařilo se editovat kategorii.');
+        }
+    }
+
+    public function getCategoryParameters(int $id): array
+    {
+        return $this->table('category')->where('id', $id)->select('name, description')->fetch()->toArray();
     }
 }
