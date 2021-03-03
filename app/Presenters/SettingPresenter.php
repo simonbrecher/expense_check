@@ -5,9 +5,9 @@ namespace App\Presenters;
 
 use App\Form\AddCategoryForm;
 use App\Model;
+use App\Model\DupliciteCategoryException;
 use App\Model\DupliciteUserException;
 use Nette\Neon\Exception;
-use Tracy\Debugger;
 
 class SettingPresenter extends BasePresenter
 {
@@ -31,19 +31,17 @@ class SettingPresenter extends BasePresenter
 
     public function createComponentAddCategoryForm(): AddCategoryForm
     {
-        Debugger::barDump('createComponentAddCategoryForm');
-
         $form = new AddCategoryForm();
 
         $form->addGroup('body');
 
-            $form->addText('name', 'Název:');
+        $form->addText('name', 'Název:');
 
-            $form->addTextArea('description', 'Popis:');
+        $form->addTextArea('description', 'Popis:');
 
         $form->addGroup('buttons');
 
-            $form->addSubmit('submit', 'Uložit');
+        $form->addSubmit('submit', 'Uložit');
 
         $form->onSuccess[] = [$this, 'addCategoryFormSuccess'];
 
@@ -57,7 +55,13 @@ class SettingPresenter extends BasePresenter
     public function addCategoryFormSuccess(AddCategoryForm $form): void
     {
         if ($this->getParameter('id') === null) {
-            $this->settingModel->addCategory($form->values);
+            try {
+                $this->settingModel->addCategory($form->values);
+                $this->flashMessage('Kategorie byla úspěšně přidaná.', 'success');
+                $this->redirect(':viewCategory');
+            } catch (\PDOException|DupliciteCategoryException $exception) {
+                $this->flashMessage($exception->getMessage(), 'error');
+            }
         } else {
             try {
                 $wasUpdated = $this->settingModel->editCategory($form->values, (int) $this->getParameter('id'));
@@ -68,7 +72,7 @@ class SettingPresenter extends BasePresenter
                     $this->flashMessage('Nedošlo k žádné změně v kategorii.', 'info');
                 }
                 $this->redirect(':viewCategory');
-            } catch (\PDOException|DupliciteUserException|AccesUserException $exception) {
+            } catch (\PDOException|DupliciteUserException|AccessUserException $exception) {
                 $this->flashMessage($exception->getMessage(), 'error');
             }
         }

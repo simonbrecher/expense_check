@@ -5,7 +5,6 @@ namespace App\Model;
 
 use App\Presenters\AccessUserException;
 use Nette;
-use Tracy\Debugger;
 
 class SettingModel extends BaseModel
 {
@@ -28,7 +27,18 @@ class SettingModel extends BaseModel
 
     public function addCategory(Nette\Utils\ArrayHash $values): void
     {
-        Debugger::barDump($values);
+        $sameName = $this->table('category')->where('name', $values->name)->fetch();
+        if ($sameName) {
+            throw new DupliciteCategoryException('Jméno je už zabrané.');
+        }
+
+        $values->family_id = $this->user->identity->family_id;
+
+        try {
+            $this->database->table('category')->insert($values);
+        } catch (\PDOException) {
+            throw new \PDOException('Nepodařilo se přidat kategorii.');
+        }
     }
 
     public function editCategory(Nette\Utils\ArrayHash $values, int $id): bool
@@ -57,4 +67,9 @@ class SettingModel extends BaseModel
     {
         return $this->table('category')->where('id', $id)->select('name, description')->fetch()->toArray();
     }
+}
+
+class DupliciteCategoryException extends \Exception
+{
+
 }
