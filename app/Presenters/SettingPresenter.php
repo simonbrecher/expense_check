@@ -78,9 +78,34 @@ class SettingPresenter extends BasePresenter
         }
     }
 
+    public function actionRemoveCategory(int $id): void
+    {
+        if (!$this->settingModel->canAccessCategory($id)) {
+            $this->redirect(':default');
+        }
+
+        $itemCount = $this->settingModel->getCategoryItemCount($id);
+        if ($itemCount > 0) {
+            $this->flashMessage('V této kategorii jsou položky, a proto ji nelze smazat.', 'error');
+            $this->redirect(':viewCategory');
+        }
+    }
+
+    public function handleRemoveCategory(int $id): void
+    {
+        try {
+            $this->settingModel->removeCategory($id);
+            $this->flashMessage('Kategorie byla úspěšně smazána.', 'success');
+        } catch (\PDOException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+        $this->redirect(':viewCategory');
+    }
+
     public function renderRemoveCategory(int $id): void
     {
-
+        $this->template->category = $this->settingModel->getCategoryName($id);
+        $this->template->id = $id;
     }
 }
 

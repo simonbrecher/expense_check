@@ -63,9 +63,33 @@ class SettingModel extends BaseModel
         }
     }
 
+    public function removeCategory(int $id): void
+    {
+        $row = $this->table('category')->get($id);
+        if (!$row) {
+            throw new \PDOException('Nepodařilo se smazat kategorii.');
+        }
+
+        try {
+            $row->delete();
+        } catch (\PDOException) {
+            throw new \PDOException('Nepodařilo se smazat kategorii.');
+        }
+    }
+
     public function getCategoryParameters(int $id): array
     {
         return $this->table('category')->where('id', $id)->select('name, description')->fetch()->toArray();
+    }
+
+    public function getCategoryItemCount(int $id): int
+    {
+        return $this->table('category')->get($id)->related('invoice_item')->count();
+    }
+
+    public function getCategoryName(int $id): string
+    {
+        return $this->table('category')->get($id)->name;
     }
 }
 
