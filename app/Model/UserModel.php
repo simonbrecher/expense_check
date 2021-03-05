@@ -46,9 +46,11 @@ class UserModel extends BaseModel
         try {
             $database->beginTransaction();
                 $family = $database->table('family')->insert([]);
-                $family->related('user')->insert($data);
+                $user = $family->related('user')->insert($data);
+                $database->table('cash_account')->insert(['user_id' => $user->id]);
             $database->commit();
-        } catch (\PDOException) {
+        } catch (\PDOException $exception) {
+            Debugger::barDump($exception);
             $this->database->rollBack();
             throw new \PDOException('Nepodařilo se vytvořit uživatelský účet.');
         }

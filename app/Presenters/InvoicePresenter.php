@@ -116,7 +116,7 @@ class InvoicePresenter extends BasePresenter
         }
     }
 
-    public function formSubmitted(InvoiceForm $form): void
+    public function renderShow(): void
     {
 
     }
