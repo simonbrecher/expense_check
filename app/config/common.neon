@@ -23,4 +23,5 @@ services:
 	- App\Model\InvoiceModel
 	- App\Model\UserModel
 	- App\Model\SettingModel
+	- App\Model\FamilyModel
 	security.passwords: Nette\Security\Passwords(::PASSWORD_BCRYPT, [const: 11])

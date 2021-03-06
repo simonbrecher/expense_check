@@ -1,0 +1,32 @@
+{block content}
+
+<div class="table-list-container">
+
+    <table class="table-smart">
+        <tr class="table-heading">
+            <td>Jméno</td>
+            <td>Příjmení</td>
+            <td>Uživatelské jméno</td>
+            <td>Role</td>
+            <td>Je aktivní</td>
+            <td></td>
+        </tr>
+        <tr n:foreach="$consumers as $consumer" class="table-body">
+            <td>{$consumer->name}</td>
+            <td>{$consumer->surname}</td>
+            <td>{$consumer->username}</td>
+            <td>{$familyModel->getRoleName($consumer->role)}</td>
+            <td>{$consumer->is_active ? 'ANO' : 'NE'}</td>
+            <td class="edit-cell"><a n:if="$consumer->role == 'ROLE_CONSUMER'" n:href=":addConsumer $consumer->id">Upravit</a></td>
+        </tr>
+    </table>
+
+</div>
+
+<a n:href=":addConsumer" class="menu-item">Přidat člena rodiny</a>
+
+<style>
+
+    .table-smart { width: 1090px; }
+
+</style>

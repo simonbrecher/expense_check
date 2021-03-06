@@ -1,0 +1,32 @@
+{block content}
+
+<div>
+
+    {form addCategoryForm}
+
+    <div class="form-linebox">
+        <div class="form-columnbox">
+            <table class="form-table">
+                {foreach $form->getGroup('body')->getControls() as $input}
+                    {var $roleEditor = $input->name == 'username' || $input->name == 'email' || $input->name == 'password'}
+                    {if $roleEditor}<tr id="role-editor">{else}<tr>{/if}
+{*                    {$roleEditor ? <tr id="role-editor"> : <tr>}*}
+                        <td class="label-cell">{label $input /}</td>
+                        <td class="control">{input $input}</td>
+                        {*            <td n:ifcontent>{inputError $input}</td>*}
+                    </tr>
+                {/foreach}
+            </table>
+        </div>
+        <hr />
+    </div>
+
+<div class="form-linebox submit-box">
+        {foreach $form->getGroup('buttons')->getControls() as $button}{input $button}{/foreach}
+    </div>
+
+{/form}
+
+</div>
+
+<a n:href=":viewConsumer" class="menu-item">Zpět</a>
