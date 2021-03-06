@@ -7,15 +7,21 @@ namespace App\Presenters;
 use App\Model;
 use App\Form\InvoiceForm;
 
-use Nette\Neon\Exception;
-use Tracy\Debugger;
-
 class InvoicePresenter extends BasePresenter
 {
     private const MAX_ITEM_COUNT = 5;
 
     public  function __construct(public Model\InvoiceModel $invoiceModel)
     {}
+
+    public function actionAdd(int $id=null): void
+    {
+        if ($id !== null) {
+            if (!$this->invoiceModel->canAccessInvoice($id)) {
+                $this->redirect(':view');
+            }
+        }
+    }
 
     public function startup(): void
     {
@@ -30,12 +36,13 @@ class InvoicePresenter extends BasePresenter
 
             $form->addText('czk_total_amount', 'Celková cena:')
                     ->addRule($form::NUMERIC, 'Celková cena musí být číslo.')
-                    ->setRequired('Vyplňte prosím celkovou cenu.');
+                    ->setRequired('Vyplňte celkovou cenu.');
 
             $form ->addText('description', 'Název:')->setMaxLength(35);
 
             $categories = $this->invoiceModel->getUserCategories();
             $form->addSelect('category', 'Kategorie:', $categories)
+                    ->setRequired('Vyplňte kategorii první položky.')
                     ->setPrompt('');
 
             $consumers = $this->invoiceModel->getUserConsumers();
@@ -46,11 +53,11 @@ class InvoicePresenter extends BasePresenter
 
             $form->addText('d_issued', 'Datum platby:')
                     ->addRule($form::PATTERN, 'Formát data musí být 13.2 / 13.2.21 / 13.2.2021', $this->invoiceModel::DATE_PATTERN_FLEXIBLE)
-                    ->setRequired('Vyplňte prosím datum vystavení dokladu.');
+                    ->setRequired('Vyplňte datum vystavení dokladu.');
 
             $paidByChoices = $this->invoiceModel->getPaidbyTypes();
             $paidBy = $form->addRadioList('type_paidby', 'Typ platby', $paidByChoices)
-                            ->setRequired('Vyberte prosím typ platby.');
+                            ->setRequired('Vyberte typ platby.');
 
             // paid by card
             $cards = $this->invoiceModel->getUserCards();
@@ -64,10 +71,10 @@ class InvoicePresenter extends BasePresenter
                     ->elseCondition()->addCondition($form::EQUAL, 'PAIDBY_BANK')->toggle($form::TOGGLE_BOX_HTML_IDS['var_symbol']);
 
             $varSymbol->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_BANK')
-                        ->setRequired('Vyplňte prosím variabilní symbol.');
+                        ->setRequired('Vyplňte variabilní symbol.');
 
             $card->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_CARD')
-                ->setRequired('Vyberte prosím platební kartu.');
+                ->setRequired('Vyberte platební kartu.');
 
         $form->addGroup('buttons');
 
@@ -97,6 +104,13 @@ class InvoicePresenter extends BasePresenter
             }
         } else {
             $form->createItems();
+
+            $editId = $this->getParameters()['id'];
+            if ($editId !== null) {
+                $data = $this->invoiceModel->getEditInvoiceData((int) $editId);
+                $form->addItem($data['item_count'] - 1);
+                $form->setDefaults($data);
+            }
         }
     }
 
@@ -105,19 +119,32 @@ class InvoicePresenter extends BasePresenter
         $submittedBy = $form->isSubmitted();
 
         if ($submittedBy->name == 'submit') {
-            Debugger::barDump($form->values);
-            $errorMessage = $this->invoiceModel->addInvoice($form);
+            $editId = $this->getParameters()['id'];
+            if ($editId === null) {
+                try {
+                    $this->invoiceModel->addInvoice($form);
 
-            if ($errorMessage === null) {
-                $this->flashMessage('Doklad byl úspěšně uložený do databáze.', 'success');
+                    $this->flashMessage('Doklad byl úspěšně uložený.', 'success');
+                    $this->redirect('this');
+                } catch (\PDOException $exception) {
+                    $this->flashMessage($exception->getMessage(), 'error');
+                }
+
             } else {
-                $this->flashMessage($errorMessage, 'error');
+                try {
+                    $this->invoiceModel->editInvoice($form, (int) $editId);
+
+                    $this->flashMessage('Doklad byl úspěšně upravený.', 'success');
+                    $this->redirect(':view');
+                } catch (\PDOException $exception) {
+                    $this->flashMessage($exception->getMessage(), 'error');
+                }
             }
         }
     }
 
-    public function renderShow(): void
+    public function renderView(): void
     {
-
+        $this->template->invoices = $this->invoiceModel->getInvoicesForView();
     }
 }

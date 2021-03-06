@@ -1,0 +1,14 @@
+.table-list-container { margin: 18px 0; }
+/*.table-smart { background-color: #000; }*/
+.table-smart { min-width: 1090px; margin: 0 auto; border: 1px solid #C0C0C0; }
+.table-smart td { padding: 9px 18px 10px; font-size: 17px; }
+.table-smart .table-heading td { text-align: center; font-weight: bold; background-color: #D3D3D3; }
+.table-smart tr.table-body td { background-color: #FDFDFD; }
+.table-smart tr.table-body:nth-child(even) td { background-color: #F3F3F3; }
+.table-smart tr.table-body:hover td { background-color: #EDEFF1; }
+.table-smart .blank-item-cell { text-align: center; }
+.table-smart .blank-item-cell span { padding: 2px 10px; border-radius:10px; background-color: #F00; color: #FFF; }
+.table-smart .edit-cell { padding-left: 10px; padding-right: 12px; text-align: center; }
+.table-smart .edit-cell a { padding: 3px 12px;border-radius: 6px; border: 1px solid #DDD; }
+.table-smart tr.table-body:hover td.edit-cell a { background-color: #DDE; border-color:#CDD; }
+.table-smart .czk-cell { text-align: right; white-space: nowrap; }

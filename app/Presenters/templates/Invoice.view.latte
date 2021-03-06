@@ -1,0 +1,43 @@
+{block content}
+
+<div class="table-list-container">
+
+    <table class="table-smart">
+        <tr class="table-heading">
+            <td>Vložil</td>
+            <td>Datum</td>
+            <td>Kategorie</td>
+            <td>Spotřebitel</td>
+            <td>Položka</td>
+            <td>Částka</td>
+            <td></td>
+        </tr>
+        <tr n:foreach="$invoices as $invoice" class="table-body">
+            <td>{$invoice->user->name}</td>
+            <td class="date-cell">{$invoice->d_issued|date:'j.n.Y'}</td>
+            {var $firstItem = $invoice->related('invoice_item')->where('is_main')->fetch()}
+            {if $firstItem}
+                {var $category = $firstItem->ref('category', 'category_id')}
+                {if $category !== null}
+                    <td class="category-cell">{$firstItem->ref('category', 'category_id')->name}</td>
+                {else}
+                    <td class="blank-item-cell"><span>- ?? -</span></td>
+                {/if}
+                <td class="consumer-cell">{$firstItem->ref('user', 'consumer_id')?->name ?? 'Všichni'}</td>
+                <td>{$firstItem->description}</td>
+                <td class="czk_cell">{$invoice->related('invoice_item')->sum('czk_amount')|number:0, '.', ' '} Kč</td>
+            {else}
+                <td colspan="4" class="blank-item-cell"><span>-- ???? --</span></td>
+            {/if}
+            <td class="edit-cell"><a n:href="Invoice:add $invoice->id">Upravit</a></td>
+        </tr>
+    </table>
+
+</div>
+
+<style>
+
+    .table-smart { width: 1090px; }
+    .date-cell, .consumer-cell { text-align: center; }
+
+</style>
