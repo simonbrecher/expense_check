@@ -3,8 +3,7 @@
 declare(strict_types=1);
 namespace App\Presenters;
 
-use App\Form\LoginForm;
-use App\Form\SigninForm;
+use App\Form\BasicForm;
 
 use App\Model\DupliciteUserException;
 use Nette\Security\AuthenticationException;
@@ -23,9 +22,9 @@ class UserPresenter extends BasePresenter
         }
     }
 
-    public function createComponentLoginForm(): LoginForm
+    public function createComponentLoginForm(): BasicForm
     {
-        $form = new LoginForm();
+        $form = new BasicForm();
 
         $form->addGroup('body');
 
@@ -42,7 +41,7 @@ class UserPresenter extends BasePresenter
         return $form;
     }
 
-    public function loginFormSuccess(LoginForm $form): void
+    public function loginFormSuccess(BasicForm $form): void
     {
         $values = $form->values;
 
@@ -55,9 +54,9 @@ class UserPresenter extends BasePresenter
         }
     }
 
-    public function createComponentSigninForm(): SigninForm
+    public function createComponentSigninForm(): BasicForm
     {
-        $form = new SigninForm();
+        $form = new BasicForm();
 
         $form->addGroup('body');
 
@@ -85,7 +84,7 @@ class UserPresenter extends BasePresenter
         return $form;
     }
 
-    public function signinFormSuccess(SigninForm $form): void
+    public function signinFormSuccess(BasicForm $form): void
     {
         $values = $form->values;
 

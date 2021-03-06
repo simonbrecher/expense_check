@@ -3,12 +3,10 @@
 declare(strict_types=1);
 namespace App\Form;
 
-use Nette;
-
 use App\Model;
-use Tracy\Debugger;
+use Nette\Application\UI\Form;
 
-class InvoiceForm extends BaseForm
+class InvoiceForm extends Form
 {
     public const BOX_STYLE_MULTI_CONTROLS = ['type_paidby'];
     public const TOGGLE_BOX_HTML_IDS = ['var_symbol' => 'var-symbol-toggle-box', 'card_id' => 'card-id-toggle-box'];

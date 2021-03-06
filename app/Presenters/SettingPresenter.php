@@ -3,7 +3,7 @@
 declare(strict_types=1);
 namespace App\Presenters;
 
-use App\Form\AddCategoryForm;
+use App\Form\BasicForm;
 use App\Model;
 use App\Model\DupliciteCategoryException;
 use App\Model\DupliciteUserException;
@@ -30,9 +30,9 @@ class SettingPresenter extends BasePresenter
         }
     }
 
-    public function createComponentAddCategoryForm(): AddCategoryForm
+    public function createComponentAddCategoryForm(): BasicForm
     {
-        $form = new AddCategoryForm();
+        $form = new BasicForm();
 
         $form->addGroup('body');
 
@@ -58,7 +58,7 @@ class SettingPresenter extends BasePresenter
         return $form;
     }
 
-    public function addCategoryFormSuccess(AddCategoryForm $form): void
+    public function addCategoryFormSuccess(BasicForm $form): void
     {
         $submittedBy = $form->isSubmitted()->name;
         Debugger::barDump($submittedBy);
