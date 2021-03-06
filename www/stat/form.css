@@ -19,4 +19,6 @@
 
 .submit-box input { margin-right: 40px; padding: 8px 22px; font-size:17px; background-color: #282; color: #FFF; border: none; }
 .submit-box input:hover { background-color: #2D9; }
+.submit-box .delete { background-color: #D11; color: #FFF; }
+.submit-box .delete:hover { background-color: #F55; }
 .submit-box input:last-child { margin-right: 0; }

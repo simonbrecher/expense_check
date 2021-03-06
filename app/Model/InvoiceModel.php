@@ -105,6 +105,24 @@ class InvoiceModel extends BaseModel
         }
     }
 
+    public function removeInvoice(int $id): void
+    {
+        if (!$this->canAccessInvoice($id)) {
+            throw new \PDOException('Nepodařilo se smazat doklad.');
+        }
+
+        $row = $this->table('invoice_head')->get($id);
+        if (!$row) {
+            throw new \PDOException('Nepodařilo se smazat doklad.');
+        }
+
+        try {
+            $row->delete();
+        } catch (\PDOException) {
+            throw new \PDOException('Nepodařilo se smazat doklad.');
+        }
+    }
+
     public function getCategoryName(int|null $id): string
     {
         if ($id === null) {

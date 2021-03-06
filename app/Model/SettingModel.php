@@ -65,6 +65,10 @@ class SettingModel extends BaseModel
 
     public function removeCategory(int $id): void
     {
+        if (!$this->canAccessCategory($id)) {
+            throw new \PDOException('Nepodařilo se smazat kategorii.');
+        }
+
         $row = $this->table('category')->get($id);
         if (!$row) {
             throw new \PDOException('Nepodařilo se smazat kategorii.');

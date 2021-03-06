@@ -6,6 +6,7 @@ namespace App\Presenters;
 
 use App\Model;
 use App\Form\InvoiceForm;
+use Tracy\Debugger;
 
 class InvoicePresenter extends BasePresenter
 {
@@ -21,11 +22,6 @@ class InvoicePresenter extends BasePresenter
                 $this->redirect(':view');
             }
         }
-    }
-
-    public function startup(): void
-    {
-        parent::startup();
     }
 
     protected function createComponentAddInvoiceForm(): InvoiceForm
@@ -82,6 +78,11 @@ class InvoicePresenter extends BasePresenter
             $form->addSubmit('add', 'Přidat položku')->setValidationScope([]);
             $form->addSubmit('remove', 'Odebrat položku')->setValidationScope([]);
 
+            if ($this->getParameter('id') !== null) {
+                $form->addSubmit('delete', 'Smazat')->setValidationScope([])
+                        ->setHtmlAttribute('class', 'delete');
+            }
+
         $form->onAnchor[] = [$this, 'invoiceFormAnchor'];
         $form->onSuccess[] = [$this, 'invoiceFormSuccess'];
         return $form;
@@ -119,7 +120,7 @@ class InvoicePresenter extends BasePresenter
         $submittedBy = $form->isSubmitted();
 
         if ($submittedBy->name == 'submit') {
-            $editId = $this->getParameters()['id'];
+            $editId = $this->getParameter('id');
             if ($editId === null) {
                 try {
                     $this->invoiceModel->addInvoice($form);
@@ -140,7 +141,44 @@ class InvoicePresenter extends BasePresenter
                     $this->flashMessage($exception->getMessage(), 'error');
                 }
             }
+        } elseif ($submittedBy->name == 'delete') {
+            Debugger::barDump('HERE');
+            $removeId = $this->getParameter('id');
+            if ($removeId !== null) {
+                $this->redirect(':remove', $removeId);
+            }
         }
+    }
+
+    public function actionRemove(int $id): void
+    {
+        if (!$this->invoiceModel->canAccessInvoice($id)) {
+            $this->redirect(':default');
+        }
+
+        # TODO: something if there are payments for the invoice_head
+    }
+
+    public function handleRemove(int $id): void
+    {
+        try {
+            $this->invoiceModel->removeInvoice($id);
+            $this->flashMessage('Doklad byl úspěšně smazaný.', 'success');
+        } catch (\PDOException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+        $this->redirect(':view');
+    }
+
+    public function handleNotRemove(): void
+    {
+        $this->flashMessage('Doklad nebyl smazaný.', 'info');
+        $this->redirect(':view');
+    }
+
+    public function renderRemove(int $id): void
+    {
+        $this->template->id = $id;
     }
 
     public function renderView(): void

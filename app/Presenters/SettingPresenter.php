@@ -8,6 +8,7 @@ use App\Model;
 use App\Model\DupliciteCategoryException;
 use App\Model\DupliciteUserException;
 use Nette\Neon\Exception;
+use Tracy\Debugger;
 
 class SettingPresenter extends BasePresenter
 {
@@ -35,13 +36,18 @@ class SettingPresenter extends BasePresenter
 
         $form->addGroup('body');
 
-        $form->addText('name', 'Název:');
+            $form->addText('name', 'Název:');
 
-        $form->addTextArea('description', 'Popis:');
+            $form->addTextArea('description', 'Popis:');
 
         $form->addGroup('buttons');
 
-        $form->addSubmit('submit', 'Uložit');
+            $form->addSubmit('submit', 'Uložit');
+
+            if ($this->getParameter('id') !== null) {
+                $form->addSubmit('delete', 'Smazat')->setValidationScope([])
+                    ->setHtmlAttribute('class', 'delete');
+            }
 
         $form->onSuccess[] = [$this, 'addCategoryFormSuccess'];
 
@@ -54,6 +60,8 @@ class SettingPresenter extends BasePresenter
 
     public function addCategoryFormSuccess(AddCategoryForm $form): void
     {
+        $submittedBy = $form->isSubmitted()->name;
+        Debugger::barDump($submittedBy);
         if ($this->getParameter('id') === null) {
             try {
                 $this->settingModel->addCategory($form->values);
@@ -62,7 +70,7 @@ class SettingPresenter extends BasePresenter
             } catch (\PDOException|DupliciteCategoryException $exception) {
                 $this->flashMessage($exception->getMessage(), 'error');
             }
-        } else {
+        } elseif ($submittedBy == 'submit') {
             try {
                 $wasUpdated = $this->settingModel->editCategory($form->values, (int) $this->getParameter('id'));
 
@@ -75,6 +83,10 @@ class SettingPresenter extends BasePresenter
             } catch (\PDOException|DupliciteUserException|AccessUserException $exception) {
                 $this->flashMessage($exception->getMessage(), 'error');
             }
+        } elseif ($submittedBy == 'delete') {
+            $this->redirect(':removeCategory', (int) $this->getParameter('id'));
+        } else {
+            throw new Exception('Form submitted by unknown button: '.$submittedBy);
         }
     }
 
@@ -99,6 +111,12 @@ class SettingPresenter extends BasePresenter
         } catch (\PDOException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }
+        $this->redirect(':viewCategory');
+    }
+
+    public function handleNotRemoveCategory(): void
+    {
+        $this->flashMessage('Kategorie nebyla smazaná.', 'info');
         $this->redirect(':viewCategory');
     }
 
