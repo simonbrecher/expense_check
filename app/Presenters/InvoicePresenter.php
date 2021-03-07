@@ -28,6 +28,8 @@ class InvoicePresenter extends BasePresenter
     {
         $form = new InvoiceForm($this->invoiceModel);
 
+        $editId = $this->getParameter('id');
+
         $form->addGroup('column0');
 
             $form->addText('czk_total_amount', 'Celková cena:')
@@ -36,12 +38,13 @@ class InvoicePresenter extends BasePresenter
 
             $form ->addText('description', 'Název:')->setMaxLength(35);
 
-            $categories = $this->invoiceModel->getUserCategories();
+            $categories = $this->invoiceModel->getUserCategories($editId);
             $form->addSelect('category', 'Kategorie:', $categories)
                     ->setRequired('Vyplňte kategorii první položky.')
                     ->setPrompt('');
 
-            $consumers = $this->invoiceModel->getUserConsumers();
+            $consumers = $this->invoiceModel->getUserConsumers($editId);
+            Debugger::barDump($consumers);
             $form->addSelect('consumer', 'Spotřebitel:', $consumers)
                     ->setPrompt('');
 
@@ -109,6 +112,7 @@ class InvoicePresenter extends BasePresenter
             $editId = $this->getParameters()['id'];
             if ($editId !== null) {
                 $data = $this->invoiceModel->getEditInvoiceData((int) $editId);
+                Debugger::barDump($data);
                 $form->addItem($data['item_count'] - 1);
                 $form->setDefaults($data);
             }

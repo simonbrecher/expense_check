@@ -44,11 +44,13 @@ class InvoiceForm extends Form
                 $container->addText('description', 'Název položky:')
                     ->setMaxLength(35);
 
-                $categories = $this->getPresenter()->invoiceModel->getUserCategories();
+                $editId = $this->getPresenter()->getParameter('id');
+
+                $categories = $this->getPresenter()->invoiceModel->getUserCategories($editId);
                 $container->addSelect('category', 'Kategorie:', $categories)
                     ->setPrompt('');
 
-                $consumers = $this->getPresenter()->invoiceModel->getUserConsumers();
+                $consumers = $this->getPresenter()->invoiceModel->getUserConsumers($editId);
                 $container->addSelect('consumer', 'Spotřebitel:', $consumers)
                     ->setPrompt('');
             }

@@ -2,7 +2,7 @@
 
 <div>
 
-    {form addCategoryForm}
+    {form addConsumerForm}
 
     <div class="form-linebox">
         <div class="form-columnbox">
@@ -16,6 +16,9 @@
                         {*            <td n:ifcontent>{inputError $input}</td>*}
                     </tr>
                 {/foreach}
+                <tr id="role-editor">
+                    <td colspan="2" class="label-cell" id="role-editor">Pokud uživateli dáte roli editor, nebudete ho už moct upravit.</td>
+                </tr>
             </table>
         </div>
         <hr />

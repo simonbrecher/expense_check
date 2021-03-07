@@ -132,16 +132,38 @@ class InvoiceModel extends BaseModel
         return $this->table('category')->get($id)->name;
     }
 
-    public function getUserCategories(): array
+    public function getUserCategories(string|null $editId): array
     {
-        return $this->table('category')->where('NOT is_cash_account_balance')
+        $data = $this->table('category')->where('NOT is_cash_account_balance')->where('is_active')
             ->fetchPairs('id', 'name');
+        if ($editId !== null) {
+            if ($this->canAccessInvoice((int) $editId)) {
+                $items = $this->database->table('invoice_item')->where('invoice_head_id', $editId)->select('category.id AS id, category.name AS name');
+                foreach ($items as $item) {
+                    $data[$item->id] = $item->name;
+                }
+            } else {
+                throw new \PDOException('Uživatel nemá přístup k tomuto dokladu.');
+            }
+        }
+        return $data;
     }
 
-    public function getUserConsumers(): array
+    public function getUserConsumers(string|null $editId): array
     {
-        return $this->table('user')
+        $data = $this->table('user')->where('is_active')
             ->fetchPairs('id', 'name');
+        if ($editId !== null) {
+            if ($this->canAccessInvoice((int) $editId)) {
+                $items = $this->database->table('invoice_item')->where('invoice_head_id', $editId)->select('consumer_id AS id, consumer_id.name AS name');
+                foreach ($items as $item) {
+                    $data[$item->id] = $item->name;
+                }
+            } else {
+                throw new \PDOException('Uživatel nemá přístup k tomuto dokladu.');
+            }
+        }
+        return $data;
     }
 
     public function getUserCards(): array

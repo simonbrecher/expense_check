@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace App\Model;
 
+use App\Presenters\AccessUserException;
 use Nette;
 use Nette\Database\Table\Selection;
 use Nette\Utils\ArrayHash;
@@ -26,7 +27,6 @@ class FamilyModel extends BaseModel
 
     public function addConsumer(ArrayHash $values): void
     {
-        Debugger::barDump($values);
         $database = $this->database;
 
         if ($values->role == 'ROLE_CONSUMER') {
@@ -44,18 +44,14 @@ class FamilyModel extends BaseModel
                 $data['dt_deactivated'] = new DateTime();
             }
 
-            Debugger::barDump($data);
-
             $sameName = $this->table('user')->where('name', $data['name'])->fetch();
             if ($sameName) {
-                Debugger::barDump('here0');
                 throw new DupliciteUserException('Jméno v této rodině už existuje.');
             }
 
             try {
                 $this->database->table('user')->insert($data);
-            } catch (\PDOException $exception) {
-                Debugger::barDump($exception);
+            } catch (\PDOException) {
                 throw new \PDOException('Nepodařilo se přidat člena rodiny.');
             }
         } elseif ($values->role == 'ROLE_EDITOR') {
@@ -100,9 +96,73 @@ class FamilyModel extends BaseModel
         }
     }
 
-    public function editConsumer(ArrayHash $values): void
+    public function editConsumer(ArrayHash $values, int $editId): bool
     {
+        if (!$this->canAccessConsumer($editId)) {
+            throw new AccessUserException('Nepodařilo se editovat kategorii.');
+        }
 
+        $row = $this->table('user')->get($editId);
+
+        if ($row->name != $values->name) {
+            $sameName = $this->table('user')->where('name', $values->name)->fetch();
+            if ($sameName) {
+                throw new DupliciteUserException('Jméno v této rodině je už zabrané.');
+            }
+        }
+
+        $data = array(
+            'name' => $values->name,
+            'surname' => $values->surname,
+            'role' => $values->role,
+            'is_active' => $values->is_active,
+        );
+
+        try {
+            return $row->update($data);
+        } catch (\PDOException $exception) {
+            Debugger::barDump($exception->getMessage());
+            throw new \PDOException('Nepodařilo se  upravit člena rodiny');
+        }
+    }
+
+    public function removeConsumer(int $id): void
+    {
+        if (!$this->canAccessConsumer($id)) {
+            throw new \PDOException('Nepodařilo se smazat člena rodiny.');
+        }
+
+        $row = $this->table('user')->get($id);
+        if (!$row) {
+            throw new \PDOException('Nepodařilo se smazat člena rodiny.');
+        }
+
+        try {
+            $row->delete();
+        } catch (\PDOException $exception) {
+            Debugger::barDump($exception->getMessage());
+            throw new \PDOException('Nepodařilo se smazat člena rodiny.');
+        }
+    }
+
+    public function getConsumerParameters(int $id): array
+    {
+        if (!$this->canAccessConsumer($id)) {
+            throw new AccessUserException('User can not access this consumer.');
+        }
+
+        $row = $this->table('user')->get($id);
+
+        $data = array(
+            'name' => $row->name,
+            'surname' => $row->surname,
+            'role' => $row->role,
+            'is_active' => $row->is_active,
+        );
+
+        Debugger::barDump($data);
+
+        return $data;
     }
 
     public function getConsumers(): Selection
@@ -117,7 +177,7 @@ class FamilyModel extends BaseModel
 
     public function canAccessConsumer(int $id): bool
     {
-        $row = $this->table('user')->fetch();
+        $row = $this->table('user')->get($id);
         if (!$row) {
             return false;
         }
@@ -133,5 +193,10 @@ class FamilyModel extends BaseModel
     public function getIsActiveSelect(): array
     {
         return self::ROLE_ISACTIVE;
+    }
+
+    public function getConsumerItemCount(int $id): int
+    {
+        return $this->database->table('invoice_item')->where('consumer_id', $id)->count();
     }
 }

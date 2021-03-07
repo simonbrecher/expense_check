@@ -1,0 +1,14 @@
+{block content}
+
+{if $itemCount == 0}
+    <p>Tento člen rodiny nemá žádné položky, a proto ho můžete smazat.</p>
+    <p>Opravdu chcete smazat člena rodiny?</p>
+
+    <a n:href="removeConsumer! $id" class="menu-item">Smazat</a>
+    <a n:href="notRemoveConsumer!" class="menu-item">Nesmazat</a>
+{else}
+    <p>Tento člen má celkem {$itemCount} polož{$itemCount == 1 ? 'ku' : ($itemCount > 1 && $itemCount < 5 ? 'ky' : 'ek')}, a proto ho nemůžete smazat.</p>
+    <p>Můžete ho ale deaktivovat ve formuláři pro upravení.</p>
+
+    <a n:href="notRemoveConsumer!" class="menu-item">Ok</a>
+{/if}

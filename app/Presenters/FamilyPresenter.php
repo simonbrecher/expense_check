@@ -27,7 +27,7 @@ class FamilyPresenter extends BasePresenter
         }
     }
 
-    public function createComponentAddCategoryForm(): BasicForm
+    public function createComponentAddConsumerForm(): BasicForm
     {
         $form = new BasicForm();
 
@@ -66,53 +66,80 @@ class FamilyPresenter extends BasePresenter
                     ->setHtmlAttribute('class', 'delete');
             }
 
-        $form->onSuccess[] = [$this, 'addCategoryFormSuccess'];
+        $form->onSuccess[] = [$this, 'addConsumerFormSuccess'];
 
-//        if ($this->getParameter('id') !== null) {
-//            $form->setDefaults($this->settingModel->getCategoryParameters((int) $this->getParameter('id')));
-//        }
+        if ($this->getParameter('id') !== null) {
+            $form->setDefaults($this->familyModel->getConsumerParameters((int) $this->getParameter('id')));
+        }
 
         return $form;
     }
 
-    public function addCategoryFormSuccess(BasicForm $form): void
+    public function addConsumerFormSuccess(BasicForm $form): void
     {
         $submittedBy = $form->isSubmitted()->name;
 
+        $editId = $this->getParameter('id');
+
         if ($submittedBy == 'submit') {
-            try {
-                $this->familyModel->addConsumer($form->values);
+            if ($editId === null) {
+                try {
+                    $this->familyModel->addConsumer($form->values);
 
-                $this->flashMessage('Člen rodiny byl úspěšně přidaný.', 'success');
-                $this->redirect(':viewConsumer');
-            } catch (\PDOException|Model\DupliciteUserException $exception) {
-                $this->flashMessage($exception->getMessage(), 'error');
+                    $this->flashMessage('Člen rodiny byl úspěšně přidaný.', 'success');
+                    $this->redirect(':viewConsumer');
+                } catch (\PDOException|Model\DupliciteUserException $exception) {
+                    $this->flashMessage($exception->getMessage(), 'error');
+                }
+
+            } else {
+                try {
+                    $wasUpdated = $this->familyModel->editConsumer($form->values, (int) $editId);
+
+                    if ($wasUpdated) {
+                        $this->flashMessage('Člen rodiny byl úspěšně upravený.', 'success');
+                    } else {
+                        $this->flashMessage('Nedošlo k žádné změně člena rodiny.', 'info');
+                    }
+                    $this->redirect(':viewConsumer');
+                } catch (\PDOException $exception) {
+                    $this->flashMessage($exception->getMessage(), 'error');
+                }
             }
+        } else {
+            $this->redirect(':removeConsumer', $editId);
         }
-    }
-
-    public function renderAddConsumer(int $id=null): void
-    {
-
     }
 
     public function actionRemoveConsumer(int $id): void
     {
-
+        if ($id !== null) {
+            if (!$this->familyModel->canAccessConsumer($id)) {
+                $this->redirect(':viewConsumer');
+            }
+        }
     }
 
     public function handleRemoveConsumer(int $id): void
     {
-
+        try {
+            $this->familyModel->removeConsumer($id);
+            $this->flashMessage('Člen rodiny byl úspěšně smazaný.', 'success');
+        } catch (\PDOException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+        $this->redirect(':viewConsumer');
     }
 
     public function handleNotRemoveConsumer(): void
     {
-
+        $this->flashMessage('Člen rodiny nebyl smazán.', 'info');
+        $this->redirect(':viewConsumer');
     }
 
     public function renderRemoveConsumer(int $id): void
     {
-
+        $this->template->id = $id;
+        $this->template->itemCount = $this->familyModel->getConsumerItemCount($id);
     }
 }
