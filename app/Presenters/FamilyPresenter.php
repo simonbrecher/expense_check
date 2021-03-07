@@ -5,12 +5,16 @@ namespace App\Presenters;
 
 use App\Form\BasicForm;
 use App\Model;
-use Tracy\Debugger;
 
 class FamilyPresenter extends BasePresenter
 {
     public function __construct(private Model\FamilyModel $familyModel)
     {}
+
+    public function actionDefault(): void
+    {
+        $this->redirect(':viewConsumer');
+    }
 
     public function renderViewConsumer(): void
     {
@@ -25,6 +29,11 @@ class FamilyPresenter extends BasePresenter
                 $this->redirect(':viewConsumer');
             }
         }
+    }
+
+    public function renderAddConsumer(int $id=null): void
+    {
+        $this->template->id = $id;
     }
 
     public function createComponentAddConsumerForm(): BasicForm

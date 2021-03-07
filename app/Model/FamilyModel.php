@@ -8,7 +8,6 @@ use Nette;
 use Nette\Database\Table\Selection;
 use Nette\Utils\ArrayHash;
 use Nette\Utils\DateTime;
-use Tracy\Debugger;
 
 class FamilyModel extends BaseModel
 {
@@ -120,8 +119,7 @@ class FamilyModel extends BaseModel
 
         try {
             return $row->update($data);
-        } catch (\PDOException $exception) {
-            Debugger::barDump($exception->getMessage());
+        } catch (\PDOException) {
             throw new \PDOException('Nepodařilo se  upravit člena rodiny');
         }
     }
@@ -140,7 +138,6 @@ class FamilyModel extends BaseModel
         try {
             $row->delete();
         } catch (\PDOException $exception) {
-            Debugger::barDump($exception->getMessage());
             throw new \PDOException('Nepodařilo se smazat člena rodiny.');
         }
     }
@@ -159,8 +156,6 @@ class FamilyModel extends BaseModel
             'role' => $row->role,
             'is_active' => $row->is_active,
         );
-
-        Debugger::barDump($data);
 
         return $data;
     }

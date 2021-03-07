@@ -4,6 +4,12 @@
 
 {form addCategoryForm}
 
+{if $id === null}
+    <h2 class="form-title">Přidat kategorii.</h2>
+{else}
+    <h2 class="form-title">Upravit kategorii.</h2>
+{/if}
+
 <div class="form-linebox">
     <div class="form-columnbox">
         <table class="form-table">

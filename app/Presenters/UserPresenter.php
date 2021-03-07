@@ -22,13 +22,19 @@ class UserPresenter extends BasePresenter
         }
     }
 
+    public function renderSignin(int $id=null): void
+    {
+        $this->template->isLoggedIn = $this->user->isLoggedIn();
+    }
+
     public function createComponentLoginForm(): BasicForm
     {
         $form = new BasicForm();
 
         $form->addGroup('body');
 
-            $form->addText('username', 'Uživatelské jméno:')->setRequired('Zadejte prosím uživatelské jméno.');
+            $form->addText('username', 'Uživatelské jméno:')->setRequired('Zadejte prosím uživatelské jméno.')
+                    ->setHtmlAttribute('autofocus');
 
             $form->addPassword('password', 'Heslo:')->setRequired('Zadejte prosím heslo.');
 
@@ -48,7 +54,7 @@ class UserPresenter extends BasePresenter
         try {
             $this->user->login($values->username, $values->password);
 
-            $this->redirect('User:');
+            $this->redirect('Homepage:');
         } catch (AuthenticationException) {
             $this->flashMessage('Nesprávné uživatelské jméno nebo heslo.', 'error');
         }
@@ -77,7 +83,7 @@ class UserPresenter extends BasePresenter
 
         $form->addGroup('buttons');
 
-            $form->addSubmit('submit', $this->user->isLoggedIn() ? 'Editovat' : 'Registrovat se');
+            $form->addSubmit('submit', $this->user->isLoggedIn() ? 'Upravit' : 'Založit');
 
         $form->onSuccess[] = [$this, 'signinFormSuccess'];
 

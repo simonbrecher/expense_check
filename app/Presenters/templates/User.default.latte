@@ -4,8 +4,8 @@
 
 {if $user->isLoggedIn()}
     {*  signin pro editaci  *}
-    <a n:href=":signin" class="menu-item">Editovat uživatelský účet</a>
+    <a n:href=":signin" class="menu-item">Upravit uživatelský účet</a>
 {else}
-    <a n:href=":signin" class="menu-item">Registrovat se</a>
-    <a n:href=":login" class="menu-item">Přihlásit se</a>
+    <div class="menu-container"><a n:href=":signin" class="menu-item">Založit uživatelský účet s novou rodinou.</a></div>
+    <a n:href=":login" class="after-menu-item">Přihlásit se</a>
 {/if}

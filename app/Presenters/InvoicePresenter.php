@@ -15,6 +15,11 @@ class InvoicePresenter extends BasePresenter
     public  function __construct(public Model\InvoiceModel $invoiceModel)
     {}
 
+    public function actionDefault(): void
+    {
+        $this->redirect(':view');
+    }
+
     public function actionAdd(int $id=null): void
     {
         if ($id !== null) {

@@ -44,7 +44,7 @@ class SettingModel extends BaseModel
     public function editCategory(Nette\Utils\ArrayHash $values, int $id): bool
     {
         if (!$this->canAccessCategory($id)) {
-            throw new AccessUserException('Nepodařilo se editovat kategorii.');
+            throw new AccessUserException('Nepodařilo se upravit kategorii.');
         }
 
         $row = $this->table('category')->get($id);
@@ -59,7 +59,7 @@ class SettingModel extends BaseModel
         try {
             return $row->update($values);
         } catch (\PDOException) {
-            throw new \PDOException('Nepodařilo se editovat kategorii.');
+            throw new \PDOException('Nepodařilo se upravit kategorii.');
         }
     }
 

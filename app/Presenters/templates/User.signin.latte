@@ -4,6 +4,12 @@
 
 {form signinForm}
 
+{if $isLoggedIn}
+    <h2 class="form-title">Upravit uživatelský účet.</h2>
+{else}
+    <h2 class="form-title">Založit uživatelský účet s novou rodinou.</h2>
+{/if}
+
 <div class="form-linebox">
     <div class="form-columnbox">
         <table class="form-table">

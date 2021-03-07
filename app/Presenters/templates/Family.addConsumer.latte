@@ -1,5 +1,11 @@
 {block content}
 
+{if $id === null}
+    <h2 class="form-title">Přidat člena rodiny.</h2>
+{else}
+    <h2 class="form-title">Upravit člena rodiny.</h2>
+{/if}
+
 <div>
 
     {form addConsumerForm}
