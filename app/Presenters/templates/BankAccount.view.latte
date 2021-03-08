@@ -1,0 +1,63 @@
+{block content}
+
+<h2 class="form-title">Bankovní účty.</h2>
+
+<div class="table-list-container">
+
+    <table class="table-smart">
+        <tr class="table-heading">
+            <td>Uživatel</td>
+            <td>Banka</td>
+            <td>Číslo účtu</td>
+            <td>Je aktivní</td>
+            <td></td>
+        </tr>
+        <tr n:foreach="$bankAccounts as $account" class="table-body">
+            <td>{$account->user->name}</td>
+            <td>{$account->bank->name}</td>
+            <td>{$account->bank->bank_code}/{$account->number}</td>
+            <td>{$bankAccountModel->getIsActiveLabel($account->is_active)}</td>
+            <td></td>
+        </tr>
+    </table>
+
+</div>
+
+<a n:href=":addBankAccount" class="menu-item">Přidat bankovní účet</a>
+
+<hr />
+
+<br>
+
+<h2 class="form-title">Platební karty.</h2>
+
+<div class="table-list-container">
+
+    <table class="table-smart">
+        <tr class="table-heading">
+            <td>Uživatel</td>
+            <td>Bankovní účet</td>
+            <td>Název</td>
+            <td>Číslo karty</td>
+            <td>Je aktivní</td>
+            <td></td>
+        </tr>
+        <tr n:foreach="$cards as $card" class="table-body">
+            <td>{$card->user->name}</td>
+            <td>{$card->bank_account->bank->bank_code}/{$card->bank_account->number}</td>
+            <td>{$card->name}</td>
+            <td>{$card->number}</td>
+            <td>{$bankAccountModel->getIsActiveLabel($card->is_active)}</td>
+            <td></td>
+        </tr>
+    </table>
+
+</div>
+
+<a n:href=":addCard" class="menu-item">Přidat platební kartu</a>
+
+<style>
+
+    .table-smart { width: 1090px; }
+
+</style>
