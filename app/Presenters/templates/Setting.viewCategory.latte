@@ -9,6 +9,7 @@
                 <div class="category-name">{$category->name}</div>
                 <div class="category-item">Celková cena: {$category->total_amount ?? 0}</div>
                 <div class="category-item">Počet položek: {$category->invoice_item_count}</div>
+                <div class="category-item, is-active-{$category->is_active}">Je aktivní: {$settingModel->getIsActiveLabel($category->is_active)}</div>
             </div>
             <div class="category-linebox">
                 <div class="category-description">{$category->description}</div>
@@ -22,3 +23,10 @@
 
     <a n:href=":addCategory" class="menu-item">Přidat kategorii</a>
 </div>
+
+<style>
+
+    .is-active-0 { background-color: #999; }
+    .is-active-1 { background-color: #2F2; }
+
+</style>

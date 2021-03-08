@@ -18,7 +18,7 @@
             <td>{$consumer->surname}</td>
             <td>{$consumer->username}</td>
             <td>{$familyModel->getRoleName($consumer->role)}</td>
-            <td>{$consumer->is_active ? 'ANO' : 'NE'}</td>
+            <td>{$familyModel->getIsActiveLabel($consumer->is_active)}</td>
             <td class="edit-cell"><a n:if="$consumer->role == 'ROLE_CONSUMER'" n:href=":addConsumer $consumer->id">Upravit</a></td>
         </tr>
     </table>

@@ -193,5 +193,6 @@ class InvoicePresenter extends BasePresenter
     public function renderView(): void
     {
         $this->template->invoices = $this->invoiceModel->getInvoicesForView();
+        $this->template->invoiceModel = $this->invoiceModel;
     }
 }

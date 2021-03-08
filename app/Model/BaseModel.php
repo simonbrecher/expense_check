@@ -16,6 +16,8 @@ class BaseModel
     public const TABLES_WITH_FAMILY_ID = ['category', 'user'];
     public const TABLES_WITH_USER_ID = ['bank_account', 'card', 'cash_account', 'invoice_head', 'payment', 'payment_channel'];
 
+    private const ROLE_ISACTIVE = [1 => 'ANO', 0 => 'NE'];
+
     public function __construct(
         protected Nette\Database\Explorer $database,
         protected Nette\Security\User $user
@@ -50,5 +52,15 @@ class BaseModel
         }
 
         return (new \DateTime($date))->format('Y-m-d');
+    }
+
+    public function getIsActiveSelect(): array
+    {
+        return self::ROLE_ISACTIVE;
+    }
+
+    public function getIsActiveLabel(int|bool $isActive): string
+    {
+        return self::ROLE_ISACTIVE[$isActive];
     }
 }

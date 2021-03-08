@@ -24,6 +24,7 @@ class SettingPresenter extends BasePresenter
     {
         $categories = $this->settingModel->getCategories();
         $this->template->categories = $categories;
+        $this->template->settingModel = $this->settingModel;
     }
 
     public function actionAddCategory(int $id=null): void
@@ -49,6 +50,9 @@ class SettingPresenter extends BasePresenter
             $form->addText('name', 'Název:');
 
             $form->addTextArea('description', 'Popis:');
+
+            $isActiveSelect = $this->settingModel->getIsActiveSelect();
+            $form->addSelect('is_active', 'Je aktivní:', $isActiveSelect)->setDefaultValue(1);
 
         $form->addGroup('buttons');
 

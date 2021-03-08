@@ -13,7 +13,6 @@ class FamilyModel extends BaseModel
 {
     private const ROLE_NAME = ['ROLE_EDITOR' => 'Editor', 'ROLE_VIEWER' => 'XXXX', 'ROLE_CONSUMER' => 'Spotřebitel'];
     private const ROLE_SELECT = ['ROLE_CONSUMER' => 'Spotřebitel', 'ROLE_EDITOR' => 'Editor'];
-    private const ROLE_ISACTIVE = [1 => 'ANO', 0 => 'NE'];
 
     public function __construct(
         private Nette\Security\Passwords $passwords,
@@ -183,11 +182,6 @@ class FamilyModel extends BaseModel
     public function getRoleSelect(): array
     {
         return self::ROLE_SELECT;
-    }
-
-    public function getIsActiveSelect(): array
-    {
-        return self::ROLE_ISACTIVE;
     }
 
     public function getConsumerItemCount(int $id): int

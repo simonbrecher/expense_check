@@ -11,7 +11,7 @@ class SettingModel extends BaseModel
     public function getCategories()
     {
         return $this->table('category')->where('NOT is_cash_account_balance')->group('category.id')
-            ->select('category.id, name, category.description, COUNT(:invoice_item.id) AS invoice_item_count, SUM(:invoice_item.czk_amount) AS total_amount')
+            ->select('category.id, name, category.description, COUNT(:invoice_item.id) AS invoice_item_count, SUM(:invoice_item.czk_amount) AS total_amount, is_active')
             ->order('total_amount DESC');
     }
 
@@ -83,7 +83,7 @@ class SettingModel extends BaseModel
 
     public function getCategoryParameters(int $id): array
     {
-        return $this->table('category')->where('id', $id)->select('name, description')->fetch()->toArray();
+        return $this->table('category')->where('id', $id)->select('name, description, is_active')->fetch()->toArray();
     }
 
     public function getCategoryItemCount(int $id): int

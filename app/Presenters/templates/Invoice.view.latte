@@ -8,6 +8,7 @@
         <tr class="table-heading">
             <td>Vložil</td>
             <td>Datum</td>
+            <td>Typ platby</td>
             <td>Kategorie</td>
             <td>Spotřebitel</td>
             <td>Položka</td>
@@ -17,6 +18,7 @@
         <tr n:foreach="$invoices as $invoice" class="table-body">
             <td>{$invoice->user->name}</td>
             <td class="date-cell">{$invoice->d_issued|date:'j.n.Y'}</td>
+            <td class="{$invoice->type_paidby}">{$invoiceModel->getTypePaidbyName($invoice->type_paidby)}</td>
             {var $firstItem = $invoice->related('invoice_item')->where('is_main')->fetch()}
             {if $firstItem}
                 {var $category = $firstItem->ref('category', 'category_id')}
@@ -42,6 +44,9 @@
 <style>
 
     .table-smart { width: 1090px; }
-    .date-cell, .consumer-cell { text-align: center; }
+    .date-cell, .consumer-cell, .PAIDBY_CASH, .PAIDBY_CARD, .PAIDBY_BANK { text-align: center; }
+    .table-body .PAIDBY_CASH { font-weight: bold; color: #0D0; }
+    .table-body .PAIDBY_CARD { font-weight: bold; color: #DC0; }
+    .table-body .PAIDBY_BANK { font-weight: bold; color: #E70; }
 
 </style>

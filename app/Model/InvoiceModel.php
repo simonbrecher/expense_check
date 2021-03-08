@@ -12,7 +12,7 @@ use Tracy\Debugger;
 class InvoiceModel extends BaseModel
 {
     public const MAX_ITEM_COUNT = 2;
-    protected const PAIDBY_TYPES = ['PAIDBY_CASH' => 'Hotovostí', 'PAIDBY_CARD' => 'Kartou', 'PAIDBY_BANK' => 'Bankou'];
+    protected const PAIDBY_TYPES = ['PAIDBY_CASH' => 'V hotovosti', 'PAIDBY_CARD' => 'Kartou', 'PAIDBY_BANK' => 'Bankou'];
 
     public function canAccessInvoice(int $id): bool
     {
@@ -222,6 +222,11 @@ class InvoiceModel extends BaseModel
         }
 
         return $invoice;
+    }
+
+    public function getTypePaidbyName(string $typePaidby): string
+    {
+        return self::PAIDBY_TYPES[$typePaidby];
     }
 }
 
