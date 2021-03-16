@@ -18,6 +18,9 @@ class BaseModel
 
     private const ROLE_ISACTIVE = [1 => 'ANO', 0 => 'NE'];
 
+    protected const MAX_BANK_ACCOUNT_NAME_LENGTH = 25;
+    protected const MAX_DESCRIPTION_LENGTH = 35;
+
     public function __construct(
         protected Nette\Database\Explorer $database,
         protected Nette\Security\User $user

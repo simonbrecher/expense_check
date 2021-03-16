@@ -5,6 +5,7 @@ namespace App\Model;
 
 
 use Nette\Utils\ArrayHash;
+use Nette\Utils\DateTime;
 use Tracy\Debugger;
 
 class PaymentModel extends BaseModel
@@ -32,6 +33,7 @@ class PaymentModel extends BaseModel
         11 => 'message_recipient', # TODO: check
         12 => 'message_payer', # TODO: check
         13 => 'payment_type',
+        16 => 'description', # TODO: check
     );
 
     private const LINES_TITLE_SCHEMA = array(
@@ -46,6 +48,7 @@ class PaymentModel extends BaseModel
         11 => 'Poznámka',
         12 => 'Zpráva pro příjemce',
         13 => 'Typ',
+        16 => 'Poznámka',
     );
 
     private const HEAD_LINE_DATE_PATTERN = '(3[01]|[012]?[0-9])\.(1[0-2]|0?[0-9])\.20([0-9]{2})';
@@ -58,14 +61,16 @@ class PaymentModel extends BaseModel
         'currency' => '.*', # wrong currency throws different error
         'counter_account_number' => '(([0-9]{1,6}-)?[0-9]{2,10})?',
         'counter_account_bank_code' => '[0-9]{0,4}',
-        'var_symbol' => '[0-9]*',
+        'var_symbol' => '[0-9]{0,10}',
     );
 
+    # PAIDBY_CASH is not here - it is only automatically generated
+    # null iff unknown
     private const PAYMENT_TYPES = array(
-        'card' => ['Karetní transakce'],
-        'bank' => ['Bezhotovostní platba', 'Okamžitá odchozí platba', 'Bezhotovostní příjem', 'Platba převodem uvnitř banky', 'Inkaso'],
-        'cash' => ['Vklad v hotovosti', 'Výběr z hotovosti'], # NOT CASH_TYPE LIKE FOR INVOICE
-        'fee' => ['Poplatek.*'],
+        'PAIDBY_CARD' => ['Karetní transakce'],
+        'PAIDBY_BANK' => ['Bezhotovostní platba', 'Okamžitá odchozí platba', 'Bezhotovostní příjem', 'Platba převodem uvnitř banky', 'Inkaso'],
+        'PAIDBY_ATM' => ['Vklad v hotovosti', 'Výběr z hotovosti'],
+        'PAIDBY_FEE' => ['Poplatek.*'],
     );
 
     private function match(string $pattern, string $str): bool
@@ -239,7 +244,53 @@ class PaymentModel extends BaseModel
         }
     }
 
+    private function constructImportData(array $values): array
+    {
+        $head = $values['head'];
 
+        list($bankAccountNumber, $bankCode) = explode('/', $head['bank_account_number']);
+        $head = array(
+            'bank_account_number' => $bankAccountNumber,
+            'bank_code' => $bankCode,
+            'd_statement_start' => new DateTime($head['d_statement_start']),
+            'd_statement_end' => new DateTime($head['d_statement_end']),
+        );
+
+        $payments = $values['payments'];
+
+        #REMOVED: currency
+        foreach ($payments as $i => $oldPayment) {
+            $counterAccountBankCode = $oldPayment['counter_account_bank_code'];
+            if ($counterAccountBankCode != '') {
+                $counterAccountBankCode = '0'*(4 - strlen($counterAccountBankCode)).$counterAccountBankCode;
+            }
+            $payment = array(
+                'bank_operation_id' => $oldPayment['bank_operation_id'],
+                'd_payment' => new DateTime($oldPayment['d_payment']),
+                'amount' => (int) round((float) $oldPayment['amount']),
+                'counter_account_number' => $oldPayment['counter_account_number'],
+                'counter_account_bank_code' => $counterAccountBankCode,
+                'counter_account_name' => substr($oldPayment['counter_account_name'], 0, self::MAX_BANK_ACCOUNT_NAME_LENGTH),
+                'var_symbol' => $oldPayment['var_symbol'],
+                'message_recipient' => substr($oldPayment['message_recipient'], 0, self::MAX_DESCRIPTION_LENGTH),
+                'message_payer' => substr($oldPayment['message_payer'], 0, self::MAX_DESCRIPTION_LENGTH),
+                'description' => substr($oldPayment['description'], 0, self::MAX_DESCRIPTION_LENGTH),
+            );
+
+            $newPaymentType = null;
+            foreach (self::PAYMENT_TYPES as $id => $patterns) {
+                if ($this->matchOne($patterns, $oldPayment['payment_type'])) {
+                    $newPaymentType = $id;
+                    break;
+                }
+            }
+            $payment['payment_type'] = $newPaymentType;
+
+            $payments[$i] = $payment;
+        }
+
+        return ['head' => $head, 'payments' => $payments];
+    }
 
     public function import(ArrayHash $values): void
     {
@@ -247,10 +298,13 @@ class PaymentModel extends BaseModel
 
         $this->validateImportDataPattern($values);
 
+//        Debugger::barDump($values['head']);
+//        Debugger::barDump($values['payments']);
+
+        $values = $this->constructImportData($values);
+
         Debugger::barDump($values['head']);
         Debugger::barDump($values['payments']);
-
-
     }
 }
 
