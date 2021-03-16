@@ -48,7 +48,57 @@ class PaymentModel extends BaseModel
         13 => 'Typ',
     );
 
-    public function constructImportData(ArrayHash $values): array
+    private const HEAD_LINE_DATE_PATTERN = '(3[01]|[012]?[0-9])\.(1[0-2]|0?[0-9])\.20([0-9]{2})';
+    private const FULL_BANK_ACCOUNT_PATTERN = '([0-9]{1,6}-)?[0-9]{2,10}/[0-9]+';
+
+    private const LINE_FIELDS_PATTERN = array(
+        'bank_operation_id' => '[0-9]+',
+        'd_payment' => self::HEAD_LINE_DATE_PATTERN,
+        'amount' => '-?[0-9]+[,.]?[0-9]*',
+        'currency' => '.*', # wrong currency throws different error
+        'counter_account_number' => '(([0-9]{1,6}-)?[0-9]{2,10})?',
+        'counter_account_bank_code' => '[0-9]{0,4}',
+        'var_symbol' => '[0-9]*',
+    );
+
+    private const PAYMENT_TYPES = array(
+        'card' => ['Karetní transakce'],
+        'bank' => ['Bezhotovostní platba', 'Okamžitá odchozí platba', 'Bezhotovostní příjem', 'Platba převodem uvnitř banky', 'Inkaso'],
+        'cash' => ['Vklad v hotovosti', 'Výběr z hotovosti'], # NOT CASH_TYPE LIKE FOR INVOICE
+        'fee' => ['Poplatek.*'],
+    );
+
+    private function match(string $pattern, string $str): bool
+    {
+        return (bool) preg_match('~^'.$pattern.'$~', $str);
+    }
+
+    private function matchOne(array $patterns, string $str): bool
+    {
+        foreach ($patterns as $pattern) {
+            if ($this->match($pattern, $str)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function checkDate(string $date): bool
+    {
+        list($day, $month, $year) = explode('.', $date);
+        return checkdate((int) $month, (int) $day, (int) $year);
+    }
+
+    private function isDateInRange(string $start, string $end, string $date): bool
+    {
+        $start = strtotime($start);
+        $end = strtotime($end);
+        $date = strtotime($date);
+
+        return (($date >= $start) && ($date <= $end));
+    }
+
+    private function loadImportData(ArrayHash $values): array
     {
         $file = $values->import;
 
@@ -121,16 +171,95 @@ class PaymentModel extends BaseModel
         return array('head' => $head, 'payments' => $payments);
     }
 
+    private function validateImportDataPattern(array $values): void
+    {
+        $head = $values['head'];
+
+        if (!$this->match(self::FULL_BANK_ACCOUNT_PATTERN, $head['bank_account_number'])) {
+            throw new InvalidFileValueException('Nesprávný formát čísla bankovního účtu: '.$head['bank_account_number'].' - mělo by být ve formátu: ČÍSLO ÚČTU/ČÍSLO BANKY');
+        }
+
+        $startDate = strtotime($head['d_statement_start']);
+        $endDate = strtotime($head['d_statement_end']);
+
+        if (!$this->match(self::HEAD_LINE_DATE_PATTERN, $head['d_statement_start'])) {
+            throw new InvalidFileValueException('Nesprávný formát data: '.$head['d_statement_start']);
+        } elseif (!$this->match(self::HEAD_LINE_DATE_PATTERN, $head['d_statement_end'])) {
+            throw new InvalidFileValueException('Nesprávný formát data: '.$head['d_statement_end']);
+        } elseif (!$this->checkDate($head['d_statement_start'])) {
+            throw new InvalidFileValueException('Neexistující datum: '.$head['d_statement_start']);
+        } elseif (!$this->checkDate($head['d_statement_end'])) {
+            throw new InvalidFileValueException('Neexistující datum: '.$head['d_statement_end']);
+        } elseif ($startDate > $endDate) {
+            throw new InvalidFileValueException('Datum začátku výpisu: '.$head['d_statement_start'].' je později, než datum konce výpisu: '.$head['d_statement_end']);
+        } elseif ($endDate > time()) {
+            throw new InvalidFileValueException('Neplatné datum konce výpisu: '.$head['d_statement_end'].' - je v budoucnosti.');
+        }
+
+        $payments = $values['payments'];
+
+        foreach ($payments as $i => $payment) {
+            $newPaymentType = null;
+            foreach (self::PAYMENT_TYPES as $id => $patterns) {
+                if ($this->matchOne($patterns, $payment['payment_type'])) {
+                    $newPaymentType = $id;
+                    break;
+                }
+            }
+
+            /* UNCOMMENT TO THROW ERROR FOR UNKNOWN PAYMENT TYPE */
+//            if ($newPaymentType === null) {
+//                throw new InvalidFileValueException('Neznámý typ platby: '.$payment['payment_type']);
+//            }
+
+            $payments[$i]['payment_type'] = $newPaymentType;
+        }
+
+        foreach ($payments as $i => $payment) {
+            foreach (self::LINE_FIELDS_PATTERN as $name => $pattern) {
+                if (!$this->match($pattern, $payment[$name])) {
+                    $columnTitle = self::LINES_TITLE_SCHEMA[array_search($name, self::LINES_SCHEMA)];
+                    throw new InvalidFileValueException('Nesprávný formát hodnoty ve sloupci: '.$columnTitle.' - hodnota: '.$payment[$name]);
+                }
+            }
+
+            if ($payment['currency'] != 'CZK') {
+                throw new InvalidFileValueException('Nesprávná měna: '.$payment['currency'].' - podporujeme pouze CZK.');
+            }
+
+            $date = $payment['d_payment'];
+            $startDate = $head['d_statement_start'];
+            $endDate = $head['d_statement_end'];
+            if (!$this->checkDate($date)) {
+                throw new InvalidFileValueException('Neexistující datum: '.$date);
+            }
+            if (!$this->isDateInRange($startDate, $endDate, $date)) {
+                throw new InvalidFileValueException('Nesprávné datum: '.$date.' - není v intervalu času výpisu (mezi: '.$startDate.' a '.$endDate.')');
+            }
+        }
+    }
+
+
+
     public function import(ArrayHash $values): void
     {
-        $output = $this->constructImportData($values);
+        $values = $this->loadImportData($values);
 
-        Debugger::barDump($output['head']);
-        Debugger::barDump($output['payments']);
+        $this->validateImportDataPattern($values);
+
+        Debugger::barDump($values['head']);
+        Debugger::barDump($values['payments']);
+
+
     }
 }
 
 class InvalidFileFormatException extends \Exception
+{
+
+}
+
+class InvalidFileValueException extends \Exception
 {
 
 }
