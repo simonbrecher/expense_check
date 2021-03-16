@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model;
 
 
+use App\Presenters\AccessUserException;
 use Nette\Utils\ArrayHash;
 use Nette\Utils\DateTime;
 use Tracy\Debugger;
@@ -18,6 +19,14 @@ class PaymentModel extends BaseModel
         array(
             'sscanf' => 'Období: %s - %s',
             'variables' => ['d_statement_start', 'd_statement_end'],
+        ),
+        array(
+            'sscanf' => 'Koncový stav účtu k %[0123456789.]: %[0123456789,] CZK',
+            'variables' => [null, 'balance_start'],
+        ),
+        array(
+            'sscanf' => 'Počáteční stav účtu k %[0123456789.]: %[0123456789,] CZK',
+            'variables' => [null, 'balance_end'],
         ),
     );
 
@@ -52,13 +61,30 @@ class PaymentModel extends BaseModel
     );
 
     private const HEAD_LINE_DATE_PATTERN = '(3[01]|[012]?[0-9])\.(1[0-2]|0?[0-9])\.20([0-9]{2})';
-    private const FULL_BANK_ACCOUNT_PATTERN = '([0-9]{1,6}-)?[0-9]{2,10}/[0-9]+';
+    private const HEAD_LINE_AMOUNT_PATTERN = '-?[0-9]+[,.]?[0-9]*';
+
+    /* Only for error messages */
+    private const HEAD_FIELDS_TITLES = array(
+        'bank_account_number' => 'Číslo bankovního účtu',
+        'balance_start' => 'Počáteční stav bankovního účtu',
+        'balance_end' => 'Koncový stav bankovního účtu',
+        'd_statement_start' => 'Datum začátku bankovního výpisu',
+        'd_statement_end' => 'Datum konce bankovního výpisu',
+    );
+
+    private const HEAD_FIELDS_PATTERN = array(
+        'bank_account_number' => '([0-9]{1,6}-)?[0-9]{2,10}/[0-9]+',
+        'balance_start' => self::HEAD_LINE_AMOUNT_PATTERN,
+        'balance_end' => self::HEAD_LINE_AMOUNT_PATTERN,
+        'd_statement_start' => self::HEAD_LINE_DATE_PATTERN,
+        'd_statement_end' => self::HEAD_LINE_DATE_PATTERN,
+    );
 
     private const LINE_FIELDS_PATTERN = array(
         'bank_operation_id' => '[0-9]+',
         'd_payment' => self::HEAD_LINE_DATE_PATTERN,
-        'amount' => '-?[0-9]+[,.]?[0-9]*',
-        'currency' => '.*', # wrong currency throws different error
+        'amount' => self::HEAD_LINE_AMOUNT_PATTERN,
+        'currency' => '.*', # unsupported currency throws different error
         'counter_account_number' => '(([0-9]{1,6}-)?[0-9]{2,10})?',
         'counter_account_bank_code' => '[0-9]{0,4}',
         'var_symbol' => '[0-9]{0,10}',
@@ -180,18 +206,16 @@ class PaymentModel extends BaseModel
     {
         $head = $values['head'];
 
-        if (!$this->match(self::FULL_BANK_ACCOUNT_PATTERN, $head['bank_account_number'])) {
-            throw new InvalidFileValueException('Nesprávný formát čísla bankovního účtu: '.$head['bank_account_number'].' - mělo by být ve formátu: ČÍSLO ÚČTU/ČÍSLO BANKY');
+        foreach (self::HEAD_FIELDS_PATTERN as $name => $pattern) {
+            if (!$this->match($pattern, $head[$name])) {
+                throw new InvalidFileValueException('Nesprávný formát pro: '.self::HEAD_FIELDS_TITLES[$name].' - hodnota: '.$head[$name]);
+            }
         }
 
         $startDate = strtotime($head['d_statement_start']);
         $endDate = strtotime($head['d_statement_end']);
 
-        if (!$this->match(self::HEAD_LINE_DATE_PATTERN, $head['d_statement_start'])) {
-            throw new InvalidFileValueException('Nesprávný formát data: '.$head['d_statement_start']);
-        } elseif (!$this->match(self::HEAD_LINE_DATE_PATTERN, $head['d_statement_end'])) {
-            throw new InvalidFileValueException('Nesprávný formát data: '.$head['d_statement_end']);
-        } elseif (!$this->checkDate($head['d_statement_start'])) {
+        if (!$this->checkDate($head['d_statement_start'])) {
             throw new InvalidFileValueException('Neexistující datum: '.$head['d_statement_start']);
         } elseif (!$this->checkDate($head['d_statement_end'])) {
             throw new InvalidFileValueException('Neexistující datum: '.$head['d_statement_end']);
@@ -252,6 +276,8 @@ class PaymentModel extends BaseModel
         $head = array(
             'bank_account_number' => $bankAccountNumber,
             'bank_code' => $bankCode,
+            'balance_start' => (int) round((float) $head['balance_start']),
+            'balance_end' => (int) round((float) $head['balance_end']),
             'd_statement_start' => new DateTime($head['d_statement_start']),
             'd_statement_end' => new DateTime($head['d_statement_end']),
         );
