@@ -1,0 +1,37 @@
+{block content}
+
+<p>Payment import page</p>
+
+<div>
+
+    {form importForm}
+
+{*{if $id === null}*}
+    <h2 class="form-title">Importovat výpis z bankovního účtu.</h2>
+{*{else}*}
+{*    <h2 class="form-title">Upravit kategorii.</h2>*}
+{*{/if}*}
+
+    <div class="form-linebox">
+        <div class="form-columnbox">
+            <table class="form-table">
+                <tr n:foreach="$form->getGroup('body')->getControls() as $input">
+                    <td class="label-cell">{label $input /}</td>
+                    <td class="control">{input $input}</td>
+                    {*            <td n:ifcontent>{inputError $input}</td>*}
+                </tr>
+            </table>
+        </div>
+        <hr />
+    </div>
+
+<div class="form-linebox submit-box">
+        {foreach $form->getGroup('buttons')->getControls() as $button}{input $button}{/foreach}
+    </div>
+
+{/form}
+
+</div>
+
+
+<a n:href=":default" class="menu-item">Zpět</a>

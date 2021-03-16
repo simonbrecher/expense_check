@@ -25,4 +25,5 @@ services:
 	- App\Model\SettingModel
 	- App\Model\FamilyModel
 	- App\Model\BankAccountModel
+	- App\Model\PaymentModel
 	security.passwords: Nette\Security\Passwords(::PASSWORD_BCRYPT, [const: 11])
