@@ -341,6 +341,8 @@ class PaymentModel extends BaseModel
         $oldPayments = $values['payments'];
         $payments = [];
 
+        # to reduce number of SQL requests
+        $cardsFound = [];
         #REMOVED: var_symbol
         #ADDED: card_id, var_symbol, user_id, cash_account_id, bank_account_id
         foreach ($oldPayments as $oldPayment) {
@@ -366,15 +368,27 @@ class PaymentModel extends BaseModel
             if ($payment['type_paidby'] == 'PAIDBY_CARD') {
                 $varSymbol = str_repeat('0', 4 - strlen($oldPayment['var_symbol'])).$oldPayment['var_symbol'];
                 $userCards = $this->table('card')->where('bank_account_id', $head['bank_account_id']);
-                $card = $userCards->where('number', $varSymbol)->fetch();
-                if (!$card) {
-                    if (strlen($varSymbol) == 4) {
-                        throw new AccessUserException('Na bankovním účtu není karta s koncem: **'.$varSymbol);
-                    } else {
-                        throw new InvalidFileValueException('Platba placená kartou má špatnou délku variabilního symbolu: '.$varSymbol.' správná délka je 4.');
+
+                # to reduce number of SQL requests
+                if (array_key_exists($varSymbol, $cardsFound)) {
+                    $cardId = $cardsFound[$varSymbol];
+
+                } else {
+                    $card = $userCards->where('number', $varSymbol)->fetch();
+
+                    if (!$card) {
+                        if (strlen($varSymbol) == 4) {
+                            throw new AccessUserException('Na bankovním účtu není karta s koncem: **'.$varSymbol);
+                        } else {
+                            throw new InvalidFileValueException('Platba placená kartou má špatnou délku variabilního symbolu: '.$varSymbol.' správná délka je 4.');
+                        }
                     }
+
+                    $cardId = $card->id;
+                    $cardsFound[$varSymbol] = $cardId;
                 }
-                $payment['card_id'] = $card->id;
+
+                $payment['card_id'] = $cardId;
             }
 
             if ($payment['type_paidby'] == 'PAIDBY_ATM') {
