@@ -5,6 +5,7 @@ namespace App\Model;
 
 
 use App\Presenters\AccessUserException;
+use App\Utils\ImportIntervals;
 use Nette\Utils\ArrayHash;
 use Nette\Utils\DateTime;
 use Tracy\Debugger;
@@ -402,18 +403,75 @@ class PaymentModel extends BaseModel
         return ['head' => $head, 'payments' => $payments];
     }
 
+    private function isImportDuplicate(array $head): bool
+    {
+        $headDateInterval = ['start' => $head['d_statement_start'], 'end' => $head['d_statement_end']];
+        $headBalanceInterval = ['start' => $head['balance_start'], 'end' => $head['balance_end']];
+        $headImportInterval = ['date' => $headDateInterval, 'balance' => $headBalanceInterval];
+
+        $alreadyDateIntervalsSelection = $this->database->table('ba_import')->where('bank_account_id', $head['bank_account_id']);
+        $alreadyDateIntervals = [];
+        foreach ($alreadyDateIntervalsSelection as $row) {
+            $dateInterval = ['start' => $row['d_statement_start'], 'end' => $row['d_statement_end']];
+            $balanceInterval = ['start' => $row['balance_start'], 'end' => $row['balance_end']];
+            $alreadyDateIntervals[] = ['date' => $dateInterval, 'balance' => $balanceInterval];
+        }
+
+        $isImportDuplicate = ImportIntervals::isImportIntervalDuplicate($headImportInterval, $alreadyDateIntervals);
+
+        return $isImportDuplicate;
+    }
+
+    private function removeDuplicates(array $values): array
+    {
+        $head = $values['head'];
+        $oldPayments = $values['payments'];
+
+        $paymentsTable = $this->database->table('payment')->where('bank_account_id', $head['bank_account_id']);
+        $alreadyBankOperationIds = [];
+        foreach($paymentsTable as $row) {
+            $alreadyBankOperationIds[$row->bank_operation_id] = null;
+        }
+
+        $payments = [];
+        $countDuplicate = 0;
+        foreach ($oldPayments as $payment) {
+            if (!array_key_exists($payment['bank_operation_id'], $alreadyBankOperationIds)) {
+                $payments[] = $payment;
+            } else {
+                $countDuplicate ++;
+            }
+        }
+
+        $info = array(
+            'countToSave' => count($payments),
+            'countDuplicate' => $countDuplicate,
+            'isImportDuplicate' => false,
+        );
+
+        if ($info['countToSave'] == 0) {
+            $info['isImportDuplicate'] = $this->isImportDuplicate($head);
+        }
+
+        return ['head' => $head, 'payments' => $payments, 'info' => $info];
+    }
+
     private function saveImport(array $values): void
     {
         $database = $this->database;
 
         $head = $values['head'];
         $payments = $values['payments'];
+        $info = $values['info'];
 
         try {
             $database->beginTransaction();
 
             $import = $database->table('ba_import')->insert($head);
-            $import->related('payment')->insert($payments);
+
+            if ($info['countToSave'] > 0) {
+                $import->related('payment')->insert($payments);
+            }
 
             $database->commit();
         } catch (\PDOException $exception) {
@@ -428,31 +486,38 @@ class PaymentModel extends BaseModel
     {
         $values = $this->loadImportData($values);
 
-        Debugger::barDump($values['head']);
-        Debugger::barDump($values['payments']);
-
         $this->validateImportDataPattern($values);
 
         $values = $this->constructImportData($values);
 
-        Debugger::barDump($values['head']);
-        Debugger::barDump($values['payments']);
-
         $values = $this->constructImportDatabaseData($values);
 
-        Debugger::barDump($values['head']);
-        Debugger::barDump($values['payments']);
+        $values = $this->removeDuplicates($values);
+
+        if ($values['info']['isImportDuplicate']) {
+            throw new DuplicateImportException('Všechny položky z bankovního účtu už jste importovali. Žádné položky se neuloží několikrát.');
+        }
 
         $this->saveImport($values);
     }
 }
 
-class InvalidFileFormatException extends \Exception
+class ImportException extends \Exception
 {
 
 }
 
-class InvalidFileValueException extends \Exception
+class InvalidFileFormatException extends ImportException
+{
+
+}
+
+class InvalidFileValueException extends ImportException
+{
+
+}
+
+class DuplicateImportException extends ImportException
 {
 
 }
