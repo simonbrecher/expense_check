@@ -33,7 +33,7 @@ class PaymentModel extends BaseModel
     private const LINES_SCHEMA = array(
         0 => 'bank_operation_id',
         1 => 'd_payment',
-        2 => 'amount',
+        2 => 'czk_amount',
         3 => 'currency',
         4 => 'counter_account_number',
         6 => 'counter_account_bank_code',
@@ -83,7 +83,7 @@ class PaymentModel extends BaseModel
     private const LINE_FIELDS_PATTERN = array(
         'bank_operation_id' => '[0-9]+',
         'd_payment' => self::HEAD_LINE_DATE_PATTERN,
-        'amount' => self::HEAD_LINE_AMOUNT_PATTERN,
+        'czk_amount' => self::HEAD_LINE_AMOUNT_PATTERN,
         'currency' => '.*', # unsupported currency throws different error
         'counter_account_number' => '(([0-9]{1,6}-)?[0-9]{2,10})?',
         'counter_account_bank_code' => '[0-9]{0,4}',
@@ -93,9 +93,9 @@ class PaymentModel extends BaseModel
     # PAIDBY_CASH is not here - it is only automatically generated
     # null iff unknown
     private const PAYMENT_TYPES = array(
-        'PAIDBY_CARD' => ['Karetní transakce'],
+        'PAIDBY_CARD' => ['Karetní transakce'], # card or ATM - we don't know
         'PAIDBY_BANK' => ['Bezhotovostní platba', 'Okamžitá odchozí platba', 'Bezhotovostní příjem', 'Platba převodem uvnitř banky', 'Inkaso'],
-        'PAIDBY_ATM' => ['Vklad v hotovosti', 'Výběr z hotovosti'],
+        'PAIDBY_ATM' => ['Vklad v hotovosti', 'Výběr z hotovosti'], # not ATM, but bank counter
         'PAIDBY_FEE' => ['Poplatek.*'],
     );
 
@@ -288,12 +288,12 @@ class PaymentModel extends BaseModel
         foreach ($payments as $i => $oldPayment) {
             $counterAccountBankCode = $oldPayment['counter_account_bank_code'];
             if ($counterAccountBankCode != '') {
-                $counterAccountBankCode = '0'*(4 - strlen($counterAccountBankCode)).$counterAccountBankCode;
+                $counterAccountBankCode = str_repeat('0', 4 - strlen($counterAccountBankCode)).$counterAccountBankCode;
             }
             $payment = array(
                 'bank_operation_id' => $oldPayment['bank_operation_id'],
                 'd_payment' => new DateTime($oldPayment['d_payment']),
-                'amount' => (int) round((float) $oldPayment['amount']),
+                'czk_amount' => (int) round((float) $oldPayment['czk_amount']),
                 'counter_account_number' => $oldPayment['counter_account_number'],
                 'counter_account_bank_code' => $counterAccountBankCode,
                 'counter_account_name' => substr($oldPayment['counter_account_name'], 0, self::MAX_BANK_ACCOUNT_NAME_LENGTH),
@@ -318,16 +318,89 @@ class PaymentModel extends BaseModel
         return ['head' => $head, 'payments' => $payments];
     }
 
+    /* Construct foreign keys and validate user access rights. */
+    private function constructImportDatabaseData(array $values): array
+    {
+        #REMOVED: balance_account_number, balance_account_code
+        #ADDED: bank_account_id
+        $oldHead = $values['head'];
+        $head = array(
+            'balance_start' => $oldHead['balance_start'],
+            'balance_end' => $oldHead['balance_end'],
+            'd_statement_start' => $oldHead['d_statement_start'],
+            'd_statement_end' => $oldHead['d_statement_end'],
+        );
+
+        $userBankAccounts = $this->table('bank_account');
+        $bankAccount = $userBankAccounts->where('number', $oldHead['bank_account_number'])->where('bank.bank_code', $oldHead['bank_code'])->fetch();
+        if (!$bankAccount) {
+            throw new AccessUserException('Uživatel nemá přístuk k bankovnímu účtu: '.$oldHead['bank_account_number'].'/'.$oldHead['bank_code']);
+        }
+        $head['bank_account_id'] = $bankAccount->id;
+
+        $oldPayments = $values['payments'];
+        $payments = [];
+
+        #REMOVED: var_symbol
+        #ADDED: card_id, var_symbol, user_id, cash_account_id
+        foreach ($oldPayments as $oldPayment) {
+            $payment = array(
+                'user_id' => $this->user->identity->id,
+
+                'bank_operation_id' => $oldPayment['bank_operation_id'],
+                'd_payment' => $oldPayment['d_payment'],
+                'czk_amount' => $oldPayment['czk_amount'],
+                'counter_account_number' => $oldPayment['counter_account_number'],
+                'counter_account_bank_code' => $oldPayment['counter_account_bank_code'],
+                'counter_account_name' => $oldPayment['counter_account_name'],
+                'message_recipient' => $oldPayment['message_recipient'],
+                'message_payer' => $oldPayment['message_payer'],
+                'description' => $oldPayment['description'],
+                'payment_type' => $oldPayment['payment_type'],
+            );
+
+            if ($payment['payment_type'] == 'PAIDBY_CARD') {
+                $varSymbol = str_repeat('0', 4 - strlen($oldPayment['var_symbol'])).$oldPayment['var_symbol'];
+                $userCards = $this->table('card')->where('bank_account_id', $head['bank_account_id']);
+                $card = $userCards->where('number', $varSymbol)->fetch();
+                if (!$card) {
+                    if (strlen($varSymbol) == 4) {
+                        throw new AccessUserException('Na bankovním účtu není karta s koncem: **'.$varSymbol);
+                    } else {
+                        throw new InvalidFileValueException('Platba placená kartou má špatnou délku variabilního symbolu: '.$varSymbol.' správná délka je 4.');
+                    }
+                }
+                $payment['card_id'] = $card->id;
+            } else {
+                $payment['var_symbol'] = $oldPayment['var_symbol'];
+            }
+
+            if ($payment['payment_type'] == 'PAIDBY_ATM') {
+                $cashAccountId = $this->database->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
+                $payment['cash_account_id'] = $cashAccountId;
+            }
+
+            $payments[] = $payment;
+        }
+
+        return ['head' => $head, 'payments' => $payments];
+    }
+
     public function import(ArrayHash $values): void
     {
         $values = $this->loadImportData($values);
 
+        Debugger::barDump($values['head']);
+        Debugger::barDump($values['payments']);
+
         $this->validateImportDataPattern($values);
 
-//        Debugger::barDump($values['head']);
-//        Debugger::barDump($values['payments']);
-
         $values = $this->constructImportData($values);
+
+        Debugger::barDump($values['head']);
+        Debugger::barDump($values['payments']);
+
+        $values = $this->constructImportDatabaseData($values);
 
         Debugger::barDump($values['head']);
         Debugger::barDump($values['payments']);
