@@ -41,7 +41,7 @@ class PaymentModel extends BaseModel
         9 => 'var_symbol',
         11 => 'message_recipient', # TODO: check
         12 => 'message_payer', # TODO: check
-        13 => 'payment_type',
+        13 => 'type_paidby',
         16 => 'description', # TODO: check
     );
 
@@ -230,7 +230,7 @@ class PaymentModel extends BaseModel
         foreach ($payments as $i => $payment) {
             $newPaymentType = null;
             foreach (self::PAYMENT_TYPES as $id => $patterns) {
-                if ($this->matchOne($patterns, $payment['payment_type'])) {
+                if ($this->matchOne($patterns, $payment['type_paidby'])) {
                     $newPaymentType = $id;
                     break;
                 }
@@ -238,10 +238,10 @@ class PaymentModel extends BaseModel
 
             /* UNCOMMENT TO THROW ERROR FOR UNKNOWN PAYMENT TYPE */
 //            if ($newPaymentType === null) {
-//                throw new InvalidFileValueException('Neznámý typ platby: '.$payment['payment_type']);
+//                throw new InvalidFileValueException('Neznámý typ platby: '.$payment['type_paidby']);
 //            }
 
-            $payments[$i]['payment_type'] = $newPaymentType;
+            $payments[$i]['type_paidby'] = $newPaymentType;
         }
 
         foreach ($payments as $i => $payment) {
@@ -291,26 +291,26 @@ class PaymentModel extends BaseModel
                 $counterAccountBankCode = str_repeat('0', 4 - strlen($counterAccountBankCode)).$counterAccountBankCode;
             }
             $payment = array(
-                'bank_operation_id' => $oldPayment['bank_operation_id'],
+                'bank_operation_id' => (int) $oldPayment['bank_operation_id'],
                 'd_payment' => new DateTime($oldPayment['d_payment']),
                 'czk_amount' => (int) round((float) $oldPayment['czk_amount']),
                 'counter_account_number' => $oldPayment['counter_account_number'],
                 'counter_account_bank_code' => $counterAccountBankCode,
-                'counter_account_name' => substr($oldPayment['counter_account_name'], 0, self::MAX_BANK_ACCOUNT_NAME_LENGTH),
+                'counter_account_name' => utf8_encode(substr($oldPayment['counter_account_name'], 0, self::MAX_BANK_ACCOUNT_NAME_LENGTH)),
                 'var_symbol' => $oldPayment['var_symbol'],
-                'message_recipient' => substr($oldPayment['message_recipient'], 0, self::MAX_DESCRIPTION_LENGTH),
-                'message_payer' => substr($oldPayment['message_payer'], 0, self::MAX_DESCRIPTION_LENGTH),
-                'description' => substr($oldPayment['description'], 0, self::MAX_DESCRIPTION_LENGTH),
+                'message_recipient' => utf8_encode(substr($oldPayment['message_recipient'], 0, self::MAX_DESCRIPTION_LENGTH)),
+                'message_payer' => utf8_encode(substr($oldPayment['message_payer'], 0, self::MAX_DESCRIPTION_LENGTH)),
+                'description' => utf8_encode(substr($oldPayment['description'], 0, self::MAX_DESCRIPTION_LENGTH)),
             );
 
             $newPaymentType = null;
             foreach (self::PAYMENT_TYPES as $id => $patterns) {
-                if ($this->matchOne($patterns, $oldPayment['payment_type'])) {
+                if ($this->matchOne($patterns, $oldPayment['type_paidby'])) {
                     $newPaymentType = $id;
                     break;
                 }
             }
-            $payment['payment_type'] = $newPaymentType;
+            $payment['type_paidby'] = $newPaymentType;
 
             $payments[$i] = $payment;
         }
@@ -342,24 +342,28 @@ class PaymentModel extends BaseModel
         $payments = [];
 
         #REMOVED: var_symbol
-        #ADDED: card_id, var_symbol, user_id, cash_account_id
+        #ADDED: card_id, var_symbol, user_id, cash_account_id, bank_account_id
         foreach ($oldPayments as $oldPayment) {
             $payment = array(
                 'user_id' => $this->user->identity->id,
+                'bank_account_id' => $head['bank_account_id'],
+                'card_id' => null,
+                'cash_account_id' => null,
 
                 'bank_operation_id' => $oldPayment['bank_operation_id'],
                 'd_payment' => $oldPayment['d_payment'],
                 'czk_amount' => $oldPayment['czk_amount'],
+                'var_symbol' => $oldPayment['var_symbol'],
                 'counter_account_number' => $oldPayment['counter_account_number'],
                 'counter_account_bank_code' => $oldPayment['counter_account_bank_code'],
                 'counter_account_name' => $oldPayment['counter_account_name'],
                 'message_recipient' => $oldPayment['message_recipient'],
                 'message_payer' => $oldPayment['message_payer'],
                 'description' => $oldPayment['description'],
-                'payment_type' => $oldPayment['payment_type'],
+                'type_paidby' => $oldPayment['type_paidby'],
             );
 
-            if ($payment['payment_type'] == 'PAIDBY_CARD') {
+            if ($payment['type_paidby'] == 'PAIDBY_CARD') {
                 $varSymbol = str_repeat('0', 4 - strlen($oldPayment['var_symbol'])).$oldPayment['var_symbol'];
                 $userCards = $this->table('card')->where('bank_account_id', $head['bank_account_id']);
                 $card = $userCards->where('number', $varSymbol)->fetch();
@@ -371,11 +375,9 @@ class PaymentModel extends BaseModel
                     }
                 }
                 $payment['card_id'] = $card->id;
-            } else {
-                $payment['var_symbol'] = $oldPayment['var_symbol'];
             }
 
-            if ($payment['payment_type'] == 'PAIDBY_ATM') {
+            if ($payment['type_paidby'] == 'PAIDBY_ATM') {
                 $cashAccountId = $this->database->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
                 $payment['cash_account_id'] = $cashAccountId;
             }
@@ -384,6 +386,28 @@ class PaymentModel extends BaseModel
         }
 
         return ['head' => $head, 'payments' => $payments];
+    }
+
+    private function saveImport(array $values): void
+    {
+        $database = $this->database;
+
+        $head = $values['head'];
+        $payments = $values['payments'];
+
+        try {
+            $database->beginTransaction();
+
+            $import = $database->table('ba_import')->insert($head);
+            $import->related('payment')->insert($payments);
+
+            $database->commit();
+        } catch (\PDOException $exception) {
+            Debugger::barDump($exception->getMessage());
+            $database->rollBack();
+
+            throw new \PDOException('Výpis se nepodařilo uložit do databáze.');
+        }
     }
 
     public function import(ArrayHash $values): void
@@ -404,6 +428,8 @@ class PaymentModel extends BaseModel
 
         Debugger::barDump($values['head']);
         Debugger::barDump($values['payments']);
+
+        $this->saveImport($values);
     }
 }
 
