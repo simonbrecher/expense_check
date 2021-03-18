@@ -9,6 +9,15 @@ use Nette\Database\Table\Selection;
 
 class PaymentModel extends BaseModel
 {
+    protected const PAIDBY_TYPES = array(
+        'PAIDBY_CASH' => 'V hotovosti',
+        'PAIDBY_CARD' => 'Kartou',
+        'PAIDBY_BANK' => 'Bankou',
+        'PAIDBY_ATM' => 'Bankomat',
+        'PAIDBY_FEE' => 'Poplatek',
+        null => '??',
+    );
+
     private function canAccessBankAccount(int $id): bool
     {
         $row = $this->table('bank_account')->get($id);
@@ -27,5 +36,10 @@ class PaymentModel extends BaseModel
         }
 
         return $this->database->table('ba_import')->where('bank_account_id', $bankAccountId)->order('d_statement_start');
+    }
+
+    public function getTypePaidbyName(string|null $typePaidby): string
+    {
+        return self::PAIDBY_TYPES[$typePaidby];
     }
 }

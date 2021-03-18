@@ -95,7 +95,7 @@ class ImportModel extends BaseModel
     private const PAYMENT_TYPES = array(
         'PAIDBY_CARD' => ['Karetní transakce'], # card or ATM - we don't know
         'PAIDBY_BANK' => ['Bezhotovostní platba', 'Okamžitá odchozí platba', 'Bezhotovostní příjem', 'Platba převodem uvnitř banky', 'Inkaso'],
-        'PAIDBY_ATM' => ['Vklad v hotovosti', 'Výběr z hotovosti'], # not ATM, but bank counter
+        'PAIDBY_ATM' => ['Vklad v hotovosti', 'Výběr v hotovosti'], # not ATM, but bank counter
         'PAIDBY_FEE' => ['Poplatek.*'],
     );
 

@@ -29,7 +29,8 @@
                 {/if}
                 <td class="consumer-cell">{$firstItem->ref('user', 'consumer_id')?->name ?? 'Všichni'}</td>
                 <td>{$firstItem->description}</td>
-                <td class="czk_cell">{$invoice->related('invoice_item')->sum('czk_amount')|number:0, '.', ' '} Kč</td>
+                {var $sum = $invoice->related('invoice_item')->sum('czk_amount')}
+                <td class="czk_cell {$sum > 10000 ? bold : null}">{$sum|number:0, '.', ' '} Kč</td>
             {else}
                 <td colspan="4" class="blank-item-cell"><span>-- ???? --</span></td>
             {/if}
@@ -45,6 +46,7 @@
 
     .table-smart { width: 1090px; }
     .date-cell, .consumer-cell, .PAIDBY_CASH, .PAIDBY_CARD, .PAIDBY_BANK { text-align: center; }
+    .bold { font-weight: bold; }
     .table-body .PAIDBY_CASH { font-weight: bold; color: #0D0; }
     .table-body .PAIDBY_CARD { font-weight: bold; color: #DC0; }
     .table-body .PAIDBY_BANK { font-weight: bold; color: #E70; }

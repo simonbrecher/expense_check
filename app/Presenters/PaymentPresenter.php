@@ -17,6 +17,12 @@ class PaymentPresenter extends BasePresenter
         $this->template->paymentModel = $this->paymentModel;
     }
 
+    public function renderViewPayment(): void
+    {
+        $this->template->bankAccounts = $this->paymentModel->getbankAccounts();
+        $this->template->paymentModel = $this->paymentModel;
+    }
+
     public function createComponentImportForm(): BasicForm
     {
         $form = new BasicForm();
