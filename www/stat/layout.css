@@ -22,6 +22,7 @@ body, input, textarea { font-family: 'Open Sans', Arial; font-size: 15px; }
 .error { border: 3px solid #F00; padding: 5px 25px; color: #F00; }
 
         /** flash messages */
-.flash-success { border: 3px solid #1F1; padding: 5px 25px; color: #1F1; }
-.flash-info { border: 3px solid #EC0; padding: 5px 25px; color: #EC0; background-color: #FFF; }
-.flash-error { border: 3px solid #F00; padding: 5px 25px; color: #F00; }
+.flash-error, .flash-info, .flash-success { font-size: 25px; padding: 5px 25px; margin-bottom: 3px; }
+.flash-success { border: 3px solid #1F1; color: #1F1; }
+.flash-info { border: 3px solid #EC0; color: #EC0; }
+.flash-error { border: 3px solid #F00; color: #F00; }

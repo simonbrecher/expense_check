@@ -8,9 +8,8 @@ use App\Presenters\AccessUserException;
 use App\Utils\ImportIntervals;
 use Nette\Utils\ArrayHash;
 use Nette\Utils\DateTime;
-use Tracy\Debugger;
 
-class PaymentModel extends BaseModel
+class ImportModel extends BaseModel
 {
     private const HEAD_SCHEMA = array(
         array(
@@ -474,15 +473,15 @@ class PaymentModel extends BaseModel
             }
 
             $database->commit();
-        } catch (\PDOException $exception) {
-            Debugger::barDump($exception->getMessage());
+        } catch (\PDOException) {
             $database->rollBack();
 
             throw new \PDOException('Výpis se nepodařilo uložit do databáze.');
         }
     }
 
-    public function import(ArrayHash $values): void
+    /* return array('countSaved', 'countDuplicate') */
+    public function import(ArrayHash $values): array
     {
         $values = $this->loadImportData($values);
 
@@ -499,25 +498,22 @@ class PaymentModel extends BaseModel
         }
 
         $this->saveImport($values);
+
+        return ['countSaved' => $values['info']['countToSave'], 'countDuplicate' => $values['info']['countDuplicate']];
     }
 }
 
-class ImportException extends \Exception
+class InvalidFileFormatException extends \Exception
 {
 
 }
 
-class InvalidFileFormatException extends ImportException
+class InvalidFileValueException extends \Exception
 {
 
 }
 
-class InvalidFileValueException extends ImportException
-{
-
-}
-
-class DuplicateImportException extends ImportException
+class DuplicateImportException extends \Exception
 {
 
 }

@@ -8,7 +8,7 @@ use App\Model;
 
 class PaymentPresenter extends BasePresenter
 {
-    public function __construct(private Model\PaymentModel $paymentModel)
+    public function __construct(private Model\ImportModel $importModel)
     {}
 
     public function createComponentImportForm(): BasicForm
@@ -41,6 +41,24 @@ class PaymentPresenter extends BasePresenter
 
     public function importFormSuccess(BasicForm $form): void
     {
-        $this->paymentModel->import($form->values);
+        try {
+            $result = $this->importModel->import($form->values);
+            $countSaved = $result['countSaved'];
+            $countDuplicate = $result['countDuplicate'];
+
+            $this->flashMessage('Výpis z bankovního účtu se podařilo úspěšně uložit.', 'success');
+            $this->flashMessage('Celkem '.$countSaved.' plateb bylo uloženo.', 'info');
+            if ($countDuplicate == 0) {
+                $this->flashMessage('Žádné platby nebyly duplicitní.', 'info');
+            } else {
+                $this->flashMessage('Celkem '.$countDuplicate.' plateb bylo duplicitních, a ty nebyly uloženy.');
+            }
+
+            $this->redirect(':default');
+        } catch (\PDOException|AccessUserException|Model\InvalidFileValueException|Model\InvalidFileFormatException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        } catch (Model\DuplicateImportException $exception) {
+            $this->flashMessage($exception->getMessage(), 'info');
+        }
     }
 }
