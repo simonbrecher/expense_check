@@ -6,6 +6,8 @@ namespace App\Utils;
 
 class ImportIntervals
 {
+    private const DAY_TIMESTAMP_DIFFERENCE = 86400;
+
     /* return int for sorting */
     private static function doesFirstImportIntervalStartLater(array $a, array $b): int
     {
@@ -48,9 +50,9 @@ class ImportIntervals
         $firstEnd = $a['date']['end']->getTimeStamp();
         $secondStart = $b['date']['start']->getTimeStamp();
 
-        if ($firstEnd < $secondStart) {
+        if ($firstEnd + self::DAY_TIMESTAMP_DIFFERENCE < $secondStart) {
             return false;
-        } elseif ($firstEnd == $secondStart) {
+        } elseif ($firstEnd < $secondStart) {
             return $a['balance']['end'] == $b['balance']['start'];
         } else {
             return true;
