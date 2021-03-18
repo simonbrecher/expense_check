@@ -4,9 +4,14 @@
 namespace App\Utils;
 
 
+use Nette\Database\Table\Selection;
+use Nette\Utils\DateTime;
+use Tracy\Debugger;
+
 class ImportIntervals
 {
     private const DAY_TIMESTAMP_DIFFERENCE = 86400;
+    private const LAST_IMPORT_TIMESTAMP_DIFFERENCE = 7 * self::DAY_TIMESTAMP_DIFFERENCE;
 
     /* return int for sorting */
     private static function doesFirstImportIntervalStartLater(array $a, array $b): int
@@ -83,6 +88,59 @@ class ImportIntervals
         }
 
         return $outputImportIntervals;
+    }
+
+    public static function getMissingImportIntervalsFromDatabase(Selection $importsSelection): array
+    {
+        $intervals = [];
+        foreach ($importsSelection as $row) {
+            $importDates = ['start' => $row->d_statement_start, 'end' => $row->d_statement_end];
+            $importBalances = ['start' => $row->balance_start, 'end' => $row->balance_end];
+            $import = ['date' => $importDates, 'balance' => $importBalances];
+            $intervals[] = $import;
+        }
+
+        $intervals = self::joinImportIntervals($intervals);
+
+        $missingIntervals = [];
+        $endDate = null;
+        foreach ($intervals as $interval) {
+            if ($endDate === null) {
+                $endDate = $interval['date']['end'];
+            } else {
+                $missingInterval = ['start' => $endDate, 'end' => $interval['date']['start']];
+                $missingIntervals[] = $missingInterval;
+                $endDate = $interval['date']['end'];
+            }
+        }
+        if ($endDate !== null) {
+            $endTimeStamp = $endDate->getTimeStamp();
+            $now = new DateTime();
+            $currentTimeStamp = $now->getTimestamp();
+            if ($endTimeStamp + self::LAST_IMPORT_TIMESTAMP_DIFFERENCE < $currentTimeStamp) {
+                $missingInterval = ['start' => $endDate, 'end' => $now];
+                $missingIntervals[] = $missingInterval;
+            }
+        }
+
+        return $missingIntervals;
+    }
+
+    public static function fancyDumpImportIntervals(array $intervals): void
+    {
+        $isFirst = true;
+        foreach ($intervals as $interval) {
+            $text = $interval['date']['start']->format('j.n').' '.$interval['date']['end']->format('j.n').' '.$interval['balance']['start'].' '.$interval['balance']['end'];
+            if ($isFirst) {
+                Debugger::barDump($text, 'fancyDumpImportIntervals');
+                $isFirst = false;
+            } else {
+                Debugger::barDump($text);
+            }
+        }
+        if ($isFirst) {
+            Debugger::barDump('', 'fancyDumpImportIntervals');
+        }
     }
 
     public static function isImportIntervalDuplicate(array $importInterval, array $inputImportIntervals): bool

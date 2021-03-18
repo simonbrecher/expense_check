@@ -8,8 +8,14 @@ use App\Model;
 
 class PaymentPresenter extends BasePresenter
 {
-    public function __construct(private Model\ImportModel $importModel)
+    public function __construct(private Model\ImportModel $importModel, private Model\PaymentModel $paymentModel)
     {}
+
+    public function renderViewImport(): void
+    {
+        $this->template->bankAccounts = $this->paymentModel->getbankAccounts();
+        $this->template->paymentModel = $this->paymentModel;
+    }
 
     public function createComponentImportForm(): BasicForm
     {
@@ -53,12 +59,12 @@ class PaymentPresenter extends BasePresenter
             } else {
                 $this->flashMessage('Celkem '.$countDuplicate.' plateb bylo duplicitních, a ty nebyly uloženy.');
             }
-
-            $this->redirect(':default');
         } catch (\PDOException|AccessUserException|Model\InvalidFileValueException|Model\InvalidFileFormatException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         } catch (Model\DuplicateImportException $exception) {
             $this->flashMessage($exception->getMessage(), 'info');
         }
+
+        $this->redirect(':default');
     }
 }

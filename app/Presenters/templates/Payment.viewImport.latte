@@ -1,0 +1,61 @@
+{block content}
+
+{foreach $bankAccounts as $bankAccount}
+
+    <h2 class="form-title">Bankovní účet: {$bankAccount->number} / {$bankAccount->bank->bank_code}</h2>
+
+    <div class="table-list-container">
+
+        <table class="table-smart">
+            <tr class="table-heading">
+                <td>Datum importu</td>
+                <td>Začátek importu</td>
+                <td>Konec importu</td>
+                <td>Počáteční stav účtu</td>
+                <td>Koncový stav účtu</td>
+                <td>Počet neduplicitních plateb</td>
+            </tr>
+            {var $imports = $paymentModel->getImportIntervalsSorted($bankAccount->id)}
+            {var $missingImports = App\Utils\ImportIntervals::class::getMissingImportIntervalsFromDatabase($imports)}
+            {var $missingImportId = 0}
+            {foreach $imports as $import}
+                {if $missingImportId != count($missingImports)}
+                    {var $missingImport = $missingImports[$missingImportId]}
+                    {if $missingImport['start']->getTimeStamp() < $import->d_statement_start->getTimeStamp()}
+                        <tr class="table-body">
+                            <td class="missing-import" colspan="6">Chybí import z doby od: {$missingImport['start']->format('j.n.y')} do: {$missingImport['end']->format('j.n.y')}</td>
+                        </tr>
+                        {var $missingImportId = $missingImportId + 1}
+                    {/if}
+                {/if}
+
+                <tr class="table-body">
+                    <td>{$import->dt_created->format('j.n.y')}</td>
+                    <td>{$import->d_statement_start->format('j.n.y')}</td>
+                    <td>{$import->d_statement_end->format('j.n.y')}</td>
+                    <td>{$import->balance_start} Kč</td>
+                    <td>{$import->balance_end} Kč</td>
+                    <td>{$import->related('payment')->count()}</td>
+                </tr>
+            {/foreach}
+
+            {if $missingImportId != count($missingImports)}
+                {var $missingImport = $missingImports[$missingImportId]}
+                <tr class="table-body">
+                    <td class="missing-import" colspan="6">Chybí import z doby od: {$missingImport['start']->format('j.n.y')} do: {$missingImport['end']->format('j.n.y')}</td>
+                </tr>
+            {/if}
+        </table>
+
+    </div>
+
+{/foreach}
+
+<a n:href=":default" class="menu-item">Zpět</a>
+
+<style>
+
+    td.missing-import { color: #F00; font-weight: bold; }
+
+</style>
+
