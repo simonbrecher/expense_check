@@ -1,5 +1,40 @@
 {block content}
 
-<p>Payment channel add page</p>
+<div>
+
+{form paymentChannelForm}
+
+<h2 class="form-title">Přídat trvalý příkaz.</h2>
+
+<div class="form-linebox">
+    <div class="form-columnbox">
+        <table class="form-table">
+            <tr n:foreach="$form->getGroup('column0')->getControls() as $input">
+                <td class="label-cell">{label $input /}</td>
+                <td class="control">{input $input}</td>
+                {*            <td n:ifcontent>{inputError $input}</td>*}
+            </tr>
+        </table>
+    </div>
+
+    <div class="form-columnbox">
+        <table class="form-table">
+            <tr n:foreach="$form->getGroup('column1')->getControls() as $input">
+                <td class="label-cell">{label $input /}</td>
+                <td class="control">{input $input}</td>
+                {*            <td n:ifcontent>{inputError $input}</td>*}
+            </tr>
+        </table>
+    </div>
+    <hr />
+</div>
+
+<div class="form-linebox submit-box">
+    {foreach $form->getGroup('buttons')->getControls() as $button}{input $button}{/foreach}
+</div>
+
+{/form}
+
+</div>
 
 <a n:href=":default" class="menu-item">Zpět</a>

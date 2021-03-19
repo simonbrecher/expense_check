@@ -37,16 +37,7 @@ class PaymentPresenter extends BasePresenter
 
             $form->addSubmit('submit', 'Uložit');
 
-//            if ($this->getParameter('id') !== null) {
-//                $form->addSubmit('delete', 'Smazat')->setValidationScope([])
-//                    ->setHtmlAttribute('class', 'delete');
-//            }
-
         $form->onSuccess[] = [$this, 'importFormSuccess'];
-
-//            if ($this->getParameter('id') !== null) {
-//                $form->setDefaults($this->settingModel->getCategoryParameters((int) $this->getParameter('id')));
-//            }
 
         return $form;
     }
@@ -72,5 +63,53 @@ class PaymentPresenter extends BasePresenter
         }
 
         $this->redirect(':default');
+    }
+
+    public function createComponentPaymentChannelForm(): BasicForm
+    {
+        $form = new BasicForm();
+
+        $form->addGroup('column0');
+
+            $bankAccountSelect = $this->paymentModel->getBankAccountSelect();
+            $form->addSelect('bank_account_id', 'Bankovní účet: ', $bankAccountSelect)->setPrompt('')->setRequired('Vyberte bankovní účet.');
+
+            $form->addText('var_symbol', 'Variabilní symbol: ')->setRequired('Vyplňte variabilní symbol.');
+
+            $yesNoSelect = [1 => 'ANO', 0 => 'NE'];
+            $form->addSelect('is_active', 'Je aktivní: ', $yesNoSelect)->setDefaultValue(1);
+
+            $form->addSelect('is_consumption_type', 'Je výdaj: ', $yesNoSelect)->setDefaultValue(1);
+
+        $form->addGroup('column1');
+
+            $categorySelect = $this->paymentModel->getCategorySelect();
+            $form->addSelect('category_id', 'Kategorie: ', $categorySelect)->setPrompt('')->setRequired('Vyberte kategorii.');
+
+            $form->addText('counter_account_number', 'Číslo protiúčtu: ');
+
+            $form->addText('counter_account_bank_code', 'Bankovní kód protiúčtu: ');
+
+            $form->addTextArea('description', 'Popis: ')->setMaxLength(35);
+
+        $form->addGroup('buttons');
+
+            $form->addSubmit('submit', 'Uložit');
+
+        $form->onSuccess[] = [$this, 'paymentChannelFormSuccess'];
+
+        return $form;
+    }
+
+    public function paymentChannelFormSuccess(BasicForm $form): void
+    {
+        try {
+            $this->paymentModel->addPaymentChannel($form);
+
+            $this->flashMessage('Trvalý příkaz byl úspěšně přidaný.', 'success');
+            $this->redirect(':viewPaymentChannel');
+        } catch (\PDOException|AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
     }
 }
