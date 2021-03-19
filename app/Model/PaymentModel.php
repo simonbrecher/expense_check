@@ -19,6 +19,36 @@ class PaymentModel extends BaseModel
         null => '??',
     );
 
+    public function activatePaymentChannel(int $id): void
+    {
+        $row = $this->table('payment_channel')->get($id);
+        if (!$row) {
+            throw new AccessUserException('Uživatel nemůže zpřístupnit tento trvalý příkaz.');
+        }
+        $row->update(['is_active' => true]);
+    }
+
+    public function deactivatePaymentChannel(int $id): void
+    {
+        $row = $this->table('payment_channel')->get($id);
+        if (!$row) {
+            throw new AccessUserException('Uživatel nemůže zpřístupnit tento trvalý příkaz.');
+        }
+        $row->update(['is_active' => false]);
+    }
+
+    public function removePaymentChannel(int $id): void
+    {
+        $row = $this->table('payment_channel')->get($id);
+        if (!$row) {
+            throw new AccessUserException('Uživatel nemůže zpřístupnit tento trvalý příkaz.');
+        }
+        if ($row->related('payment')->count() != 0) {
+            throw new AccessUserException('Tento trvalý příkaz nelze smazat, protože podle něj byly roztřízené platby.');
+        }
+        $row->delete();
+    }
+
     public function constructAddPaymentChannelData(BasicForm $form): array
     {
         $oldValues = $form->values;
@@ -71,6 +101,11 @@ class PaymentModel extends BaseModel
     public function getBankAccounts(): Selection
     {
         return $this->table('bank_account');
+    }
+
+    public function getPaymentChannels(): Selection
+    {
+        return $this->table('payment_channel');
     }
 
     public function getCategorySelect(): array

@@ -11,6 +11,40 @@ class PaymentPresenter extends BasePresenter
     public function __construct(private Model\ImportModel $importModel, private Model\PaymentModel $paymentModel)
     {}
 
+    public function handleActivatePaymentChannel(int $id): void
+    {
+        try{
+            $this->paymentModel->activatePaymentChannel($id);
+        } catch (AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+    }
+
+    public function handleDeactivatePaymentChannel(int $id): void
+    {
+        try{
+            $this->paymentModel->deactivatePaymentChannel($id);
+        } catch (AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+    }
+
+    public function handleRemovePaymentChannel(int $id): void
+    {
+        try{
+            $this->paymentModel->removePaymentChannel($id);
+
+            $this->flashMessage('Trvalý příkaz byl úspěšně smazaný.', 'success');
+        } catch (AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+    }
+
+    public function renderViewPaymentChannel(): void
+    {
+        $this->template->channels = $this->paymentModel->getPaymentChannels();
+    }
+
     public function renderViewImport(): void
     {
         $this->template->bankAccounts = $this->paymentModel->getbankAccounts();

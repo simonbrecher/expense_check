@@ -15,7 +15,7 @@ class BankAccountModel extends BaseModel
     {
         $row = $this->table('bank_account')->get($id);
         if (!$row) {
-            throw new AccessUserException('Užívatel nemůže zpřístupnit tento bankovní účet.');
+            throw new AccessUserException('Uživatel nemůže zpřístupnit tento bankovní účet.');
         }
         $row->update(['is_active' => true]);
     }
@@ -24,7 +24,7 @@ class BankAccountModel extends BaseModel
     {
         $row = $this->table('bank_account')->get($id);
         if (!$row) {
-            throw new AccessUserException('Užívatel nemůže zpřístupnit tento bankovní účet.');
+            throw new AccessUserException('Uživatel nemůže zpřístupnit tento bankovní účet.');
         }
         $row->update(['is_active' => false]);
     }
@@ -33,7 +33,7 @@ class BankAccountModel extends BaseModel
     {
         $row = $this->table('card')->get($id);
         if (!$row) {
-            throw new AccessUserException('Užívatel nemůže zpřístupnit tuto kartu.');
+            throw new AccessUserException('Uživatel nemůže zpřístupnit tuto kartu.');
         }
         $row->update(['is_active' => true]);
     }

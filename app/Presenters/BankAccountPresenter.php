@@ -18,22 +18,38 @@ class BankAccountPresenter extends BasePresenter
 
     public function handleActivateBankAccount(int $id): void
     {
-        $this->bankAccountModel->activateBankAccount($id);
+        try{
+            $this->bankAccountModel->activateBankAccount($id);
+        } catch (AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
     }
 
     public function handleDeactivateBankAccount(int $id): void
     {
-        $this->bankAccountModel->deactivateBankAccount($id);
+        try{
+            $this->bankAccountModel->deactivateBankAccount($id);
+        } catch (AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
     }
 
     public function handleActivateCard(int $id): void
     {
-        $this->bankAccountModel->activateCard($id);
+        try{
+            $this->bankAccountModel->activateCard($id);
+        } catch (AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
     }
 
     public function handleDeactivateCard(int $id): void
     {
-        $this->bankAccountModel->deactivateCard($id);
+        try{
+            $this->bankAccountModel->deactivateCard($id);
+        } catch (AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
     }
 
     public function createComponentAddBankAccountForm(): BasicForm
@@ -45,9 +61,7 @@ class BankAccountPresenter extends BasePresenter
             $bankSelect = $this->bankAccountModel->getBankSelect();
             $form->addselect('bank_id', 'Banka:', $bankSelect)->setRequired('Vyberte banku.')->setPrompt('');
 
-            $form->addText('number', 'Číslo:')
-//                ->addRule($form::RANGE, 'Číslo bankovního účtu musí být %d až %d znaků dlouhé.', [6, 17])
-                ->setRequired('Doplňte číslo bankovního účtu.');
+            $form->addText('number', 'Číslo:')->setRequired('Doplňte číslo bankovního účtu.');
 
             $isActiveSelect = $this->bankAccountModel->getIsActiveSelect();
             $form->addSelect('is_active', 'Je aktivní:', $isActiveSelect)->setDefaultValue(1);
@@ -56,16 +70,7 @@ class BankAccountPresenter extends BasePresenter
 
             $form->addSubmit('submit', 'Uložit');
 
-//            if ($this->getParameter('id') !== null) {
-//                $form->addSubmit('delete', 'Smazat')->setValidationScope([])
-//                    ->setHtmlAttribute('class', 'delete');
-//            }
-
         $form->onSuccess[] = [$this, 'addBankAccountFormSuccess'];
-
-//        if ($this->getParameter('id') !== null) {
-//            $form->setDefaults($this->familyModel->getConsumerParameters((int) $this->getParameter('id')));
-//        }
 
         return $form;
     }
@@ -104,16 +109,7 @@ class BankAccountPresenter extends BasePresenter
 
             $form->addSubmit('submit', 'Uložit');
 
-    //            if ($this->getParameter('id') !== null) {
-    //                $form->addSubmit('delete', 'Smazat')->setValidationScope([])
-    //                    ->setHtmlAttribute('class', 'delete');
-    //            }
-
         $form->onSuccess[] = [$this, 'addCardFormSuccess'];
-
-//        if ($this->getParameter('id') !== null) {
-//            $form->setDefaults($this->familyModel->getConsumerParameters((int) $this->getParameter('id')));
-//        }
 
         return $form;
     }
