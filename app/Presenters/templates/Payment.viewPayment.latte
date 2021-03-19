@@ -39,7 +39,7 @@
                     {if $payment->message_payer !== '' && $payment->description != ''}<br>{/if}
                     {$payment->description}
                 </td>
-                <td>{$payment->is_paired ? ANO : NE}</td>
+                <td>{$payment->is_paired ? 'ANO' : 'NE'}</td>
             </tr>
         </table>
 

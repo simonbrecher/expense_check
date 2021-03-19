@@ -296,11 +296,11 @@ class ImportModel extends BaseModel
                 'czk_amount' => (int) round((float) $oldPayment['czk_amount']),
                 'counter_account_number' => $oldPayment['counter_account_number'],
                 'counter_account_bank_code' => $counterAccountBankCode,
-                'counter_account_name' => utf8_encode(substr($oldPayment['counter_account_name'], 0, self::MAX_BANK_ACCOUNT_NAME_LENGTH)),
+                'counter_account_name' => mb_substr($oldPayment['counter_account_name'], 0, self::MAX_BANK_ACCOUNT_NAME_LENGTH, 'utf-8'),
                 'var_symbol' => $oldPayment['var_symbol'],
-                'message_recipient' => utf8_encode(substr($oldPayment['message_recipient'], 0, self::MAX_DESCRIPTION_LENGTH)),
-                'message_payer' => utf8_encode(substr($oldPayment['message_payer'], 0, self::MAX_DESCRIPTION_LENGTH)),
-                'description' => utf8_encode(substr($oldPayment['description'], 0, self::MAX_DESCRIPTION_LENGTH)),
+                'message_recipient' => mb_substr($oldPayment['message_recipient'], 0, self::MAX_DESCRIPTION_LENGTH, 'utf-8'),
+                'message_payer' => mb_substr($oldPayment['message_payer'], 0, self::MAX_DESCRIPTION_LENGTH, 'utf-8'),
+                'description' => mb_substr($oldPayment['description'], 0, self::MAX_DESCRIPTION_LENGTH, 'utf-8'),
             );
 
             $newPaymentType = null;
