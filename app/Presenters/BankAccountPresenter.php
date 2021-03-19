@@ -16,6 +16,26 @@ class BankAccountPresenter extends BasePresenter
         $this->redirect(':view');
     }
 
+    public function handleActivateBankAccount(int $id): void
+    {
+        $this->bankAccountModel->activateBankAccount($id);
+    }
+
+    public function handleDeactivateBankAccount(int $id): void
+    {
+        $this->bankAccountModel->deactivateBankAccount($id);
+    }
+
+    public function handleActivateCard(int $id): void
+    {
+        $this->bankAccountModel->activateCard($id);
+    }
+
+    public function handleDeactivateCard(int $id): void
+    {
+        $this->bankAccountModel->deactivateCard($id);
+    }
+
     public function createComponentAddBankAccountForm(): BasicForm
     {
         $form = new BasicForm();

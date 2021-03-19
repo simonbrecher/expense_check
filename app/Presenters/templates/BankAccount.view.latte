@@ -17,7 +17,11 @@
             <td>{$account->bank->name}</td>
             <td>{$account->bank->bank_code}/{$account->number}</td>
             <td>{$bankAccountModel->getIsActiveLabel($account->is_active)}</td>
-            <td></td>
+            {if $account->is_active}
+                <td class="edit-cell"><a n:href=":deactivateBankAccount! $account->id">Deaktivovat</a></td>
+            {else}
+                <td class="edit-cell"><a n:href=":activateBankAccount! $account->id">Aktivovat</a></td>
+            {/if}
         </tr>
     </table>
 
@@ -48,7 +52,11 @@
             <td>{$card->name}</td>
             <td>{$card->number}</td>
             <td>{$bankAccountModel->getIsActiveLabel($card->is_active)}</td>
-            <td></td>
+            {if $card->is_active}
+                <td class="edit-cell"><a n:href=":deactivateCard! $card->id">Deaktivovat</a></td>
+            {else}
+                <td class="edit-cell"><a n:href=":activateCard! $card->id">Aktivovat</a></td>
+            {/if}
         </tr>
     </table>
 

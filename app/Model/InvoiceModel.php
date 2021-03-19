@@ -7,7 +7,6 @@ use App\Form\InvoiceForm;
 use App\Presenters\AccessUserException;
 use Nette\Neon\Exception;
 use Nette;
-use Tracy\Debugger;
 
 class InvoiceModel extends BaseModel
 {
@@ -16,11 +15,11 @@ class InvoiceModel extends BaseModel
 
     public function canAccessInvoice(int $id): bool
     {
-        $invoice = $this->database->table('invoice_head')->get($id);
+        $invoice = $this->table('invoice_head')->get($id);
         if (!$invoice) {
             return false;
         } else {
-            return $invoice->user_id == $this->user->identity->id and !$invoice->is_cash_account_balance;
+            return !$invoice->is_cash_account_balance;
         }
     }
 
@@ -132,10 +131,9 @@ class InvoiceModel extends BaseModel
         return $this->table('category')->get($id)->name;
     }
 
-    public function getUserCategories(string|null $editId): array
+    public function getCategorySelect(string|null $editId): array
     {
-        $data = $this->table('category')->where('NOT is_cash_account_balance')->where('is_active')
-            ->fetchPairs('id', 'name');
+        $data = $this->table('category')->where('NOT is_cash_account_balance')->where('is_active')->fetchPairs('id', 'name');
         if ($editId !== null) {
             if ($this->canAccessInvoice((int) $editId)) {
                 $items = $this->database->table('invoice_item')->where('invoice_head_id', $editId)->select('category.id AS id, category.name AS name');
@@ -149,10 +147,9 @@ class InvoiceModel extends BaseModel
         return $data;
     }
 
-    public function getUserConsumers(string|null $editId): array
+    public function getConsumerSelect(string|null $editId): array
     {
-        $data = $this->table('user')->where('is_active')
-            ->fetchPairs('id', 'name');
+        $data = $this->table('user')->where('is_active')->fetchPairs('id', 'name');
         if ($editId !== null) {
             if ($this->canAccessInvoice((int) $editId)) {
                 $items = $this->database->table('invoice_item')->where('invoice_head_id', $editId)->select('consumer_id AS id, consumer_id.name AS name');
@@ -166,9 +163,21 @@ class InvoiceModel extends BaseModel
         return $data;
     }
 
-    public function getUserCards(): array
+    public function getCardSelect(string|null $editId): array
     {
-        return $this->table('card')->fetchPairs('id', 'number');
+        $data = $this->table('card')->where('is_active')->select('id, CONCAT(number, "** - ", name) AS name')->fetchPairs('id', 'name');
+        if ($editId !== null) {
+            if ($this->canAccessInvoice((int) $editId)) {
+                $invoice = $this->table('invoice_head')->get($editId);
+                $card = $invoice->ref('card');
+                if ($card) {
+                    $data[$card->id] = $card->number.'** - '.$card->name;
+                }
+            } else {
+                throw new \PDOException('Uživatel nemá přístup k tomuto dokladu.');
+            }
+        }
+        return $data;
     }
 
     public function getPaidbyTypes(): array

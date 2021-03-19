@@ -46,11 +46,11 @@ class InvoiceForm extends Form
 
                 $editId = $this->getPresenter()->getParameter('id');
 
-                $categories = $this->getPresenter()->invoiceModel->getUserCategories($editId);
+                $categories = $this->getPresenter()->invoiceModel->getCategorySelect($editId);
                 $container->addSelect('category', 'Kategorie:', $categories)
                     ->setPrompt('');
 
-                $consumers = $this->getPresenter()->invoiceModel->getUserConsumers($editId);
+                $consumers = $this->getPresenter()->invoiceModel->getConsumerSelect($editId);
                 $container->addSelect('consumer', 'Spotřebitel:', $consumers)
                     ->setPrompt('');
             }

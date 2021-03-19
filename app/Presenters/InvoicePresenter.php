@@ -43,12 +43,12 @@ class InvoicePresenter extends BasePresenter
 
             $form ->addText('description', 'Název:')->setMaxLength(35);
 
-            $categories = $this->invoiceModel->getUserCategories($editId);
+            $categories = $this->invoiceModel->getCategorySelect($editId);
             $form->addSelect('category', 'Kategorie:', $categories)
                     ->setRequired('Vyplňte kategorii první položky.')
                     ->setPrompt('');
 
-            $consumers = $this->invoiceModel->getUserConsumers($editId);
+            $consumers = $this->invoiceModel->getConsumerSelect($editId);
             Debugger::barDump($consumers);
             $form->addSelect('consumer', 'Spotřebitel:', $consumers)
                     ->setPrompt('');
@@ -64,7 +64,7 @@ class InvoicePresenter extends BasePresenter
                             ->setRequired('Vyberte typ platby.');
 
             // paid by card
-            $cards = $this->invoiceModel->getUserCards();
+            $cards = $this->invoiceModel->getCardSelect($editId);
             $card = $form->addSelect('card_id', 'Platební karta:', $cards)
                             ->setPrompt('');
 

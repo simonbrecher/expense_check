@@ -11,14 +11,50 @@ use Nette\Utils\ArrayHash;
 
 class BankAccountModel extends BaseModel
 {
+    public function activateBankAccount(int $id): void
+    {
+        $row = $this->table('bank_account')->get($id);
+        if (!$row) {
+            throw new AccessUserException('Užívatel nemůže zpřístupnit tento bankovní účet.');
+        }
+        $row->update(['is_active' => true]);
+    }
+
+    public function deactivateBankAccount(int $id): void
+    {
+        $row = $this->table('bank_account')->get($id);
+        if (!$row) {
+            throw new AccessUserException('Užívatel nemůže zpřístupnit tento bankovní účet.');
+        }
+        $row->update(['is_active' => false]);
+    }
+
+    public function activateCard(int $id): void
+    {
+        $row = $this->table('card')->get($id);
+        if (!$row) {
+            throw new AccessUserException('Užívatel nemůže zpřístupnit tuto kartu.');
+        }
+        $row->update(['is_active' => true]);
+    }
+
+    public function deactivateCard(int $id): void
+    {
+        $row = $this->table('card')->get($id);
+        if (!$row) {
+            throw new AccessUserException('Užívatel nemůže zpřístupnit tuto kartu.');
+        }
+        $row->update(['is_active' => false]);
+    }
+
     public function getBankAccounts(): Selection
     {
-        return $this->table('bank_account')->order('is_active DESC');
+        return $this->table('bank_account');
     }
 
     public function getCards(): Selection
     {
-        return $this->table('card')->order('is_active DESC');
+        return $this->table('card');
     }
 
     public function getBankSelect(): array
