@@ -11,18 +11,19 @@
                 <td>Datum</td>
                 <td>Typ platby</td>
                 <td>Karta</td>
-                <td>Cena</td>
+                <td style="min-width: 80px">Částka</td>
                 <td>Protiúčet</td>
                 <td>Variabilní symbol</td>
                 <td>Zprávy</td>
                 <td>Je spárovaný</td>
+                <td>Je výdaj</td>
             </tr>
             {var $payments = $bankAccount->related('payment')}
             <tr n:foreach="$payments as $payment" class="table-body">
                 <td>{$payment->d_payment->format('j.n.y')}</td>
                 <td  class="PAIDBY {$payment->type_paidby}">{$paymentModel->getTypePaidbyName($payment->type_paidby)}</td>
                 <td>{$payment->card?->number}</td>
-                <td class="price {abs($payment->czk_amount) > 10000 ? bold : null} {$payment->czk_amount > 0 ? positive : negative}">{$payment->czk_amount} Kč</td>
+                <td class="price-cell {abs($payment->czk_amount) > 10000 ? bold : null} {$payment->czk_amount > 0 ? positive : negative}">{$payment->czk_amount} Kč</td>
                     <td>
                         {if $payment->counter_account_number != ''}
                             {$payment->counter_account_number} / {$payment->counter_account_bank_code}
@@ -39,7 +40,8 @@
                     {if $payment->message_payer !== '' && $payment->description != ''}<br>{/if}
                     {$payment->description}
                 </td>
-                <td>{$payment->is_paired ? 'ANO' : 'NE'}</td>
+                <td class="{$payment->is_paired ? 'positive' : 'negative'}">{$payment->is_paired ? 'Spárované' : 'Nespárované'}</td>
+                <td>{$payment->is_consumption ? 'Výdaj' : 'Není výdaj'}</td>
             </tr>
         </table>
 

@@ -17,7 +17,7 @@
         </tr>
         <tr n:foreach="$invoices as $invoice" class="table-body">
             <td>{$invoice->user->name}</td>
-            <td class="date-cell">{$invoice->d_issued|date:'j.n.Y'}</td>
+            <td class="date-cell">{$invoice->d_issued->format('j.n.y')}</td>
             <td class="{$invoice->type_paidby}">{$invoiceModel->getTypePaidbyName($invoice->type_paidby)}</td>
             {var $firstItem = $invoice->related('invoice_item')->where('is_main')->fetch()}
             {if $firstItem}
@@ -25,14 +25,12 @@
                 {if $category !== null}
                     <td class="category-cell">{$firstItem->ref('category', 'category_id')->name}</td>
                 {else}
-                    <td class="blank-item-cell"><span>- ?? -</span></td>
+                    <td class="category-cell">- ?? -</td>
                 {/if}
                 <td class="consumer-cell">{$firstItem->ref('user', 'consumer_id')?->name ?? 'Všichni'}</td>
                 <td>{$firstItem->description}</td>
                 {var $sum = $invoice->related('invoice_item')->sum('czk_amount')}
-                <td class="czk_cell {$sum > 10000 ? bold : null}">{$sum|number:0, '.', ' '} Kč</td>
-            {else}
-                <td colspan="4" class="blank-item-cell"><span>-- ???? --</span></td>
+                <td class="price-cell {$sum > 10000 ? bold : null}">{$sum} Kč</td>
             {/if}
             <td class="edit-cell"><a n:href=":add $invoice->id">Upravit</a></td>
         </tr>

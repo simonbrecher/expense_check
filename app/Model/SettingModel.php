@@ -10,9 +10,7 @@ class SettingModel extends BaseModel
 {
     public function getCategories()
     {
-        return $this->table('category')->where('NOT is_cash_account_balance')->group('category.id')
-            ->select('category.id, name, category.description, COUNT(:invoice_item.id) AS invoice_item_count, SUM(:invoice_item.czk_amount) AS total_amount, is_active')
-            ->order('total_amount DESC');
+        return $this->table('category')->where('NOT is_cash_account_balance')->group('category.id')->order('SUM(:invoice_item.czk_amount) DESC');
     }
 
     public function canAccessCategory(int $id): bool

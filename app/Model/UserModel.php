@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Model;
 
 use Nette;
-use Tracy\Debugger;
 
 class UserModel extends BaseModel
 {
@@ -49,8 +48,7 @@ class UserModel extends BaseModel
                 $user = $family->related('user')->insert($data);
                 $database->table('cash_account')->insert(['user_id' => $user->id]);
             $database->commit();
-        } catch (\PDOException $exception) {
-            Debugger::barDump($exception);
+        } catch (\PDOException) {
             $this->database->rollBack();
             throw new \PDOException('Nepodařilo se vytvořit uživatelský účet.');
         }

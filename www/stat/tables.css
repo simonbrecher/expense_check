@@ -8,3 +8,4 @@
 .table-smart .edit-cell { padding-left: 10px; padding-right: 12px; text-align: center; }
 .table-smart .edit-cell a { padding: 3px 12px;border-radius: 6px; border: 1px solid #DDD; }
 .table-smart tr.table-body:hover td.edit-cell a { background-color: #DDE; border-color:#CDD; }
+.table-smart .price-cell { text-align: right; }

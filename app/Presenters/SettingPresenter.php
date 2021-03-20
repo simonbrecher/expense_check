@@ -8,7 +8,6 @@ use App\Model;
 use App\Model\DupliciteCategoryException;
 use App\Model\DupliciteUserException;
 use Nette\Neon\Exception;
-use Tracy\Debugger;
 
 class SettingPresenter extends BasePresenter
 {
@@ -75,7 +74,6 @@ class SettingPresenter extends BasePresenter
     public function addCategoryFormSuccess(BasicForm $form): void
     {
         $submittedBy = $form->isSubmitted()->name;
-        Debugger::barDump($submittedBy);
         if ($this->getParameter('id') === null) {
             try {
                 $this->settingModel->addCategory($form->values);
@@ -89,7 +87,7 @@ class SettingPresenter extends BasePresenter
                 $wasUpdated = $this->settingModel->editCategory($form->values, (int) $this->getParameter('id'));
 
                 if ($wasUpdated) {
-                    $this->flashMessage('Kategorie byla úspěšně updatovaná.', 'success');
+                    $this->flashMessage('Kategorie byla úspěšně upravená.', 'success');
                 } else {
                     $this->flashMessage('Nedošlo k žádné změně v kategorii.', 'info');
                 }

@@ -2,31 +2,33 @@
 
 <h2 class="view-category-title">Kategorie</h2>
 
-<div class="view-category-wrapper">
-    <div class="category" n:foreach="$categories as $category">
-        <div class="category-columnbox">
-            <div class="category-linebox">
-                <div class="category-name">{$category->name}</div>
-                <div class="category-item">Celková cena: {$category->total_amount ?? 0}</div>
-                <div class="category-item">Počet položek: {$category->invoice_item_count}</div>
-                <div class="category-item, is-active-{$category->is_active}">Je aktivní: {$settingModel->getIsActiveLabel($category->is_active)}</div>
-            </div>
-            <div class="category-linebox">
-                <div class="category-description">{$category->description}</div>
-            </div>
-        </div>
-        <div class="buttons">
-            <a n:href=":addCategory $category->id" class="edit-button">Upravit</a>
-        </div>
-        <hr />
-    </div>
+<div class="table-list-container">
 
-    <a n:href=":addCategory" class="menu-item">Přidat kategorii</a>
+    <table class="table-smart">
+        <tr class="table-heading">
+            <td>Název</td>
+            <td>Datum vzniku</td>
+            <td>Popis</td>
+            <td>Počet položek</td>
+            <td style="min-width: 100px;">Celková částka položek</td>
+            <td>Je aktivní</td>
+            <td></td>
+        </tr>
+        <tr n:foreach="$categories as $category" class="table-body">
+            <td>{$category->name}</td>
+            <td class="date-cell">{$category->dt_created->format('j.n.y')}</td>
+            <td class="message-cell">{$category->description}</td>
+            <td>{$category->related('invoice_item')->count('id')}</td>
+            <td class="price-cell">{$category->related('invoice_item')->sum('czk_amount')} Kč</td>
+            <td>{$category->is_active ? 'Aktivní' : 'NE'}</td>
+            <td class="edit-cell"><a n:href=":addCategory $category->id">Upravit</a></td>
+        </tr>
+    </table>
+
 </div>
 
 <style>
 
-    .is-active-0 { background-color: #999; }
-    .is-active-1 { background-color: #2F2; }
+    .table-smart .message-cell { font-size: 15.5px; padding: 6px 9px; }
 
 </style>
