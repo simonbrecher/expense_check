@@ -79,7 +79,7 @@ class PairModel extends BaseModel
     {
         $payment = $this->tablePayments()->get($id);
         if (!$payment) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tuto platbu.');
+            throw new AccessUserException('Uživatel nemá přístup k této platbě.');
         }
 
         $payment->update(['is_consumption' => false, 'is_paired' => true]);

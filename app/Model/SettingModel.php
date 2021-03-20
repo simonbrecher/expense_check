@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace App\Model;
 
+
 use App\Presenters\AccessUserException;
 use Nette;
 
@@ -27,7 +28,7 @@ class SettingModel extends BaseModel
     {
         $sameName = $this->table('category')->where('name', $values->name)->fetch();
         if ($sameName) {
-            throw new DupliciteCategoryException('Jméno je už zabrané.');
+            throw new DupliciteCategoryException('Stejné jméno kategorie v této rodině už existuje.');
         }
 
         $values->family_id = $this->user->identity->family_id;
@@ -50,7 +51,7 @@ class SettingModel extends BaseModel
         if ($row->name != $values->name) {
             $sameName = $this->table('category')->where('name', $values->name)->fetch();
             if ($sameName) {
-                throw new DupliciteUserException('Jméno je už zabrané.');
+                throw new DupliciteUserException('Stejné jméno kategorie v této rodině už existuje');
             }
         }
 

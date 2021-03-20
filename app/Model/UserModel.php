@@ -27,11 +27,11 @@ class UserModel extends BaseModel
 
         $sameUsername = $database->table('user')->where('username', $values->username)->fetch();
         if ($sameUsername) {
-            throw new DupliciteUserException('Uživatelské jméno už existuje.');
+            throw new DupliciteUserException('Stejné uživatelské jméno už existuje.');
         }
         $sameEmail = $database->table('user')->where('email', $values->email)->fetch();
         if ($sameEmail) {
-            throw new DupliciteUserException('Email je už zabraný.');
+            throw new DupliciteUserException('Stejný email už existuje.');
         }
 
         $data = array(
@@ -63,20 +63,20 @@ class UserModel extends BaseModel
         if ($row->username != $values->username) {
             $sameUsername = $database->table('user')->where('username', $values->username)->fetch();
             if ($sameUsername) {
-                throw new DupliciteUserException('Uživatelské jméno už existuje.');
+                throw new DupliciteUserException('Stejné uživatelské jméno už existuje.');
             }
         }
         if ($row->email != $values->email) {
             $sameUsername = $database->table('email')->where('email', $values->email)->fetch();
             if ($sameUsername) {
-                throw new DupliciteUserException('Email je už zabraný.');
+                throw new DupliciteUserException('Stejný email už existuje.');
             }
         }
 
         try {
             return $row->update($values);
         } catch (\PDOException) {
-            throw new \PDOException('Nepodařilo se editovat uživatelský účet.');
+            throw new \PDOException('Nepodařilo se upravit uživatelský účet.');
         }
     }
 }

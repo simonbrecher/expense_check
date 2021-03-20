@@ -15,7 +15,7 @@ class BankAccountModel extends BaseModel
     {
         $row = $this->table('bank_account')->get($id);
         if (!$row) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tento bankovní účet.');
+            throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
         }
         $row->update(['is_active' => true]);
     }
@@ -24,7 +24,7 @@ class BankAccountModel extends BaseModel
     {
         $row = $this->table('bank_account')->get($id);
         if (!$row) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tento bankovní účet.');
+            throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
         }
         $row->update(['is_active' => false]);
     }
@@ -33,7 +33,7 @@ class BankAccountModel extends BaseModel
     {
         $row = $this->table('card')->get($id);
         if (!$row) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tuto kartu.');
+            throw new AccessUserException('Uživatel nemá přístup k této kartě.');
         }
         $row->update(['is_active' => true]);
     }
@@ -42,7 +42,7 @@ class BankAccountModel extends BaseModel
     {
         $row = $this->table('card')->get($id);
         if (!$row) {
-            throw new AccessUserException('Užívatel nemůže zpřístupnit tuto kartu.');
+            throw new AccessUserException('Uživatel nemá přístup k této kartě.');
         }
         $row->update(['is_active' => false]);
     }
@@ -73,7 +73,7 @@ class BankAccountModel extends BaseModel
 
         $sameBankAccount = $this->database->table('bank_account')->where('bank_id', $values->bank_id)->where('number', $values->number)->fetch();
         if ($sameBankAccount) {
-            throw new DupliciteException('Stejný bankovní účet je už zabraný.');
+            throw new DupliciteException('Stejný bankovní účet už existuje.');
         }
 
         try {

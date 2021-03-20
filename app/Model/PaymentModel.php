@@ -23,7 +23,7 @@ class PaymentModel extends BaseModel
     {
         $row = $this->table('payment_channel')->get($id);
         if (!$row) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tento trvalý příkaz.');
+            throw new AccessUserException('Uživatel nemá přístup k tomuto trvalému příkazu.');
         }
         $row->update(['is_active' => true]);
     }
@@ -32,7 +32,7 @@ class PaymentModel extends BaseModel
     {
         $row = $this->table('payment_channel')->get($id);
         if (!$row) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tento trvalý příkaz.');
+            throw new AccessUserException('Uživatel nemá přístup k tomuto trvalému příkazu.');
         }
         $row->update(['is_active' => false]);
     }
@@ -41,7 +41,7 @@ class PaymentModel extends BaseModel
     {
         $row = $this->table('payment_channel')->get($id);
         if (!$row) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tento trvalý příkaz.');
+            throw new AccessUserException('Uživatel nemá přístup k tomuto trvalému příkazu.');
         }
         if ($row->related('payment')->count() != 0) {
             throw new AccessUserException('Tento trvalý příkaz nelze smazat, protože podle něj byly roztřízené platby.');
@@ -54,11 +54,11 @@ class PaymentModel extends BaseModel
         $oldValues = $form->values;
 
         if (!$this->canAccessBankAccount($oldValues->bank_account_id)) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tento bankovní účet.');
+            throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
         }
 
         if (!$this->canAccessCategory($oldValues->category_id)) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tuto kategorii.');
+            throw new AccessUserException('Uživatel nemá přístup k této kategorii.');
         }
 
         $values = array(
@@ -121,7 +121,7 @@ class PaymentModel extends BaseModel
     public function getImportIntervalsSorted(int $bankAccountId): Selection
     {
         if (!$this->canAccessBankAccount($bankAccountId)) {
-            throw new AccessUserException('Uživatel nemůže zpřístupnit tento bankovní účet.');
+            throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
         }
 
         return $this->database->table('ba_import')->where('bank_account_id', $bankAccountId)->order('d_statement_start');

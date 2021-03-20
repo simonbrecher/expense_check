@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace App\Model;
 
+
 use App\Presenters\AccessUserException;
 use Nette;
 use Nette\Database\Table\Selection;
@@ -44,7 +45,7 @@ class FamilyModel extends BaseModel
 
             $sameName = $this->table('user')->where('name', $data['name'])->fetch();
             if ($sameName) {
-                throw new DupliciteUserException('Jméno v této rodině už existuje.');
+                throw new DupliciteUserException('Stejné jméno v této rodině už existuje.');
             }
 
             try {
@@ -69,15 +70,15 @@ class FamilyModel extends BaseModel
 
             $sameName = $this->table('user')->where('name', $data['name'])->fetch();
             if ($sameName) {
-                throw new DupliciteUserException('Jméno v této rodině už existuje.');
+                throw new DupliciteUserException('Stejné jméno v této rodině už existuje.');
             }
             $sameUsername = $database->table('user')->where('username', $data['username'])->fetch();
             if ($sameUsername) {
-                throw new DupliciteUserException('Uživatelské jméno už existuje.');
+                throw new DupliciteUserException('Stejné uživatelské jméno už existuje.');
             }
             $sameEmail = $database->table('user')->where('email', $data['email'])->fetch();
             if ($sameEmail) {
-                throw new DupliciteUserException('Email je už zabraný.');
+                throw new DupliciteUserException('Stejný email už existuje.');
             }
 
             try {
@@ -97,7 +98,7 @@ class FamilyModel extends BaseModel
     public function editConsumer(ArrayHash $values, int $editId): bool
     {
         if (!$this->canAccessConsumer($editId)) {
-            throw new AccessUserException('Nepodařilo se editovat kategorii.');
+            throw new AccessUserException('Nepodařilo se upravit člena rodiny.');
         }
 
         $row = $this->table('user')->get($editId);
@@ -105,7 +106,7 @@ class FamilyModel extends BaseModel
         if ($row->name != $values->name) {
             $sameName = $this->table('user')->where('name', $values->name)->fetch();
             if ($sameName) {
-                throw new DupliciteUserException('Jméno v této rodině je už zabrané.');
+                throw new DupliciteUserException('Stejné jméno v této rodině už existuje.');
             }
         }
 
