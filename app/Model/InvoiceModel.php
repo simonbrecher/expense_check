@@ -10,7 +10,9 @@ use Nette;
 
 class InvoiceModel extends BaseModel
 {
-    public const MAX_ITEM_COUNT = 2;
+    private const VAR_SYMBOL_PATTERN = '~^[0-9]{0,10}$~';
+
+    public const MAX_ITEM_COUNT = 4;
     protected const PAIDBY_TYPES = ['PAIDBY_CASH' => 'V hotovosti', 'PAIDBY_CARD' => 'Kartou', 'PAIDBY_BANK' => 'Bankou'];
 
     public function canAccessInvoice(int $id): bool
@@ -34,6 +36,22 @@ class InvoiceModel extends BaseModel
             'card_id' => $values->type_paidby == 'PAIDBY_CARD' ? $values->card_id : null,
             'var_symbol' => $values->type_paidby == 'PAIDBY_BANK' ? $values->var_symbol : '',
         );
+
+        $category = $this->table('category')->get($values->category);
+        if (!$category) {
+            throw new AccessUserException('Uživatel nemá přístup k této kategorii.');
+        }
+
+        $consumer = $this->table('user')->get($values->consumer);
+        if (!$consumer) {
+            throw new AccessUserException('Uživatel nemá přístup k tomuto členu rodiny.');
+        }
+
+        if ($values->type_paidby == 'PAIDBY_BANK') {
+            if (!preg_match(self::VAR_SYMBOL_PATTERN, $values->var_symbol)) {
+                throw new InvalidValueException('Neplatný formát variabilního symbolu.');
+            }
+        }
 
         $items = array();
         $firstItem = array(
@@ -76,9 +94,9 @@ class InvoiceModel extends BaseModel
             $invoiceHead = $this->database->table('invoice_head')->insert($values['head']);
             $invoiceHead->related('invoice_item')->insert($values['items']);
             $this->database->commit();
-        } catch (\PDOException|InvalidValueException $exception) {
+        } catch (\PDOException) {
             $this->database->rollBack();
-            throw new \PDOException($exception->getMessage());
+            throw new \PDOException('Nepodařilo se doklad uložit do databáze.');
         }
     }
 
@@ -99,9 +117,9 @@ class InvoiceModel extends BaseModel
 
             $this->database->commit();
 
-        } catch (\PDOException $exception) {
+        } catch (\PDOException) {
             $this->database->rollBack();
-            throw new \PDOException($exception->getMessage());
+            throw new \PDOException('Nepodařilo se doklad uložit do databáze.');
         }
     }
 

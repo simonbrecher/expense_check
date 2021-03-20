@@ -6,12 +6,9 @@ namespace App\Presenters;
 
 use App\Model;
 use App\Form\InvoiceForm;
-use Tracy\Debugger;
 
 class InvoicePresenter extends BasePresenter
 {
-    private const MAX_ITEM_COUNT = 5;
-
     public  function __construct(public Model\InvoiceModel $invoiceModel)
     {}
 
@@ -49,7 +46,6 @@ class InvoicePresenter extends BasePresenter
                     ->setPrompt('');
 
             $consumers = $this->invoiceModel->getConsumerSelect($editId);
-            Debugger::barDump($consumers);
             $form->addSelect('consumer', 'Spotřebitel:', $consumers)
                     ->setPrompt('');
 
@@ -117,8 +113,8 @@ class InvoicePresenter extends BasePresenter
             $editId = $this->getParameters()['id'];
             if ($editId !== null) {
                 $data = $this->invoiceModel->getEditInvoiceData((int) $editId);
-                Debugger::barDump($data);
                 $form->addItem($data['item_count'] - 1);
+                unset($data['item_count']);
                 $form->setDefaults($data);
             }
         }
@@ -136,7 +132,7 @@ class InvoicePresenter extends BasePresenter
 
                     $this->flashMessage('Doklad byl úspěšně uložený.', 'success');
                     $this->redirect('this');
-                } catch (\PDOException $exception) {
+                } catch (\PDOException|Model\InvalidValueException|AccessUserException $exception) {
                     $this->flashMessage($exception->getMessage(), 'error');
                 }
 
@@ -146,12 +142,11 @@ class InvoicePresenter extends BasePresenter
 
                     $this->flashMessage('Doklad byl úspěšně upravený.', 'success');
                     $this->redirect(':view');
-                } catch (\PDOException $exception) {
+                } catch (\PDOException|Model\InvalidValueException|AccessUserException $exception) {
                     $this->flashMessage($exception->getMessage(), 'error');
                 }
             }
         } elseif ($submittedBy->name == 'delete') {
-            Debugger::barDump('HERE');
             $removeId = $this->getParameter('id');
             if ($removeId !== null) {
                 $this->redirect(':remove', $removeId);
