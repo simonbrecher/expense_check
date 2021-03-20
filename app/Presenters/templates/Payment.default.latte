@@ -1,7 +1,26 @@
 {block content}
 
-<a n:href=":import" class="menu-item">Importovat výpis z bankovního účtu</a>
-<a n:href=":viewImport" class="menu-item">Zobrazit importy</a>
-<a n:href=":viewPayment" class="menu-item">Zobrazit platby</a>
-<a n:href=":viewPaymentChannel" class="menu-item">Zobrazit příkazy</a>
-<a n:href=":addPaymentChannel" class="menu-item">Přidat příkaz</a>
+<h2>Import</h2>
+
+<div>
+    <a n:href=":viewImport" class="menu-item">Zobrazit importy</a>
+    <a n:href=":import" class="menu-item">Importovat výpis z bankovního účtu</a>
+    <hr />
+</div>
+<br>
+
+<h2>Platby / párování</h2>
+
+<div>
+    <a n:href=":viewPayment" class="menu-item">Zobrazit platby</a>
+    <a n:href=":pair" class="menu-item">Párovat platby s doklady</a>
+    <hr />
+</div>
+<br>
+
+<h2>Trvalé příkazy</h2>
+
+<div>
+    <a n:href=":viewPaymentChannel" class="menu-item">Zobrazit příkazy</a>
+    <a n:href=":addPaymentChannel" class="menu-item">Přidat příkaz</a>
+</div>

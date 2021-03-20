@@ -8,8 +8,55 @@ use App\Model;
 
 class PaymentPresenter extends BasePresenter
 {
-    public function __construct(private Model\ImportModel $importModel, private Model\PaymentModel $paymentModel)
+    public function __construct(private Model\ImportModel $importModel, private Model\PaymentModel $paymentModel, private Model\PairModel $pairModel)
     {}
+
+    public function handlePair(int $id, $confirmed=false): void
+    {
+        $parameters = $this->getParameters();
+        if (array_key_exists('selectedPayments', $parameters)) {
+            try {
+                $this->pairModel->manualPair($id, $parameters['selectedPayments'], $confirmed);
+
+                if (count($parameters) == 1) {
+                    $this->flashMessage('Platba a doklad byly úspěšně spárované.', 'success');
+                } else {
+                    $this->flashMessage('Platby a doklad byly úspěšně spárované.', 'success');
+                }
+            } catch (\PDOException|AccessUserException $exception) {
+                $this->flashMessage($exception->getMessage(), 'error');
+            } catch (Model\ManualPairDifferenceWarning $exception) {
+                $this->flashMessage($exception->getMessage(), 'info');
+                $this->flashMessage('Je potřeba potvrdit párování.', 'info');
+                $this->redirect(':pair', $parameters['selectedPayments'], $id);
+            }
+        } else {
+            $this->flashMessage('Vyberte platby pro párování.', 'info');
+        }
+
+        $this->redirect(':pair');
+    }
+
+    public function handleNotConsumption(int $id): void
+    {
+        try {
+            $this->pairModel->notConsumption($id);
+
+            $this->flashMessage('Platba byla označená za nevýdajovou, proto se nezapočítá do součtu výdajů.', 'info');
+        } catch (\PDOException|AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+
+        $this->redirect(':pair');
+    }
+
+    public function renderPair(array $selectedPayments=[], int $confirmId=null): void
+    {
+        $this->template->payments = $this->pairModel->getPayments();
+        $this->template->invoices = $this->pairModel->getInvoices();
+        $this->template->selectedPayments = $selectedPayments;
+        $this->template->confirmId = $confirmId;
+    }
 
     public function handleActivatePaymentChannel(int $id): void
     {

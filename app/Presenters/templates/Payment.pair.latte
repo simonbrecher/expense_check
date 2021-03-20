@@ -1,0 +1,89 @@
+{block content}
+
+
+
+<h2 class="form-title">Párování</h2>
+
+<div class="wrapper-first">
+
+    <table class="table-smart">
+        <tr class="table-heading">
+            <td>Datum</td>
+            <td>Částka</td>
+            <td>Protiúčet</td>
+            <td>Zprávy</td>
+            <td></td>
+            <td style="width: 62px;"></td>
+        </tr>
+        <tr n:foreach="$payments as $payment" class="table-body {in_array($payment->id, $selectedPayments) ? 'selected-payment' : null}">
+            <td>{$payment->d_payment->format('j.n.y')}</td>
+            <td class="price {abs($payment->czk_amount) > 10000 ? bold : null} {$payment->czk_amount > 0 ? positive : negative}">{$payment->czk_amount} Kč</td>
+            <td>{$payment->counter_account_name}</td>
+            <td class="message-cell">
+                {$payment->message_recipient}
+{*                {if $payment->message_recipient !== '' && $payment->message_payer != ''}<br>{/if}*}
+{*                {$payment->message_payer}*}
+                {if $payment->message_recipient !== '' && $payment->description != ''}<br>{/if}
+                {$payment->description}
+            </td>
+            <td><a n:href=":notConsumption! $payment->id">Není výdaj</a></td>
+            <td>
+                {var $newSelectedPayments = $selectedPayments}
+                {var $id = $payment->id}
+                {if in_array($id, $selectedPayments)}
+                    {var $newSelectedPayments = array_diff($selectedPayments, [$id])}
+                    <a n:href="this $newSelectedPayments">Nevybrat</a>
+                {else}
+                {var $newSelectedPayments = $selectedPayments}
+                {var $newSelectedPayments[] = $id}
+                    <a n:href="this $newSelectedPayments">Vybrat</a>
+                {/if}
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+<div class="wrapper-last">
+
+    <table class="table-smart">
+        <tr class="table-heading">
+            <td></td>
+            <td>Datum</td>
+            <td>Částka</td>
+            <td>Kategorie</td>
+        </tr>
+        <tr n:foreach="$invoices as $invoice" class="table-body">
+            <td>
+                {if $invoice->id == $confirmId}
+                    <a n:href=":pair! $invoice->id, true">POTVRDIT</a>
+                {else}
+                    <a n:href=":pair! $invoice->id">Párovat</a>
+                {/if}
+            </td>
+            <td>{$invoice->d_issued->format('j.n.y')}</td>
+            <td class="price {$invoice->related('invoice_item')->sum('czk_amount') > 10000 ? bold : null}">{$invoice->related('invoice_item')->sum('czk_amount')} Kč</td>
+            <td>{$invoice->related('invoice_item')->where('is_main')->fetch()->category->name}</td>
+        </tr>
+    </table>
+
+</div>
+
+<hr />
+
+<br>
+
+<a n:href=":default" class="menu-item">Zpět</a>
+
+<style>
+    .table-smart tr.selected-payment:nth-child(n) td { background-color: #E3E3F4; }
+    .table-smart { min-width: 100%; }
+    .wrapper-first { float: left; width: 68%; }
+    .wrapper-last { float: right; width: 31%; }
+    .table-smart td { padding: 9px; font-size: 14.5px; }
+    .bold { font-weight: bold; }
+    .positive { color: #0E0; }
+    .negative { color: #D60; }
+    .table-smart .message-cell { font-size: 12.5px; padding: 6px 9px; }
+
+</style>

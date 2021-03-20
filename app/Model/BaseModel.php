@@ -30,9 +30,9 @@ class BaseModel
     protected function table(string $tableName): Nette\Database\Table\Selection
     {
         if (in_array($tableName, self::TABLES_WITH_FAMILY_ID)) {
-            return $this->database->table($tableName)->where('family_id', $this->user->identity->family_id);
+            return $this->database->table($tableName)->where($tableName.'.family_id', $this->user->identity->family_id);
         } elseif (in_array($tableName, self::TABLES_WITH_USER_ID)) {
-            return $this->database->table($tableName)->where('user_id', $this->user->id);
+            return $this->database->table($tableName)->where($tableName.'.user_id', $this->user->id);
         } else {
             throw new Exception('BaseModel->table() - Unknown table: '.$tableName);
         }
