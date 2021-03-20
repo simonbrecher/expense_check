@@ -25,6 +25,22 @@ class InvoiceModel extends BaseModel
         }
     }
 
+    private function validateCategory($id): void
+    {
+        $category = $this->table('category')->get($id);
+        if (!$category) {
+            throw new AccessUserException('Uživatel nemá přístup k této kategorii.');
+        }
+    }
+
+    private function validateConsumer($id): void
+    {
+        $consumer = $this->table('user')->get($id);
+        if (!$consumer) {
+            throw new AccessUserException('Uživatel nemá přístup k tomuto členu rodiny.');
+        }
+    }
+
     public function constructAddInvoiceValues(InvoiceForm $form): array
     {
         $values = $form->values;
@@ -37,14 +53,14 @@ class InvoiceModel extends BaseModel
             'var_symbol' => $values->type_paidby == 'PAIDBY_BANK' ? $values->var_symbol : '',
         );
 
-        $category = $this->table('category')->get($values->category);
-        if (!$category) {
-            throw new AccessUserException('Uživatel nemá přístup k této kategorii.');
+        if ($values->category) {
+            $this->validateCategory((int) $values->category);
+        } else {
+            throw new InvalidValueException('Kategorie hlavní pololožky v dokladu musí být vybraná.');
         }
 
-        $consumer = $this->table('user')->get($values->consumer);
-        if (!$consumer) {
-            throw new AccessUserException('Uživatel nemá přístup k tomuto členu rodiny.');
+        if ($values->consumer) {
+            $this->validateConsumer((int) $values->consumer);
         }
 
         if ($values->type_paidby == 'PAIDBY_BANK') {
@@ -58,7 +74,7 @@ class InvoiceModel extends BaseModel
             'czk_amount' => $values->czk_total_amount,
             'description' => $values->description ?: $this->getCategoryName($values->category),
             'category_id' => $values->category,
-            'consumer_id' => $values->consumer,
+            'consumer_id' => $values->consumer ?: null,
             'is_main' => true,
         );
         $items[] = $firstItem;
@@ -66,11 +82,19 @@ class InvoiceModel extends BaseModel
         $itemsValues = $values->items ?? array();
 
         foreach ($itemsValues as $itemValues) {
+            if ($itemValues->category) {
+                $this->validateCategory((int) $itemValues->category);
+            }
+
+            if ($itemValues->consumer) {
+                $this->validateConsumer((int) $itemValues->consmer);
+            }
+
             $item = array(
                 'czk_amount' => $itemValues->czk_amount,
-                'category_id' => $itemValues->category ?? $values->category,
+                'category_id' => $itemValues->category ?: $values->category,
                 'description' => $itemValues->description ?: ( $itemValues->category !== null ? $this->getCategoryName($itemValues->category) : $firstItem['description']),
-                'consumer_id' => $itemValues->consumer,
+                'consumer_id' => $itemValues->consumer ?: null,
                 'is_main' => false,
             );
             $items[] = $item;
@@ -93,6 +117,7 @@ class InvoiceModel extends BaseModel
 
             $invoiceHead = $this->database->table('invoice_head')->insert($values['head']);
             $invoiceHead->related('invoice_item')->insert($values['items']);
+
             $this->database->commit();
         } catch (\PDOException) {
             $this->database->rollBack();
@@ -116,7 +141,6 @@ class InvoiceModel extends BaseModel
             $head->related('invoice_item')->insert($values['items']);
 
             $this->database->commit();
-
         } catch (\PDOException) {
             $this->database->rollBack();
             throw new \PDOException('Nepodařilo se doklad uložit do databáze.');

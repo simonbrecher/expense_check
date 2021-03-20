@@ -32,11 +32,11 @@
                 {var $id = $payment->id}
                 {if in_array($id, $selectedPayments)}
                     {var $newSelectedPayments = array_diff($selectedPayments, [$id])}
-                    <a n:href="this $newSelectedPayments">Nevybrat</a>
+                    <a n:href=":pair $newSelectedPayments">Nevybrat</a>
                 {else}
                 {var $newSelectedPayments = $selectedPayments}
                 {var $newSelectedPayments[] = $id}
-                    <a n:href="this $newSelectedPayments">Vybrat</a>
+                    <a n:href=":pair $newSelectedPayments">Vybrat</a>
                 {/if}
             </td>
         </tr>
