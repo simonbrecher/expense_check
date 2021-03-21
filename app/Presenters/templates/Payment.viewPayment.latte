@@ -1,5 +1,30 @@
 {block content}
 
+<br>
+
+{for $year = $startYear; $year <= $endYear; $year++}
+    {var $selected = $renderYear == $year ? 'selected' : null}
+    <a n:href=":viewPayment $year, $renderMonth" class="menu-item {$selected}">{$year}</a>
+{/for}
+
+<hr />
+<br>
+
+{if $renderYear != $startYear}
+    {var $startMonth = 1}
+{/if}
+{if $renderYear != $endYear}
+    {var $endMonth = 12}
+{/if}
+
+{for $month = $startMonth; $month <= $endMonth; $month++}
+    {var $selected = $renderMonth == $month ? 'selected' : null}
+    <a n:href=":viewPayment $renderYear, $month" class="menu-item {$selected}">{$month}</a>
+{/for}
+
+<hr />
+<br>
+
 {foreach $bankAccounts as $bankAccount}
 
     <h2 class="form-title">Bankovní účet: {$bankAccount->number} / {$bankAccount->bank->bank_code}</h2>
@@ -18,7 +43,7 @@
                 <td>Je spárovaný</td>
                 <td>Je výdaj</td>
             </tr>
-            {var $payments = $bankAccount->related('payment')}
+            {var $payments = $bankAccount->related('payment')->where('d_payment >=', $startInterval)->where('d_payment <=', $endInterval)}
             <tr n:foreach="$payments as $payment" class="table-body">
                 <td>{$payment->d_payment->format('j.n.y')}</td>
                 <td  class="PAIDBY {$payment->type_paidby}">{$paymentModel->getTypePaidbyName($payment->type_paidby)}</td>

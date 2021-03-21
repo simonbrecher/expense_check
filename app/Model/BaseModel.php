@@ -3,8 +3,10 @@
 declare(strict_types=1);
 namespace App\Model;
 
+use Nette\Database\Table\Selection;
 use Nette\Neon\Exception;
 use Nette;
+use Nette\Utils\DateTime;
 
 class BaseModel
 {
@@ -35,6 +37,27 @@ class BaseModel
             return $this->database->table($tableName)->where($tableName.'.user_id', $this->user->id);
         } else {
             throw new Exception('BaseModel->table() - Unknown table: '.$tableName);
+        }
+    }
+
+    /* Same as BaseModel->table, does payments by bank accounts, not by user */
+    protected function tablePayments(): Selection
+    {
+        $bankAccounts = $this->table('bank_account');
+        return $this->database->table('payment')->where('bank_account_id', $bankAccounts);
+    }
+
+    public function getFirstDayInMonth(int $month, int $year): DateTime
+    {
+        return new DateTime('1.'.$month.'.'.$year);
+    }
+
+    public function getLastDayInMonth(int $month, int $year): DateTime
+    {
+        if ($month == 12) {
+            return new DateTime('1.'.$month.'.'.($year + 1).' - 1 day');
+        } else {
+            return new DateTime('1.'.($month + 1).'.'.$year.' - 1 day');
         }
     }
 

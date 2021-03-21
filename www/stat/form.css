@@ -9,6 +9,8 @@
 .form-table .label-cell label { background-color: #111; color: #FFF; display: block; padding: 6px 8px; min-width: 120px; }
 .form-table .label-cell label:hover { background-color: #444; }
 .form-table .control * { display: block; padding: 4px 8px; margin-left: 12px; font-size: 17px; }
+.form-table .box-style-list { line-height: 35px; }
+.form-table .box-style-list br:nth-of-type(2) { display: inline; }
 .form-table .box-style-list * { display: inline; }
 .form-table .box-style-list br { display: none; }
 .form-table .box-style-list label { padding: 4px 15px; border: 2px solid #DDD; background-color: #DDD; font-size: 15px; }

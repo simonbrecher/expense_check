@@ -98,8 +98,40 @@ class PaymentPresenter extends BasePresenter
         $this->template->paymentModel = $this->paymentModel;
     }
 
-    public function renderViewPayment(): void
+    public function actionViewPayment(int $year=null, int $month=null): void
     {
+        $startInterval = $this->paymentModel->getStartInterval();
+        $endInterval = $this->paymentModel->getEndInterval();
+
+        $startYear = (int) $startInterval->format('Y');
+        $startMonth = (int) $startInterval->format('n');
+        $endYear = (int) $endInterval->format('Y');
+        $endMonth = (int) $endInterval->format('n');
+
+        if ($year === null || $month === null) {
+            $this->redirect(':viewPayment', [$endYear, $endMonth]);
+        } elseif ($year < $startYear || ($year == $startYear && $month < $startMonth)) {
+            $this->redirect(':viewPayment', [$startYear, $startMonth]);
+        } elseif ($year > $endYear || ($year == $endYear && $month > $endMonth)) {
+            $this->redirect(':viewPayment', [$endYear, $endMonth]);
+        }
+    }
+
+    public function renderViewPayment(int $year=null, int $month=null): void
+    {
+        $startInterval = $this->paymentModel->getStartInterval();
+        $endInterval = $this->paymentModel->getEndInterval();
+
+        $this->template->startYear = (int) $startInterval->format('Y');
+        $this->template->startMonth = (int) $startInterval->format('n');
+        $this->template->endYear = (int) $endInterval->format('Y');
+        $this->template->endMonth = (int) $endInterval->format('n');
+        $this->template->renderYear = $year;
+        $this->template->renderMonth = $month;
+
+        $this->template->startInterval = $this->paymentModel->getFirstDayInMonth($month, $year);
+        $this->template->endInterval = $this->paymentModel->getLastDayInMonth($month, $year);
+
         $this->template->bankAccounts = $this->paymentModel->getbankAccounts();
         $this->template->paymentModel = $this->paymentModel;
     }

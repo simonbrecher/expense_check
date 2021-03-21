@@ -1,5 +1,30 @@
 {block content}
 
+<br>
+
+{for $year = $startYear; $year <= $endYear; $year++}
+    {var $selected = $renderYear == $year ? 'selected' : null}
+    <a n:href=":view $year, $renderMonth" class="menu-item {$selected}">{$year}</a>
+{/for}
+
+<hr />
+<br>
+
+{if $renderYear != $startYear}
+    {var $startMonth = 1}
+{/if}
+{if $renderYear != $endYear}
+    {var $endMonth = 12}
+{/if}
+
+{for $month = $startMonth; $month <= $endMonth; $month++}
+    {var $selected = $renderMonth == $month ? 'selected' : null}
+    <a n:href=":view $renderYear, $month" class="menu-item {$selected}">{$month}</a>
+{/for}
+
+<hr />
+<br>
+
 <h2 class="form-title">Doklady.</h2>
 
 <div class="table-list-container">
@@ -13,6 +38,7 @@
             <td>Spotřebitel</td>
             <td>Položka</td>
             <td>Částka</td>
+            <td>Je spárovaný</td>
             <td></td>
         </tr>
         <tr n:foreach="$invoices as $invoice" class="table-body">
@@ -32,6 +58,7 @@
                 {var $sum = $invoice->related('invoice_item')->sum('czk_amount')}
                 <td class="price-cell {$sum > 10000 ? bold : null}">{$sum} Kč</td>
             {/if}
+            <td>{$invoice->related('payment')->count('id') != 0 ? 'Spárovaný' : 'NE'}</td>
             <td class="edit-cell"><a n:href=":add $invoice->id">Upravit</a></td>
         </tr>
     </table>

@@ -58,13 +58,6 @@ class PairModel extends BaseModel
         }
     }
 
-    /* Same as BaseModel->table, does payments by bank accounts, not by user */
-    public function tablePayments(): Selection
-    {
-        $bankAccounts = $this->table('bank_account');
-        return $this->database->table('payment')->where('bank_account_id', $bankAccounts);
-    }
-
     public function getPayments(): Selection
     {
         return $this->tablePayments()->where('NOT is_paired');

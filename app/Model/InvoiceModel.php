@@ -7,13 +7,14 @@ use App\Form\InvoiceForm;
 use App\Presenters\AccessUserException;
 use Nette\Neon\Exception;
 use Nette;
+use Nette\Utils\DateTime;
 
 class InvoiceModel extends BaseModel
 {
     private const VAR_SYMBOL_PATTERN = '~^[0-9]{0,10}$~';
 
     public const MAX_ITEM_COUNT = 4;
-    protected const PAIDBY_TYPES = ['PAIDBY_CASH' => 'V hotovosti', 'PAIDBY_CARD' => 'Kartou', 'PAIDBY_BANK' => 'Bankou'];
+    protected const PAIDBY_TYPES = ['PAIDBY_CASH' => 'V hotovosti', 'PAIDBY_CARD' => 'Kartou', 'PAIDBY_BANK' => 'Převodem'];
 
     public function canAccessInvoice(int $id): bool
     {
@@ -23,6 +24,16 @@ class InvoiceModel extends BaseModel
         } else {
             return !$invoice->is_cash_account_balance;
         }
+    }
+
+    public function getStartInterval(): DateTime
+    {
+        return $this->table('invoice_head')->min('d_issued');
+    }
+
+    public function getEndInterval(): DateTime
+    {
+        return $this->table('invoice_head')->max('d_issued');
     }
 
     private function validateCategory($id): void
@@ -227,7 +238,7 @@ class InvoiceModel extends BaseModel
         return self::PAIDBY_TYPES;
     }
 
-    public function getInvoicesForView(): Nette\Database\Table\Selection
+    public function getInvoices(): Nette\Database\Table\Selection
     {
         return $this->table('invoice_head')->where('NOT invoice_head.is_cash_account_balance');
     }

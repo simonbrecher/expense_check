@@ -7,17 +7,28 @@ namespace App\Model;
 use App\Form\BasicForm;
 use App\Presenters\AccessUserException;
 use Nette\Database\Table\Selection;
+use Nette\Utils\DateTime;
 
 class PaymentModel extends BaseModel
 {
-    protected const PAIDBY_TYPES = array(
+    private const PAIDBY_TYPES = array(
         'PAIDBY_CASH' => 'V hotovosti',
         'PAIDBY_CARD' => 'Kartou',
-        'PAIDBY_BANK' => 'Bankou',
+        'PAIDBY_BANK' => 'Převodem',
         'PAIDBY_ATM' => 'Bankomat',
         'PAIDBY_FEE' => 'Poplatek',
         null => '??',
     );
+
+    public function getStartInterval(): DateTime
+    {
+        return $this->tablePayments()->min('d_payment');
+    }
+
+    public function getEndInterval(): DateTime
+    {
+        return $this->tablePayments()->max('d_payment');
+    }
 
     public function activatePaymentChannel(int $id): void
     {

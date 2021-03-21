@@ -185,9 +185,41 @@ class InvoicePresenter extends BasePresenter
         $this->template->id = $id;
     }
 
-    public function renderView(): void
+    public function actionView(int $year=null, int $month=null): void
     {
-        $this->template->invoices = $this->invoiceModel->getInvoicesForView();
+        $startInterval = $this->invoiceModel->getStartInterval();
+        $endInterval = $this->invoiceModel->getEndInterval();
+
+        $startYear = (int) $startInterval->format('Y');
+        $startMonth = (int) $startInterval->format('n');
+        $endYear = (int) $endInterval->format('Y');
+        $endMonth = (int) $endInterval->format('n');
+
+        if ($year === null || $month === null) {
+            $this->redirect(':view', [$endYear, $endMonth]);
+        } elseif ($year < $startYear || ($year == $startYear && $month < $startMonth)) {
+            $this->redirect(':viewPayment', [$startYear, $startMonth]);
+        } elseif ($year > $endYear || ($year == $endYear && $month > $endMonth)) {
+            $this->redirect(':viewPayment', [$endYear, $endMonth]);
+        }
+    }
+
+    public function renderView(int $year=null, int $month=null): void
+    {
+        $startInterval = $this->invoiceModel->getStartInterval();
+        $endInterval = $this->invoiceModel->getEndInterval();
+
+        $this->template->startYear = (int) $startInterval->format('Y');
+        $this->template->startMonth = (int) $startInterval->format('n');
+        $this->template->endYear = (int) $endInterval->format('Y');
+        $this->template->endMonth = (int) $endInterval->format('n');
+        $this->template->renderYear = $year;
+        $this->template->renderMonth = $month;
+
+        $startInterval = $this->invoiceModel->getFirstDayInMonth($month, $year);
+        $endInterval = $this->invoiceModel->getLastDayInMonth($month, $year);
+
+        $this->template->invoices = $this->invoiceModel->getInvoices()->where('d_issued >=', $startInterval)->where('d_issued <=', $endInterval);
         $this->template->invoiceModel = $this->invoiceModel;
     }
 }
