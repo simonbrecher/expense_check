@@ -11,15 +11,6 @@ use Nette\Utils\DateTime;
 
 class PaymentModel extends BaseModel
 {
-    private const PAIDBY_TYPES = array(
-        'PAIDBY_CASH' => 'V hotovosti',
-        'PAIDBY_CARD' => 'Kartou',
-        'PAIDBY_BANK' => 'Převodem',
-        'PAIDBY_ATM' => 'Bankomat',
-        'PAIDBY_FEE' => 'Poplatek',
-        null => '??',
-    );
-
     public function getStartInterval(): DateTime
     {
         return $this->tablePayments()->min('d_payment');
@@ -136,10 +127,5 @@ class PaymentModel extends BaseModel
         }
 
         return $this->database->table('ba_import')->where('bank_account_id', $bankAccountId)->order('d_statement_start');
-    }
-
-    public function getTypePaidbyName(string|null $typePaidby): string
-    {
-        return self::PAIDBY_TYPES[$typePaidby];
     }
 }

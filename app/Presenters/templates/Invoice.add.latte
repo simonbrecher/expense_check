@@ -4,48 +4,56 @@
 
 {form addInvoiceForm}
 
-<h2 class="form-title">Vložit nový doklad.</h2>
+<h2 class="form-title">Vložit nový doklad</h2>
 
 <div class="form-linebox">
     <div class="form-columnbox">
-    <table class="form-table">
-        <tr n:foreach="$form->getGroup('column0')->getControls() as $input" class="form-table">
-            <td class="label-cell">{label $input /}</td>
-            <td class="control">{input $input}</td>
-{*            <td n:ifcontent>{inputError $input}</td>*}
-        </tr>
-    </table>
+        <table class="form-table">
+            <tr n:foreach="$form->getGroup('column0')->getControls() as $input" class="form-table">
+                <td class="label-cell">{label $input /}</td>
+                <td class="control">{input $input}</td>
+    {*            <td n:ifcontent>{inputError $input}</td>*}
+            </tr>
+        </table>
     </div>
     <div class="form-columnbox">
-    <table class="form-table">
-        {foreach $form->getGroup('column1')->getControls() as $input}
-            <tr class="form-table" n:attr="id: $form::TOGGLE_BOX_HTML_IDS[$input->name] ?? null">
-                <td class="label-cell">{label $input /}</td>
-                <td n:class="control, in_array($input->name, $form::BOX_STYLE_MULTI_CONTROLS) ? 'box-style-list' : null">{input $input}</td>
-{*                <td n:ifcontent>{inputError $input}</td>*}
+        <table class="form-table">
+            {foreach $form->getGroup('column1')->getControls() as $input}
+                <tr class="form-table" n:attr="id: $form::TOGGLE_BOX_HTML_IDS[$input->name] ?? null">
+                    <td class="label-cell">{label $input /}</td>
+                    <td n:class="control, in_array($input->name, $form::BOX_STYLE_MULTI_CONTROLS) ? 'box-style-list' : null">{input $input}</td>
+                    {*                <td n:ifcontent>{inputError $input}</td>*}
+                </tr>
+            {/foreach}
+            <tr n:attr="id: 'toggle-paidby-atm' ?? null">
+                <td colspan="2">Zapište částku výběru kladně, částku vkladu záporně.</td>
             </tr>
-        {/foreach}
-    </table>
+        </table>
     </div>
     <hr />
 </div>
 
 {foreach $form['items']->components ?? array() as $item}
-    {if $iterator->odd}<div class="form-linebox">{/if}
-    <div class="form-columnbox">
-    <table class="form-table">
-        <tr n:foreach="$item->components as $input">
-            <td class="label-cell">{label $input /}</td>
-            <td class="control">{input $input}</td>
-{*            <td n:ifcontent>{inputError $input}</td>*}
-        </tr>
-    </table>
-    </div>
+    {if $iterator->odd}<div class="form-linebox" id="toggle-not-paidby-atm">{/if}
+        <div class="form-columnbox">
+            <table class="form-table">
+                <tr n:foreach="$item->components as $input">
+                    <td class="label-cell">{label $input /}</td>
+                    <td class="control">{input $input}</td>
+        {*            <td n:ifcontent>{inputError $input}</td>*}
+                </tr>
+            </table>
+        </div>
     {if $iterator->even or $iterator->last}<hr /></div>{/if}
 {/foreach}
 
 <div class="form-linebox submit-box">
-    {foreach $form->getGroup('buttons')->getControls() as $button}{input $button}{/foreach}
+    {foreach $form->getGroup('buttons')->getControls() as $button}
+        <div n:attr="id: $form::TOGGLE_BUTTON_HTML_IDS[$button->name] ?? null">
+            {input $button}
+        </div>
+    {/foreach}
+    <hr />
 </div>
 
 {/form}

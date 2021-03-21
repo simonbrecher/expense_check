@@ -18,6 +18,29 @@ class BaseModel
     public const TABLES_WITH_FAMILY_ID = ['category', 'user'];
     public const TABLES_WITH_USER_ID = ['bank_account', 'card', 'cash_account', 'invoice_head', 'payment', 'payment_channel'];
 
+    public const PAIDBY_TYPES = array(
+        'PAIDBY_CASH' => 'V hotovosti',
+        'PAIDBY_CARD' => 'Kartou',
+        'PAIDBY_BANK' => 'Převodem',
+        'PAIDBY_ATM' => 'Výběr/vklad hotovosti',
+        'PAIDBY_FEE' => 'Poplatek',
+        null => 'Neznámý',
+    );
+    public const PAIDBY_TYPES_INVOICE_FORM = array(
+        'PAIDBY_CASH' => 'V hotovosti',
+        'PAIDBY_CARD' => 'Kartou',
+        'PAIDBY_BANK' => 'Převodem',
+        'PAIDBY_ATM' => 'Výběr/vklad hotovosti',
+    );
+    public const PAIDBY_TYPES_TABLE = array(
+        'PAIDBY_CASH' => 'V hotovosti',
+        'PAIDBY_CARD' => 'Kartou',
+        'PAIDBY_BANK' => 'Převodem',
+        'PAIDBY_ATM' => 'Výběr/vklad',
+        'PAIDBY_FEE' => 'Poplatek',
+        null => 'Neznámý',
+    );
+
     private const ROLE_ISACTIVE = [1 => 'ANO', 0 => 'NE'];
 
     protected const MAX_BANK_ACCOUNT_NAME_LENGTH = 25;

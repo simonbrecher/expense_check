@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Presenters;
 
+
 use App\Model;
 use App\Form\InvoiceForm;
 
@@ -55,8 +56,8 @@ class InvoicePresenter extends BasePresenter
                     ->addRule($form::PATTERN, 'Formát data musí být 13.2 / 13.2.21 / 13.2.2021', $this->invoiceModel::DATE_PATTERN_FLEXIBLE)
                     ->setRequired('Vyplňte datum vystavení dokladu.');
 
-            $paidByChoices = $this->invoiceModel->getPaidbyTypes();
-            $paidBy = $form->addRadioList('type_paidby', 'Typ platby', $paidByChoices)
+            $paidByChoices = $this->invoiceModel::PAIDBY_TYPES_INVOICE_FORM;
+            $paidBy = $form->addRadioList('type_paidby', 'Typ platby:', $paidByChoices)
                             ->setRequired('Vyberte typ platby.');
 
             // paid by card
@@ -68,7 +69,11 @@ class InvoicePresenter extends BasePresenter
             $varSymbol = $form->addText('var_symbol', 'Variabilní symbol:')->setMaxLength(10);
 
             $paidBy->addCondition($form::EQUAL, 'PAIDBY_CARD')->toggle($form::TOGGLE_BOX_HTML_IDS['card_id'])
-                    ->elseCondition()->addCondition($form::EQUAL, 'PAIDBY_BANK')->toggle($form::TOGGLE_BOX_HTML_IDS['var_symbol']);
+                    ->elseCondition()->addCondition($form::EQUAL, 'PAIDBY_BANK')->toggle($form::TOGGLE_BOX_HTML_IDS['var_symbol'])
+                    ->elseCondition()->addCondition($form::EQUAL, 'PAIDBY_ATM')->toggle('toggle-paidby-atm');
+
+            $paidBy->addCondition($form::NOT_EQUAL, 'PAIDBY_ATM')->toggle('toggle-not-paidby-atm');
+            $paidBy->addCondition($form::BLANK)->toggle('toggle-not-paidby-atm');
 
             $varSymbol->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_BANK')
                         ->setRequired('Vyplňte variabilní symbol.');

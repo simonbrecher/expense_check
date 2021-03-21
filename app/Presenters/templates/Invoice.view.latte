@@ -44,7 +44,7 @@
         <tr n:foreach="$invoices as $invoice" class="table-body">
             <td>{$invoice->user->name}</td>
             <td class="date-cell">{$invoice->d_issued->format('j.n.y')}</td>
-            <td class="{$invoice->type_paidby}">{$invoiceModel->getTypePaidbyName($invoice->type_paidby)}</td>
+            <td class="{$invoice->type_paidby}">{$invoiceModel::PAIDBY_TYPES_TABLE[$invoice->type_paidby]}</td>
             {var $firstItem = $invoice->related('invoice_item')->where('is_main')->fetch()}
             {if $firstItem}
                 {var $category = $firstItem->ref('category', 'category_id')}

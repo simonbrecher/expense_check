@@ -14,7 +14,6 @@ class InvoiceModel extends BaseModel
     private const VAR_SYMBOL_PATTERN = '~^[0-9]{0,10}$~';
 
     public const MAX_ITEM_COUNT = 4;
-    protected const PAIDBY_TYPES = ['PAIDBY_CASH' => 'V hotovosti', 'PAIDBY_CARD' => 'Kartou', 'PAIDBY_BANK' => 'Převodem'];
 
     public function canAccessInvoice(int $id): bool
     {
@@ -92,29 +91,37 @@ class InvoiceModel extends BaseModel
 
         $itemsValues = $values->items ?? array();
 
-        foreach ($itemsValues as $itemValues) {
-            if ($itemValues->category) {
-                $this->validateCategory((int) $itemValues->category);
+        if ($values->type_paidby !== 'PAIDBY_ATM') {
+            foreach ($itemsValues as $itemValues) {
+                if ($itemValues->category) {
+                    $this->validateCategory((int) $itemValues->category);
+                }
+
+                if ($itemValues->consumer) {
+                    $this->validateConsumer((int) $itemValues->consmer);
+                }
+
+                if ($itemValues->czk_amount === '') {
+                    throw new InvalidValueException('Vyplňte cenu.');
+                } elseif (! is_numeric($itemValues->czk_amount)) {
+                    throw new InvalidValueException('Neplatný formát ceny.');
+                }
+
+                $item = array(
+                    'czk_amount' => $itemValues->czk_amount,
+                    'category_id' => $itemValues->category ?: $values->category,
+                    'description' => $itemValues->description ?: ( $itemValues->category !== null ? $this->getCategoryName($itemValues->category) : $firstItem['description']),
+                    'consumer_id' => $itemValues->consumer ?: null,
+                    'is_main' => false,
+                );
+                $items[] = $item;
+
+                $items[0]['czk_amount'] -= $itemValues->czk_amount;
             }
 
-            if ($itemValues->consumer) {
-                $this->validateConsumer((int) $itemValues->consmer);
+            if ($items[0]['czk_amount'] <= 0) {
+                throw new InvalidValueException('Celková cena musí být vyšší, než ceny položek.');
             }
-
-            $item = array(
-                'czk_amount' => $itemValues->czk_amount,
-                'category_id' => $itemValues->category ?: $values->category,
-                'description' => $itemValues->description ?: ( $itemValues->category !== null ? $this->getCategoryName($itemValues->category) : $firstItem['description']),
-                'consumer_id' => $itemValues->consumer ?: null,
-                'is_main' => false,
-            );
-            $items[] = $item;
-
-            $items[0]['czk_amount'] -= $itemValues->czk_amount;
-        }
-
-        if ($items[0]['czk_amount'] <= 0) {
-            throw new InvalidValueException('Celková cena musí být vyšší, než ceny položek.');
         }
 
         return array('head' => $head, 'items' => $items);
@@ -233,11 +240,6 @@ class InvoiceModel extends BaseModel
         return $data;
     }
 
-    public function getPaidbyTypes(): array
-    {
-        return self::PAIDBY_TYPES;
-    }
-
     public function getInvoices(): Nette\Database\Table\Selection
     {
         return $this->table('invoice_head')->where('NOT invoice_head.is_cash_account_balance');
@@ -284,11 +286,6 @@ class InvoiceModel extends BaseModel
         }
 
         return $invoice;
-    }
-
-    public function getTypePaidbyName(string $typePaidby): string
-    {
-        return self::PAIDBY_TYPES[$typePaidby];
     }
 }
 
