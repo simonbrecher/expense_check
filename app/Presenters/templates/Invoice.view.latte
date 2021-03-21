@@ -1,6 +1,6 @@
 {block content}
 
-<br>
+<h2 class="form-title">Doklady</h2>
 
 {for $year = $startYear; $year <= $endYear; $year++}
     {var $selected = $renderYear == $year ? 'selected' : null}
@@ -23,15 +23,12 @@
 {/for}
 
 <hr />
-<br>
-
-<h2 class="form-title">Doklady.</h2>
 
 <div class="table-list-container">
 
     <table class="table-smart">
         <tr class="table-heading">
-            <td>Vložil</td>
+{*            <td>Vložil</td>*}
             <td>Datum</td>
             <td>Typ platby</td>
             <td>Kategorie</td>
@@ -42,7 +39,7 @@
             <td></td>
         </tr>
         <tr n:foreach="$invoices as $invoice" class="table-body">
-            <td>{$invoice->user->name}</td>
+{*            <td>{$invoice->user->name}</td>*}
             <td class="date-cell">{$invoice->d_issued->format('j.n.y')}</td>
             <td class="{$invoice->type_paidby}">{$invoiceModel::PAIDBY_TYPES_TABLE[$invoice->type_paidby]}</td>
             {var $firstItem = $invoice->related('invoice_item')->where('is_main')->fetch()}
@@ -70,10 +67,5 @@
 <style>
 
     .table-smart { width: 1090px; }
-    .date-cell, .consumer-cell, .PAIDBY_CASH, .PAIDBY_CARD, .PAIDBY_BANK { text-align: center; }
-    .bold { font-weight: bold; }
-    .table-body .PAIDBY_CASH { font-weight: bold; color: #0D0; }
-    .table-body .PAIDBY_CARD { font-weight: bold; color: #DC0; }
-    .table-body .PAIDBY_BANK { font-weight: bold; color: #E70; }
 
 </style>

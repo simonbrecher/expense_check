@@ -1,4 +1,5 @@
 .form-title { background-color: #000; color: #FFF; margin: 5px 0 15px; padding: 12px 20px; }
+.form-subtitle { background-color: #555; color: #FFF; margin: 5px 0 15px; padding: 12px 20px; }
 
 .form-linebox { margin-bottom: 14px; padding: 12px; background-color: #EEE; }
 .form-columnbox { width: 49%; float: left; margin-right: 17px; }
@@ -24,3 +25,4 @@
 .submit-box .delete { background-color: #D11; color: #FFF; }
 .submit-box .delete:hover { background-color: #F55; }
 .submit-box input:last-child { margin-right: 0; }
+.submit-box div { float: left; margin-right: 40px; }

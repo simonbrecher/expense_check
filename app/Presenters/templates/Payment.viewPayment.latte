@@ -1,6 +1,6 @@
 {block content}
 
-<br>
+<h2 class="form-title">Platby</h2>
 
 {for $year = $startYear; $year <= $endYear; $year++}
     {var $selected = $renderYear == $year ? 'selected' : null}
@@ -27,7 +27,7 @@
 
 {foreach $bankAccounts as $bankAccount}
 
-    <h2 class="form-title">Bankovní účet: {$bankAccount->number} / {$bankAccount->bank->bank_code}</h2>
+    <h2 class="form-subtitle">Bankovní účet: {$bankAccount->number} / {$bankAccount->bank->bank_code}</h2>
 
     <div class="table-list-container">
 
@@ -46,7 +46,7 @@
             {var $payments = $bankAccount->related('payment')->where('d_payment >=', $startInterval)->where('d_payment <=', $endInterval)}
             <tr n:foreach="$payments as $payment" class="table-body">
                 <td>{$payment->d_payment->format('j.n.y')}</td>
-                <td  class="PAIDBY {$payment->type_paidby}">{$paymentModel->getTypePaidbyName($payment->type_paidby)}</td>
+                <td  class="PAIDBY {$payment->type_paidby}">{$paymentModel::PAIDBY_TYPES_TABLE[$payment->type_paidby]}</td>
                 <td>{$payment->card?->number}</td>
                 <td class="price-cell {abs($payment->czk_amount) > 10000 ? bold : null} {$payment->czk_amount > 0 ? positive : negative}">{$payment->czk_amount} Kč</td>
                     <td>
@@ -74,20 +74,16 @@
 
 {/foreach}
 
+<a n:href=":import" class="menu-item">Importovat výpis z bankovního účtu</a>
+
+<hr />
+<br>
+
 <a n:href=":default" class="menu-item">Zpět</a>
 
 <style>
 
     .table-smart td { padding: 9px; font-size: 15px; }
-    .bold { font-weight: bold; }
-    .positive { color: #0E0; }
-    .negative { color: #D60; }
-    .table-body .PAIDBY { font-weight: bold; text-align: center; }
-    .table-body .PAIDBY_CASH { color: #0D0; }
-    .table-body .PAIDBY_CARD { color: #DC0; }
-    .table-body .PAIDBY_BANK { color: #E70; }
-    .table-body .PAIDBY_ATM { color: #5AF; }
-    .table-body .PAIDBY_FEE { color: #F0D; }
     .table-smart .message-cell { font-size: 13px; padding: 6px 9px; }
 
 </style>

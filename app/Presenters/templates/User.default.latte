@@ -1,9 +1,12 @@
 {block content}
 
 {if $user->isLoggedIn()}
-    {*  signin pro editaci  *}
+    <h2 class="form-title">Uživatelský účet</h2>
+
     <a n:href=":signin" class="menu-item">Upravit uživatelský účet</a>
 {else}
-    <div class="menu-container"><a n:href=":signin" class="menu-item">Založit uživatelský účet s novou rodinou.</a></div>
+    <h2 class="form-title">Přihlášení / založení nové rodiny</h2>
+
+    <a n:href=":signin" class="menu-item">Založit uživatelský účet s novou rodinou</a>
     <a n:href=":login" class="after-menu-item">Přihlásit se</a>
 {/if}

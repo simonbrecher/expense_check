@@ -9,3 +9,13 @@
 .table-smart .edit-cell a { padding: 3px 12px;border-radius: 6px; border: 1px solid #DDD; }
 .table-smart tr.table-body:hover td.edit-cell a { background-color: #DDE; border-color:#CDD; }
 .table-smart .price-cell { text-align: right; }
+
+.bold { font-weight: bold; }
+.positive { color: #0E0; }
+.negative { color: #D60; }
+.table-body .PAIDBY { font-weight: bold; text-align: center; }
+.table-body .PAIDBY_CASH { color: #0D0; }
+.table-body .PAIDBY_CARD { color: #DC0; }
+.table-body .PAIDBY_BANK { color: #E70; }
+.table-body .PAIDBY_ATM { color: #5AF; }
+.table-body .PAIDBY_FEE { color: #F0D; }
