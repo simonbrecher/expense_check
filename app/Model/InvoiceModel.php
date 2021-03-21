@@ -7,6 +7,7 @@ use App\Form\InvoiceForm;
 use App\Presenters\AccessUserException;
 use Nette\Neon\Exception;
 use Nette;
+use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
 
 class InvoiceModel extends BaseModel
@@ -25,14 +26,29 @@ class InvoiceModel extends BaseModel
         }
     }
 
+    public function getInvoiceDate(int $id): DateTime
+    {
+        return $this->table('invoice_head')->get($id)->d_issued;
+    }
+
     public function getStartInterval(): DateTime
     {
-        return $this->table('invoice_head')->min('d_issued');
+        $invoices = $this->table('invoice_head');
+        if ($invoices->count('id') == 0) {
+            return new DateTime();
+        } else {
+            return $invoices->min('d_issued');
+        }
     }
 
     public function getEndInterval(): DateTime
     {
-        return $this->table('invoice_head')->max('d_issued');
+        $invoices = $this->table('invoice_head');
+        if ($invoices->count('id') == 0) {
+            return new DateTime();
+        } else {
+            return $invoices->max('d_issued');
+        }
     }
 
     private function validateCategory($id): void
@@ -63,14 +79,16 @@ class InvoiceModel extends BaseModel
             'var_symbol' => $values->type_paidby == 'PAIDBY_BANK' ? $values->var_symbol : '',
         );
 
-        if ($values->category) {
-            $this->validateCategory((int) $values->category);
-        } else {
-            throw new InvalidValueException('Kategorie hlavní pololožky v dokladu musí být vybraná.');
-        }
+        if ($values->type_paidby != 'PAIDBY_ATM') {
+            if ($values->category) {
+                $this->validateCategory((int) $values->category);
+            } else {
+                throw new InvalidValueException('Kategorie hlavní položky v dokladu musí být vybraná.');
+            }
 
-        if ($values->consumer) {
-            $this->validateConsumer((int) $values->consumer);
+            if ($values->consumer) {
+                $this->validateConsumer((int) $values->consumer);
+            }
         }
 
         if ($values->type_paidby == 'PAIDBY_BANK') {
@@ -83,8 +101,8 @@ class InvoiceModel extends BaseModel
         $firstItem = array(
             'czk_amount' => $values->czk_total_amount,
             'description' => $values->description ?: $this->getCategoryName($values->category),
-            'category_id' => $values->category,
-            'consumer_id' => $values->consumer ?: null,
+            'category_id' => $values->type_paidby === 'PAIDBY_ATM' ? null : $values->category,
+            'consumer_id' => $values->type_paidby === 'PAIDBY_ATM' ? null : ($values->consumer ?: null),
             'is_main' => true,
         );
         $items[] = $firstItem;
@@ -98,7 +116,7 @@ class InvoiceModel extends BaseModel
                 }
 
                 if ($itemValues->consumer) {
-                    $this->validateConsumer((int) $itemValues->consmer);
+                    $this->validateConsumer((int) $itemValues->consumer);
                 }
 
                 if ($itemValues->czk_amount === '') {
@@ -127,14 +145,45 @@ class InvoiceModel extends BaseModel
         return array('head' => $head, 'items' => $items);
     }
 
+    /* transaction MUST BE outside of this function */
+    private function autoCreatePayment(ActiveRow $head): void
+    {
+        if ($head->type_paidby == 'PAIDBY_CASH') {
+            $payment = array(
+                'user_id' => $this->user->identity->id,
+                'cash_account_id' => $this->database->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id,
+                'd_payment' => $head->d_issued,
+                'czk_amount' => - $head->related('invoice_item')->sum('czk_amount'),
+                'description' => $head->related('invoice_item')->where('is_main')->fetch()->description,
+                'type_paidby' => 'PAIDBY_CASH',
+                'is_identified' => false,
+            );
+
+            $head->related('payment')->insert($payment);
+        }
+    }
+
+    /* transaction MUST BE outside of this function */
+    private function unpairPayment(ActiveRow $head): void
+    {
+        if ($head->type_paidby == 'PAIDBY_CASH') {
+            $head->related('payment')->fetch()->delete();
+        } else {
+            $head->related('payment')->update(['invoice_head_id' => null, 'is_identified' => false]);
+        }
+    }
+
+    /* not edit */
     public function addInvoice(InvoiceForm $form): void
     {
         try {
             $this->database->beginTransaction();
             $values = $this->constructAddInvoiceValues($form);
 
-            $invoiceHead = $this->database->table('invoice_head')->insert($values['head']);
-            $invoiceHead->related('invoice_item')->insert($values['items']);
+            $head = $this->database->table('invoice_head')->insert($values['head']);
+            $head->related('invoice_item')->insert($values['items']);
+
+            $this->autoCreatePayment($head);
 
             $this->database->commit();
         } catch (\PDOException) {
@@ -154,9 +203,14 @@ class InvoiceModel extends BaseModel
             $values = $this->constructAddInvoiceValues($form);
 
             $head = $this->database->table('invoice_head')->get($editId);
+
+            $this->unpairPayment($head);
+
             $head->update($values['head']);
             $head->related('invoice_item')->delete();
             $head->related('invoice_item')->insert($values['items']);
+
+            $this->autoCreatePayment($head);
 
             $this->database->commit();
         } catch (\PDOException) {
@@ -171,14 +225,20 @@ class InvoiceModel extends BaseModel
             throw new \PDOException('Nepodařilo se smazat doklad.');
         }
 
-        $row = $this->table('invoice_head')->get($id);
-        if (!$row) {
+        $head = $this->table('invoice_head')->get($id);
+        if (!$head) {
             throw new \PDOException('Nepodařilo se smazat doklad.');
         }
 
         try {
-            $row->delete();
+            $this->database->beginTransaction();
+
+            $this->unpairPayment($head);
+            $head->delete();
+
+            $this->database->commit();
         } catch (\PDOException) {
+            $this->database->rollBack();
             throw new \PDOException('Nepodařilo se smazat doklad.');
         }
     }

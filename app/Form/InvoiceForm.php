@@ -9,7 +9,12 @@ use Nette\Application\UI\Form;
 class InvoiceForm extends Form
 {
     public const BOX_STYLE_MULTI_CONTROLS = ['type_paidby'];
-    public const TOGGLE_BOX_HTML_IDS = ['var_symbol' => 'var-symbol-toggle-box', 'card_id' => 'card-id-toggle-box'];
+    public const TOGGLE_BOX_HTML_IDS = array(
+        'var_symbol' => 'var-symbol-toggle-box',
+        'card_id' => 'card-id-toggle-box',
+        'category' => 'toggle-not-paidby-atm',
+        'consumer' => 'toggle-not-paidby-atm',
+    );
     public const TOGGLE_BUTTON_HTML_IDS = ['add' => 'toggle-not-paidby-atm', 'remove' => 'toggle-not-paidby-atm'];
 
     private $focusedControl;

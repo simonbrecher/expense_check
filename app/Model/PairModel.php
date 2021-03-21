@@ -31,7 +31,7 @@ class PairModel extends BaseModel
                 if (!$payment) {
                     throw new AccessUserException('Uživatel nemá přístup k této platbě.');
                 }
-                $payment->update(['invoice_head_id' => $invoiceId, 'is_paired' => true]);
+                $payment->update(['invoice_head_id' => $invoiceId, 'is_identified' => true]);
             }
 
             if (!$confirmed) {
@@ -60,7 +60,7 @@ class PairModel extends BaseModel
 
     public function getPayments(): Selection
     {
-        return $this->tablePayments()->where('NOT is_paired');
+        return $this->tablePayments()->where('NOT is_identified');
     }
 
     public function getInvoices(): Selection
@@ -75,7 +75,7 @@ class PairModel extends BaseModel
             throw new AccessUserException('Uživatel nemá přístup k této platbě.');
         }
 
-        $payment->update(['is_consumption' => false, 'is_paired' => true]);
+        $payment->update(['is_consumption' => false, 'is_identified' => true]);
     }
 }
 

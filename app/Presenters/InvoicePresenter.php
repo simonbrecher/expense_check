@@ -27,6 +27,18 @@ class InvoicePresenter extends BasePresenter
         }
     }
 
+    public function renderAdd(int $id=null): void
+    {
+        if ($id === null) {
+            $this->template->year = null;
+            $this->template->month = null;
+        } else {
+            $date = $this->invoiceModel->getInvoiceDate($id);
+            $this->template->year = $date->format('Y');
+            $this->template->month = $date->format('n');
+        }
+    }
+
     protected function createComponentAddInvoiceForm(): InvoiceForm
     {
         $form = new InvoiceForm($this->invoiceModel);
@@ -35,20 +47,15 @@ class InvoicePresenter extends BasePresenter
 
         $form->addGroup('column0');
 
-            $form->addText('czk_total_amount', 'Celková cena:')
-                    ->addRule($form::NUMERIC, 'Celková cena musí být číslo.')
-                    ->setRequired('Vyplňte celkovou cenu.');
+            $form->addText('czk_total_amount', 'Celková cena:')->addRule($form::NUMERIC, 'Celková cena musí být číslo.')->setRequired('Vyplňte celkovou cenu.');
 
             $form ->addText('description', 'Název:')->setMaxLength(35);
 
             $categories = $this->invoiceModel->getCategorySelect($editId);
-            $form->addSelect('category', 'Kategorie:', $categories)
-                    ->setRequired('Vyplňte kategorii první položky.')
-                    ->setPrompt('');
+            $form->addSelect('category', 'Kategorie:', $categories)->setPrompt('');
 
             $consumers = $this->invoiceModel->getConsumerSelect($editId);
-            $form->addSelect('consumer', 'Spotřebitel:', $consumers)
-                    ->setPrompt('');
+            $form->addSelect('consumer', 'Spotřebitel:', $consumers)->setPrompt('');
 
         $form->addGroup('column1');
 
@@ -57,13 +64,11 @@ class InvoicePresenter extends BasePresenter
                     ->setRequired('Vyplňte datum vystavení dokladu.');
 
             $paidByChoices = $this->invoiceModel::PAIDBY_TYPES_INVOICE_FORM;
-            $paidBy = $form->addRadioList('type_paidby', 'Typ platby:', $paidByChoices)
-                            ->setRequired('Vyberte typ platby.');
+            $paidBy = $form->addRadioList('type_paidby', 'Typ platby:', $paidByChoices)->setRequired('Vyberte typ platby.');
 
             // paid by card
             $cards = $this->invoiceModel->getCardSelect($editId);
-            $card = $form->addSelect('card_id', 'Platební karta:', $cards)
-                            ->setPrompt('');
+            $card = $form->addSelect('card_id', 'Platební karta:', $cards)->setPrompt('');
 
             // paid by bank
             $varSymbol = $form->addText('var_symbol', 'Variabilní symbol:')->setMaxLength(10);
@@ -75,11 +80,9 @@ class InvoicePresenter extends BasePresenter
             $paidBy->addCondition($form::NOT_EQUAL, 'PAIDBY_ATM')->toggle('toggle-not-paidby-atm');
             $paidBy->addCondition($form::BLANK)->toggle('toggle-not-paidby-atm');
 
-            $varSymbol->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_BANK')
-                        ->setRequired('Vyplňte variabilní symbol.');
+            $varSymbol->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_BANK')->setRequired('Vyplňte variabilní symbol.');
 
-            $card->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_CARD')
-                ->setRequired('Vyberte platební kartu.');
+            $card->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_CARD')->setRequired('Vyberte platební kartu.');
 
         $form->addGroup('buttons');
 
@@ -88,8 +91,7 @@ class InvoicePresenter extends BasePresenter
             $form->addSubmit('remove', 'Odebrat položku')->setValidationScope([]);
 
             if ($this->getParameter('id') !== null) {
-                $form->addSubmit('delete', 'Smazat')->setValidationScope([])
-                        ->setHtmlAttribute('class', 'delete');
+                $form->addSubmit('delete', 'Smazat')->setValidationScope([]) ->setHtmlAttribute('class', 'delete');
             }
 
         $form->onAnchor[] = [$this, 'invoiceFormAnchor'];
@@ -164,25 +166,34 @@ class InvoicePresenter extends BasePresenter
         if (!$this->invoiceModel->canAccessInvoice($id)) {
             $this->redirect(':default');
         }
-
-        # TODO: something if there are payments for the invoice_head
     }
 
     public function handleRemove(int $id): void
     {
+        $year = null;
+        $month = null;
+
         try {
+            $date = $this->invoiceModel->getInvoiceDate($id);
+            $year = (int) $date->format('Y');
+            $month = (int) $date->format('n');
+
             $this->invoiceModel->removeInvoice($id);
             $this->flashMessage('Doklad byl úspěšně smazaný.', 'success');
         } catch (\PDOException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }
-        $this->redirect(':view');
+
+        $this->redirect(':view', [$year, $month]);
     }
 
-    public function handleNotRemove(): void
+    public function handleNotRemove(int $id): void
     {
         $this->flashMessage('Doklad nebyl smazaný.', 'info');
-        $this->redirect(':view');
+
+        $date = $this->invoiceModel->getInvoiceDate($id);
+
+        $this->redirect(':view', [(int) $date->format('Y'), (int) $date->format('n')]);
     }
 
     public function renderRemove(int $id): void
@@ -203,9 +214,9 @@ class InvoicePresenter extends BasePresenter
         if ($year === null || $month === null) {
             $this->redirect(':view', [$endYear, $endMonth]);
         } elseif ($year < $startYear || ($year == $startYear && $month < $startMonth)) {
-            $this->redirect(':viewPayment', [$startYear, $startMonth]);
+            $this->redirect(':view', [$startYear, $startMonth]);
         } elseif ($year > $endYear || ($year == $endYear && $month > $endMonth)) {
-            $this->redirect(':viewPayment', [$endYear, $endMonth]);
+            $this->redirect(':view', [$endYear, $endMonth]);
         }
     }
 

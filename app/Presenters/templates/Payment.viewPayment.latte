@@ -40,7 +40,7 @@
                 <td>Protiúčet</td>
                 <td>Variabilní symbol</td>
                 <td>Zprávy</td>
-                <td>Je spárovaný</td>
+                <td>Je identifikovaný</td>
                 <td>Je výdaj</td>
             </tr>
             {var $payments = $bankAccount->related('payment')->where('d_payment >=', $startInterval)->where('d_payment <=', $endInterval)}
@@ -65,7 +65,7 @@
                     {if $payment->message_payer !== '' && $payment->description != ''}<br>{/if}
                     {$payment->description}
                 </td>
-                <td class="{$payment->is_paired ? 'positive' : 'negative'}">{$payment->is_paired ? 'Spárované' : 'Nespárované'}</td>
+                <td class="{$payment->is_identified ? 'positive' : 'negative'}">{$payment->is_identified ? 'Identifikovaný' : 'Neidentifikovaný'}</td>
                 <td>{$payment->is_consumption ? 'Výdaj' : 'Není výdaj'}</td>
             </tr>
         </table>

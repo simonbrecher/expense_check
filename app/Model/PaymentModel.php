@@ -13,12 +13,22 @@ class PaymentModel extends BaseModel
 {
     public function getStartInterval(): DateTime
     {
-        return $this->tablePayments()->min('d_payment');
+        $payments = $this->tablePayments();
+        if ($payments->count('id') == 0) {
+            return new DateTime();
+        } else {
+            return $payments->min('d_payment');
+        }
     }
 
     public function getEndInterval(): DateTime
     {
-        return $this->tablePayments()->max('d_payment');
+        $payments = $this->tablePayments();
+        if ($payments->count('id') == 0) {
+            return new DateTime();
+        } else {
+            return $payments->max('d_payment');
+        }
     }
 
     public function activatePaymentChannel(int $id): void
