@@ -9,6 +9,9 @@ use App\Model;
 
 class PaymentPresenter extends BasePresenter
 {
+    private $startInterval;
+    private $endInterval;
+
     public function __construct(private Model\ImportModel $importModel, private Model\PaymentModel $paymentModel, private Model\PairModel $pairModel)
     {}
 
@@ -129,8 +132,9 @@ class PaymentPresenter extends BasePresenter
 
     public function actionViewPayment(int $year=null, int $month=null): void
     {
-        $startInterval = $this->paymentModel->getStartInterval();
-        $endInterval = $this->paymentModel->getEndInterval();
+        list($startInterval, $endInterval) = $this->paymentModel->getPaymentInterval();
+        $this->startInterval = $startInterval;
+        $this->endInterval = $endInterval;
 
         $startYear = (int) $startInterval->format('Y');
         $startMonth = (int) $startInterval->format('n');
@@ -148,8 +152,8 @@ class PaymentPresenter extends BasePresenter
 
     public function renderViewPayment(int $year=null, int $month=null): void
     {
-        $startInterval = $this->paymentModel->getStartInterval();
-        $endInterval = $this->paymentModel->getEndInterval();
+        $startInterval = $this->startInterval;
+        $endInterval = $this->endInterval;
 
         $this->template->startYear = (int) $startInterval->format('Y');
         $this->template->startMonth = (int) $startInterval->format('n');

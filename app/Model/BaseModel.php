@@ -79,7 +79,7 @@ class BaseModel
     public function getLastDayInMonth(int $month, int $year): DateTime
     {
         if ($month == 12) {
-            return new DateTime('1.'.$month.'.'.($year + 1).' - 1 day');
+            return new DateTime('1.1.'.($year + 1).' - 1 day');
         } else {
             return new DateTime('1.'.($month + 1).'.'.$year.' - 1 day');
         }

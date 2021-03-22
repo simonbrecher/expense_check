@@ -10,6 +10,9 @@ use App\Form\InvoiceForm;
 
 class InvoicePresenter extends BasePresenter
 {
+    private $startInterval;
+    private $endInterval;
+
     public  function __construct(public Model\InvoiceModel $invoiceModel)
     {}
 
@@ -203,8 +206,9 @@ class InvoicePresenter extends BasePresenter
 
     public function actionView(int $year=null, int $month=null): void
     {
-        $startInterval = $this->invoiceModel->getStartInterval();
-        $endInterval = $this->invoiceModel->getEndInterval();
+        list($startInterval, $endInterval) = $this->invoiceModel->getInvoiceInterval();
+        $this->startInterval = $startInterval;
+        $this->endInterval = $endInterval;
 
         $startYear = (int) $startInterval->format('Y');
         $startMonth = (int) $startInterval->format('n');
@@ -222,8 +226,8 @@ class InvoicePresenter extends BasePresenter
 
     public function renderView(int $year=null, int $month=null): void
     {
-        $startInterval = $this->invoiceModel->getStartInterval();
-        $endInterval = $this->invoiceModel->getEndInterval();
+        $startInterval = $this->startInterval;
+        $endInterval = $this->endInterval;
 
         $this->template->startYear = (int) $startInterval->format('Y');
         $this->template->startMonth = (int) $startInterval->format('n');
@@ -232,10 +236,10 @@ class InvoicePresenter extends BasePresenter
         $this->template->renderYear = $year;
         $this->template->renderMonth = $month;
 
-        $startInterval = $this->invoiceModel->getFirstDayInMonth($month, $year);
-        $endInterval = $this->invoiceModel->getLastDayInMonth($month, $year);
+        $startMonthInterval = $this->invoiceModel->getFirstDayInMonth($month, $year);
+        $endMonthInterval = $this->invoiceModel->getLastDayInMonth($month, $year);
 
-        $this->template->invoices = $this->invoiceModel->getInvoices()->where('d_issued >=', $startInterval)->where('d_issued <=', $endInterval);
+        $this->template->invoices = $this->invoiceModel->getInvoicesInInterval($startMonthInterval, $endMonthInterval);
         $this->template->invoiceModel = $this->invoiceModel;
     }
 }

@@ -6,6 +6,7 @@ namespace App\Model;
 
 use App\Presenters\AccessUserException;
 use App\Utils\ImportIntervals;
+use Nette\Database\Table\Selection;
 use Nette\Utils\ArrayHash;
 use Nette\Utils\DateTime;
 
@@ -112,6 +113,28 @@ class ImportModel extends BaseModel
             }
         }
         return false;
+    }
+
+    /* transaction MUST BE outside of this function */
+    private function autoCreateInvoices(Selection $payments): void
+    {
+        // WARNING: if to add new type_paidby - check if the database object can be used in two for cycles, or has to be copied
+        foreach ($payments->where('type_paidby', 'PAIDBY_FEE') as $payment) {
+            $head = array(
+                'user_id' => $this->user->identity->id,
+                'd_issued' => $payment->d_payment,
+                'type_paidby' => 'PAIDBY_FEE',
+            );
+            $head = $this->database->table('invoice_head')->insert($head);
+            $payment->update(['invoice_head_id' => $head->id, 'is_identified' => true]);
+
+            $item = array(
+                'is_main' => true,
+                'czk_amount' => - $payment->czk_amount,
+                'description' => 'poplatek',
+            );
+            $head->related('invoice_item')->insert($item);
+        }
     }
 
     private function checkDate(string $date): bool
@@ -471,6 +494,9 @@ class ImportModel extends BaseModel
             if ($info['countToSave'] > 0) {
                 $import->related('payment')->insert($payments);
             }
+
+            $payments = $this->database->table('payment')->where('ba_import_id', $import->id);
+            $this->autoCreateInvoices($payments);
 
             $database->commit();
         } catch (\PDOException) {

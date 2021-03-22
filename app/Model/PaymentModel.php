@@ -11,23 +11,13 @@ use Nette\Utils\DateTime;
 
 class PaymentModel extends BaseModel
 {
-    public function getStartInterval(): DateTime
+    public function getPaymentInterval(): array
     {
         $payments = $this->tablePayments();
         if ($payments->count('id') == 0) {
-            return new DateTime();
+            return [new DateTime(), new DateTime()];
         } else {
-            return $payments->min('d_payment');
-        }
-    }
-
-    public function getEndInterval(): DateTime
-    {
-        $payments = $this->tablePayments();
-        if ($payments->count('id') == 0) {
-            return new DateTime();
-        } else {
-            return $payments->max('d_payment');
+            return [$payments->min('d_payment'), $payments->max('d_payment')];
         }
     }
 

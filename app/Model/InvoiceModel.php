@@ -6,7 +6,7 @@ namespace App\Model;
 use App\Form\InvoiceForm;
 use App\Presenters\AccessUserException;
 use Nette\Neon\Exception;
-use Nette;
+use Nette\Database\Table\Selection;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
 
@@ -31,23 +31,13 @@ class InvoiceModel extends BaseModel
         return $this->table('invoice_head')->get($id)->d_issued;
     }
 
-    public function getStartInterval(): DateTime
+    public function getInvoiceInterval(): array
     {
-        $invoices = $this->table('invoice_head');
+        $invoices = $this->getInvoices();
         if ($invoices->count('id') == 0) {
-            return new DateTime();
+            return [new DateTime(), new DateTime()];
         } else {
-            return $invoices->min('d_issued');
-        }
-    }
-
-    public function getEndInterval(): DateTime
-    {
-        $invoices = $this->table('invoice_head');
-        if ($invoices->count('id') == 0) {
-            return new DateTime();
-        } else {
-            return $invoices->max('d_issued');
+            return [$invoices->min('d_issued'), $invoices->max('d_issued')];
         }
     }
 
@@ -300,9 +290,15 @@ class InvoiceModel extends BaseModel
         return $data;
     }
 
-    public function getInvoices(): Nette\Database\Table\Selection
+    public function getInvoicesInInterval(DateTime $startInterval, DateTime $endInterval): Selection
     {
-        return $this->table('invoice_head')->where('NOT invoice_head.is_cash_account_balance');
+        return $this->getInvoices()->where('d_issued >=', $startInterval)->where('d_issued <=', $endInterval);
+    }
+
+    private function getInvoices(): Selection
+    {
+        return $this->table('invoice_head')->where('type_paidby !=', 'PAIDBY_FEE')
+                    ->where('NOT invoice_head.is_cash_account_balance');
     }
 
     public function getEditInvoiceData(int $id): array
