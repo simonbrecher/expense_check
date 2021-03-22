@@ -82,8 +82,10 @@ class PaymentPresenter extends BasePresenter
 
     public function renderPair(array $selectedPayments=[], int $confirmId=null): void
     {
-        $this->template->payments = $this->pairModel->getPayments();
-        $this->template->invoices = $this->pairModel->getInvoices();
+        $this->pairModel->pairMain($this); // TODO: remove when auto pairing is complete
+
+        $this->template->payments = $this->pairModel->getNotIdentifiedPayments();
+        $this->template->invoices = $this->pairModel->getNotIdentifiedInvoices();
         $this->template->selectedPayments = $selectedPayments;
         $this->template->confirmId = $confirmId;
 
@@ -94,6 +96,8 @@ class PaymentPresenter extends BasePresenter
     {
         try{
             $this->paymentModel->activatePaymentChannel($id);
+
+            $this->pairModel->pairMain($this);
         } catch (AccessUserException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }
@@ -202,6 +206,8 @@ class PaymentPresenter extends BasePresenter
             } else {
                 $this->flashMessage('Celkem '.$countDuplicate.' plateb bylo duplicitních, a ty nebyly uloženy.');
             }
+
+            $this->pairModel->pairMain($this);
         } catch (\PDOException|AccessUserException|Model\InvalidFileValueException|Model\InvalidFileFormatException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         } catch (Model\DuplicateImportException $exception) {
@@ -225,7 +231,7 @@ class PaymentPresenter extends BasePresenter
             $yesNoSelect = [1 => 'ANO', 0 => 'NE'];
             $form->addSelect('is_active', 'Je aktivní: ', $yesNoSelect)->setDefaultValue(1);
 
-            $form->addSelect('is_consumption_type', 'Je výdaj: ', $yesNoSelect)->setDefaultValue(1);
+            $form->addSelect('is_consumption', 'Je výdaj: ', $yesNoSelect)->setDefaultValue(1);
 
         $form->addGroup('column1');
 
@@ -253,6 +259,9 @@ class PaymentPresenter extends BasePresenter
             $this->paymentModel->addPaymentChannel($form);
 
             $this->flashMessage('Trvalý příkaz byl úspěšně přidaný.', 'success');
+
+            $this->pairModel->pairMain($this);
+
             $this->redirect(':viewPaymentChannel');
         } catch (\PDOException|AccessUserException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');

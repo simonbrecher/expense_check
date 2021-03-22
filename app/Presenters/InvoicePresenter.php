@@ -13,7 +13,7 @@ class InvoicePresenter extends BasePresenter
     private $startInterval;
     private $endInterval;
 
-    public  function __construct(public Model\InvoiceModel $invoiceModel)
+    public  function __construct(private Model\InvoiceModel $invoiceModel, private Model\PairModel $pairModel)
     {}
 
     public function actionDefault(): void
@@ -141,6 +141,9 @@ class InvoicePresenter extends BasePresenter
                     $this->invoiceModel->addInvoice($form);
 
                     $this->flashMessage('Doklad byl úspěšně uložený.', 'success');
+
+                    $this->pairModel->pairMain($this);
+
                     $this->redirect('this');
                 } catch (\PDOException|Model\InvalidValueException|AccessUserException $exception) {
                     $this->flashMessage($exception->getMessage(), 'error');
@@ -151,6 +154,9 @@ class InvoicePresenter extends BasePresenter
                     $this->invoiceModel->editInvoice($form, (int) $editId);
 
                     $this->flashMessage('Doklad byl úspěšně upravený.', 'success');
+
+                    $this->pairModel->pairMain($this);
+
                     $this->redirect(':view');
                 } catch (\PDOException|Model\InvalidValueException|AccessUserException $exception) {
                     $this->flashMessage($exception->getMessage(), 'error');

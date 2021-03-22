@@ -72,7 +72,7 @@ class PaymentModel extends BaseModel
             'counter_account_bank_code' => $oldValues->counter_account_bank_code,
             'description' => $oldValues->description,
             'is_active' => $oldValues->is_active,
-            'is_consumption_type' => $oldValues->is_consumption_type,
+            'is_consumption' => $oldValues->is_consumption,
         );
 
         return $values;

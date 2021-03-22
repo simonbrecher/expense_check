@@ -5,17 +5,92 @@ namespace App\Model;
 
 
 use App\Presenters\AccessUserException;
+use App\Presenters\BasePresenter;
 use Nette\Database\Table\Selection;
 use Nette\Neon\Exception;
 
 class PairModel extends BaseModel
 {
-    private const MAX_MANUAL_PAIR_ABSOLUTE_DIFFERENCE = 3;
+    private const MAX_MANUAL_PAIR_CZK_ABSOLUTE_DIFFERENCE = 3;
 
     public function getNotIdentifiedCashPayments(): Selection
     {
         $cashAccountId = $this->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
         return $this->table('payment')->where('cash_account_id', $cashAccountId)->where('type_paidby', 'PAIDBY_CASH')->where('NOT is_identified');
+    }
+
+    private function pairByPaymentChannel(): int
+    {
+        $pairedCount = 0;
+
+        $paymentChannels = $this->table('payment_channel')->where('is_active')->fetchAssoc('id');
+
+        $payments = $this->getNotIdentifiedPayments();
+        foreach ($payments as $payment) {
+            foreach ($paymentChannels as $channel) {
+                if ($payment->bank_account_id == $channel['bank_account_id']) {
+                    $isInChannel = true;
+                    if ($channel['counter_account_number'] != '' && $channel['counter_account_bank_code'] != '') {
+                        if ($channel['counter_account_number'] != $payment->counter_account_number || $channel['counter_account_number'] != $payment->counter_account_bank_code) {
+                            $isInChannel = false;
+                        }
+                    }
+                    if ($channel['var_symbol'] != $payment->var_symbol) {
+                        $isInChannel = false;
+                    }
+
+                    if ($isInChannel) {
+                        try {
+                            $this->database->beginTransaction();
+
+                            if ($channel['is_consumption']) {
+                                $head = array(
+                                    'user_id' => $this->user->identity->id,
+                                    'card_id' => $payment->card_id,
+                                    'd_issued' => $payment->d_payment,
+                                    'counter_account_number' => $payment->counter_account_number,
+                                    'counter_account_bank_code' => $payment->counter_account_bank_code,
+                                    'var_symbol' => $payment->var_symbol,
+                                    'type_paidby' => $payment->type_paidby,
+                                );
+                                $head = $this->database->table('invoice_head')->insert($head);
+                                $payment->update(['payment_channel_id' => $channel['id'], 'invoice_head_id' => $head->id, 'is_identified' => true]);
+
+                                $item = array(
+                                    'category_id' => $channel['category_id'],
+                                    'is_main' => true,
+                                    'czk_amount' => - $payment->czk_amount,
+                                    'description' => $channel['description'],
+                                );
+                                $head->related('invoice_item')->insert($item);
+                            } else {
+                                $payment->update(['payment_channel_id' => $channel['id'], 'is_consumption' => false, 'is_identified' => true]);
+                            }
+
+                            $this->database->commit();
+
+                            $pairedCount ++;
+                            break;
+                        } catch (\Exception) {
+                            $this->database->rollBack();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $pairedCount;
+    }
+
+    /* Throws no errors; if something is paired - flashmessage */
+    public function pairMain(BasePresenter $presenter): void
+    {
+        $pairedByChannel = $this->pairByPaymentChannel();
+
+        if ($pairedByChannel > 0) {
+            $presenter->flashMessage('Celkem '.$pairedByChannel.' plateb bylo identifikováno podle trvalého příkazu.', 'autopair');
+        }
     }
 
     public function manualPair(int $invoiceId, array $paymentsId, bool $confirmed): void
@@ -45,7 +120,7 @@ class PairModel extends BaseModel
                 $paymentsAmount = - $this->tablePayments()->where('id', $paymentsId)->sum('czk_amount');
                 $difference = abs($invoiceAmount - $paymentsAmount);
 
-                if ($difference > self::MAX_MANUAL_PAIR_ABSOLUTE_DIFFERENCE) {
+                if ($difference > self::MAX_MANUAL_PAIR_CZK_ABSOLUTE_DIFFERENCE) {
                     if (count($paymentsId) == 0) {
                         throw new ManualPairDifferenceWarning('Celková částka vybraných plateb a dokladu se liší o: '.$difference.' Kč.');
                     } else {
@@ -64,14 +139,14 @@ class PairModel extends BaseModel
         }
     }
 
-    public function getPayments(): Selection
+    public function getNotIdentifiedPayments(): Selection
     {
         return $this->tablePayments()->where('NOT is_identified');
     }
 
-    public function getInvoices(): Selection
+    public function getNotIdentifiedInvoices(): Selection
     {
-        return $this->table('invoice_head')->where(':payment.invoice_head_id', null);
+        return $this->table('invoice_head')->where('NOT invoice_head.type_paidby', 'PAIDBY_FEE')->where(':payment.invoice_head_id', null);
     }
 
     public function notConsumption(int $id): void

@@ -1,13 +1,12 @@
 {block content}
 
-<h2 class="form-title">Doklady</h2>
+<h2 class="form-title">Trvalé příkazy</h2>
 
 <div class="table-list-container">
 
     <table class="table-smart">
         <tr class="table-heading">
-            <td>Vložil</td>
-            <td>Datum</td>
+            <td>Datum vytvoření</td>
             <td>Bankovní účet</td>
             <td>Kategorie</td>
             <td>Variablní symbol</td>
@@ -19,7 +18,6 @@
             <td></td>
         </tr>
         <tr n:foreach="$channels as $channel" class="table-body">
-            <td>{$channel->user->name}</td>
             <td>{$channel->dt_created->format('j.n.y')}</td>
             <td>{$channel->bank_account->number}</td>
             <td>{$channel->category->name}</td>
@@ -31,13 +29,13 @@
             </td>
             <td>{$channel->description}</td>
             <td>{$channel->related('payment')->count()}</td>
-            <td>{$channel->is_consumption_type ? 'ANO' : 'NE'}</td>
+            <td>{$channel->is_consumption ? 'ANO' : 'NE'}</td>
             <td>{$channel->is_active ? 'ANO' : 'NE'}</td>
             <td class="edit-cell">
                 {if ! $channel->is_active}
                     <a n:href=":activatePaymentChannel! $channel->id">Aktivovat</a>
                 {elseif $channel->related('payment')->count() == 0}
-                        <a n:href=":removePaymentChannel! $channel->id">Smazat</a>
+                    <a n:href=":removePaymentChannel! $channel->id">Smazat</a>
                 {else}
                     <a n:href=":deactivatePaymentChannel! $channel->id">Deaktivovat</a>
                 {/if}
@@ -53,3 +51,9 @@
 <br>
 
 <a n:href=":default" class="menu-item">Zpět</a>
+
+<style>
+
+    .table-smart td { padding: 9px; font-size: 16px; }
+
+</style>

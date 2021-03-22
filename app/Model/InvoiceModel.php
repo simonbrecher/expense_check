@@ -297,7 +297,7 @@ class InvoiceModel extends BaseModel
 
     private function getInvoices(): Selection
     {
-        return $this->table('invoice_head')->where('type_paidby !=', 'PAIDBY_FEE')
+        return $this->table('invoice_head')->where('NOT type_paidby', 'PAIDBY_FEE')
                     ->where('NOT invoice_head.is_cash_account_balance');
     }
 
