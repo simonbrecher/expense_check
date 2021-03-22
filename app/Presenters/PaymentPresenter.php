@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace App\Presenters;
 
+
 use App\Form\BasicForm;
 use App\Model;
 
@@ -37,6 +38,32 @@ class PaymentPresenter extends BasePresenter
         $this->redirect(':pair');
     }
 
+    public function handleCashConsumption(int $id): void
+    {
+        try {
+            $this->pairModel->cashConsumption($id);
+
+            $this->flashMessage('Platba v hotovosti byla označená za výdajovou, proto se započítá do součtu výdajů.', 'info');
+        } catch (\PDOException|AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+
+        $this->redirect(':pair');
+    }
+
+    public function handleCashNotConsumption(int $id): void
+    {
+        try {
+            $this->pairModel->cashNotConsumption($id);
+
+            $this->flashMessage('Platba v hotovosti byla označená za nevýdajovou, proto se nezapočítá do součtu výdajů.', 'info');
+        } catch (\PDOException|AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+
+        $this->redirect(':pair');
+    }
+
     public function handleNotConsumption(int $id): void
     {
         try {
@@ -56,6 +83,8 @@ class PaymentPresenter extends BasePresenter
         $this->template->invoices = $this->pairModel->getInvoices();
         $this->template->selectedPayments = $selectedPayments;
         $this->template->confirmId = $confirmId;
+
+        $this->template->cashPayments = $this->pairModel->getNotIdentifiedCashPayments();
     }
 
     public function handleActivatePaymentChannel(int $id): void

@@ -1,8 +1,8 @@
 {block content}
 
-
-
 <h2 class="form-title">Párování</h2>
+
+<h2 class="form-subtitle">Bankovního výpisu</h2>
 
 <div class="wrapper-first">
 
@@ -72,6 +72,36 @@
 </div>
 
 <hr />
+
+<br>
+
+<h2 class="form-subtitle">Hotovosti</h2>
+
+<div>
+
+    <table class="table-smart">
+        <tr class="table-heading">
+            <td>Datum</td>
+            <td>Částka</td>
+            <td>Zprávy</td>
+            <td>Kategorie</td>
+            <td>Spotřebitel</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr n:foreach="$cashPayments as $payment" class="table-body">
+            {var $invoice = $payment->ref('invoice_head')}
+            <td>{$payment->d_payment->format('j.n.y')}</td>
+            <td>{$payment->czk_amount} Kč</td>
+            <td>{$payment->description}</td>
+            <td>{$invoice->related('invoice_item')->where('is_main')->fetch()->category->name ?? '??'}</td>
+            <td>{$invoice->related('invoice_item')->where('is_main')->fetch()->consumer?->name ?? 'Všichni'}</td>
+            <td><a n:href=":CashConsumption! $payment->id">Výdaj</a></td>
+            <td><a n:href=":CashNotConsumption! $payment->id">Není výdaj</a></td>
+        </tr>
+    </table>
+
+</div>
 
 <br>
 

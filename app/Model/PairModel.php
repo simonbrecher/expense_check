@@ -12,6 +12,12 @@ class PairModel extends BaseModel
 {
     private const MAX_MANUAL_PAIR_ABSOLUTE_DIFFERENCE = 3;
 
+    public function getNotIdentifiedCashPayments(): Selection
+    {
+        $cashAccountId = $this->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
+        return $this->table('payment')->where('cash_account_id', $cashAccountId)->where('type_paidby', 'PAIDBY_CASH')->where('NOT is_identified');
+    }
+
     public function manualPair(int $invoiceId, array $paymentsId, bool $confirmed): void
     {
         foreach($paymentsId as $i => $paymentId) {
@@ -71,6 +77,28 @@ class PairModel extends BaseModel
     public function notConsumption(int $id): void
     {
         $payment = $this->tablePayments()->get($id);
+        if (!$payment) {
+            throw new AccessUserException('Uživatel nemá přístup k této platbě.');
+        }
+
+        $payment->update(['is_consumption' => false, 'is_identified' => true]);
+    }
+
+    public function cashConsumption(int $id): void
+    {
+        $cashAccountId = $this->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
+        $payment = $this->table('payment')->where('cash_account_id', $cashAccountId)->where('type_paidby', 'PAIDBY_CASH')->get($id);
+        if (!$payment) {
+            throw new AccessUserException('Uživatel nemá přístup k této platbě.');
+        }
+
+        $payment->update(['is_identified' => true]);
+    }
+
+    public function cashNotConsumption(int $id): void
+    {
+        $cashAccountId = $this->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
+        $payment = $this->table('payment')->where('cash_account_id', $cashAccountId)->where('type_paidby', 'PAIDBY_CASH')->get($id);
         if (!$payment) {
             throw new AccessUserException('Uživatel nemá přístup k této platbě.');
         }
