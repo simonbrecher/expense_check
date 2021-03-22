@@ -13,7 +13,7 @@ class InvoicePresenter extends BasePresenter
     private $startInterval;
     private $endInterval;
 
-    public  function __construct(private Model\InvoiceModel $invoiceModel, private Model\PairModel $pairModel)
+    public  function __construct(public Model\InvoiceModel $invoiceModel, private Model\PairModel $pairModel)
     {}
 
     public function actionDefault(): void
@@ -83,7 +83,7 @@ class InvoicePresenter extends BasePresenter
             $paidBy->addCondition($form::NOT_EQUAL, 'PAIDBY_ATM')->toggle('toggle-not-paidby-atm');
             $paidBy->addCondition($form::BLANK)->toggle('toggle-not-paidby-atm');
 
-            $varSymbol->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_BANK')->setRequired('Vyplňte variabilní symbol.');
+//            $varSymbol->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_BANK')->setRequired('Vyplňte variabilní symbol.');
 
             $card->addConditionOn($paidBy, $form::EQUAL, 'PAIDBY_CARD')->setRequired('Vyberte platební kartu.');
 

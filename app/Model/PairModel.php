@@ -11,7 +11,10 @@ use Nette\Neon\Exception;
 
 class PairModel extends BaseModel
 {
-    private const MAX_MANUAL_PAIR_CZK_ABSOLUTE_DIFFERENCE = 3;
+    private const MAX_MANUAL_PAIR_CZK_DIFFERENCE = 3;
+
+    private const MAX_AUTO_PAIR_CZK_DIFFERENCE = 1;
+    private const MAX_AUTO_PAIR_TIMESTAMP_DIFFERENCE = 86400;
 
     public function getNotIdentifiedCashPayments(): Selection
     {
@@ -23,61 +26,122 @@ class PairModel extends BaseModel
     {
         $pairedCount = 0;
 
-        $paymentChannels = $this->table('payment_channel')->where('is_active')->fetchAssoc('id');
+        // this try is here so that SQL request reading database don't effect application, because this is automatic process
+        // errors in SQL requests updating database are caught in inside try with transaction
+        try {
 
-        $payments = $this->getNotIdentifiedPayments();
-        foreach ($payments as $payment) {
-            foreach ($paymentChannels as $channel) {
-                if ($payment->bank_account_id == $channel['bank_account_id']) {
-                    $isInChannel = true;
-                    if ($channel['counter_account_number'] != '' && $channel['counter_account_bank_code'] != '') {
-                        if ($channel['counter_account_number'] != $payment->counter_account_number || $channel['counter_account_number'] != $payment->counter_account_bank_code) {
+            $paymentChannels = $this->table('payment_channel')->where('is_active')->fetchAssoc('id');
+
+            $payments = $this->getNotIdentifiedPayments();
+            foreach ($payments as $payment) {
+                foreach ($paymentChannels as $channel) {
+                    if ($payment->bank_account_id == $channel['bank_account_id']) {
+                        $isInChannel = true;
+                        if ($channel['counter_account_number'] != '' && $channel['counter_account_bank_code'] != '') {
+                            if ($channel['counter_account_number'] != $payment->counter_account_number || $channel['counter_account_number'] != $payment->counter_account_bank_code) {
+                                $isInChannel = false;
+                            }
+                        }
+                        if ($channel['var_symbol'] != $payment->var_symbol) {
                             $isInChannel = false;
                         }
-                    }
-                    if ($channel['var_symbol'] != $payment->var_symbol) {
-                        $isInChannel = false;
-                    }
 
-                    if ($isInChannel) {
-                        try {
-                            $this->database->beginTransaction();
+                        if ($isInChannel) {
+                            try {
+                                $this->database->beginTransaction();
 
-                            if ($channel['is_consumption']) {
-                                $head = array(
-                                    'user_id' => $this->user->identity->id,
-                                    'card_id' => $payment->card_id,
-                                    'd_issued' => $payment->d_payment,
-                                    'counter_account_number' => $payment->counter_account_number,
-                                    'counter_account_bank_code' => $payment->counter_account_bank_code,
-                                    'var_symbol' => $payment->var_symbol,
-                                    'type_paidby' => $payment->type_paidby,
-                                );
-                                $head = $this->database->table('invoice_head')->insert($head);
-                                $payment->update(['payment_channel_id' => $channel['id'], 'invoice_head_id' => $head->id, 'is_identified' => true]);
+                                if ($channel['is_consumption']) {
+                                    $head = array(
+                                        'user_id' => $this->user->identity->id,
+                                        'card_id' => $payment->card_id,
+                                        'd_issued' => $payment->d_payment,
+                                        'counter_account_number' => $payment->counter_account_number,
+                                        'counter_account_bank_code' => $payment->counter_account_bank_code,
+                                        'var_symbol' => $payment->var_symbol,
+                                        'type_paidby' => $payment->type_paidby,
+                                    );
+                                    $head = $this->database->table('invoice_head')->insert($head);
+                                    $payment->update(['payment_channel_id' => $channel['id'], 'invoice_head_id' => $head->id, 'is_identified' => true]);
 
-                                $item = array(
-                                    'category_id' => $channel['category_id'],
-                                    'is_main' => true,
-                                    'czk_amount' => - $payment->czk_amount,
-                                    'description' => $channel['description'],
-                                );
-                                $head->related('invoice_item')->insert($item);
-                            } else {
-                                $payment->update(['payment_channel_id' => $channel['id'], 'is_consumption' => false, 'is_identified' => true]);
+                                    $item = array(
+                                        'category_id' => $channel['category_id'],
+                                        'is_main' => true,
+                                        'czk_amount' => - $payment->czk_amount,
+                                        'description' => $channel['description'],
+                                    );
+                                    $head->related('invoice_item')->insert($item);
+                                } else {
+                                    $payment->update(['payment_channel_id' => $channel['id'], 'is_consumption' => false, 'is_identified' => true]);
+                                }
+
+                                $this->database->commit();
+
+                                $pairedCount ++;
+                                break;
+                            } catch (\Exception) {
+                                $this->database->rollBack();
+                                break;
                             }
-
-                            $this->database->commit();
-
-                            $pairedCount ++;
-                            break;
-                        } catch (\Exception) {
-                            $this->database->rollBack();
-                            break;
                         }
                     }
                 }
             }
+
+        } catch (\PDOException) {
+
+        }
+
+        return $pairedCount;
+    }
+
+    private function autoPair(): int
+    {
+        $pairedCount = 0;
+
+        // this try is here so that SQL request reading database don't effect application, because this is automatic process
+        // errors in SQL requests updating database are caught in inside try with transaction
+        try {
+
+            $payments = $this->getNotIdentifiedPayments();
+            $invoices = $this->getNotIdentifiedInvoices()->group('invoice_head.id')
+                ->select('invoice_head.id, invoice_head.type_paidby, d_issued, SUM(:invoice_item.czk_amount) AS czk_amount')->fetchAssoc('id');
+
+            $pairedInvoiceIds = [];
+            foreach ($payments as $payment) {
+                foreach ($invoices as $invoice) {
+                    if (! in_array($invoice['id'], $pairedInvoiceIds)) {
+                        // FIO bank doesn't differentiate between card payment and ATM
+                        if ($payment->type_paidby == $invoice['type_paidby'] || ($payment->type_paidby == 'PAIDBY_CARD' && $invoice['type_paidby'] == 'PAIDBY_ATM')) {
+                            if (abs($payment->d_payment->getTimeStamp() - $invoice['d_issued']->getTimeStamp()) <= self::MAX_AUTO_PAIR_TIMESTAMP_DIFFERENCE) {
+                                // payment and invoice has opposite sign
+                                if (abs($payment->czk_amount + $invoice['czk_amount']) <= self::MAX_AUTO_PAIR_CZK_DIFFERENCE) {
+                                    try {
+                                        $this->database->beginTransaction();
+
+                                        $paymentData = array(
+                                            'is_identified' => true,
+                                            'type_paidby' => $invoice['type_paidby'],
+                                            'is_consumption' => $invoice['type_paidby'] != 'PAIDBY_ATM',
+                                            'invoice_head_id' => $invoice['id'],
+                                        );
+                                        $payment->update($paymentData);
+
+                                        $this->database->commit();
+                                        $pairedCount ++;
+                                        break;
+                                    } catch (\PDOException) {
+                                        $this->database->rollBack();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (\PDOException) {
+
         }
 
         return $pairedCount;
@@ -90,6 +154,12 @@ class PairModel extends BaseModel
 
         if ($pairedByChannel > 0) {
             $presenter->flashMessage('Celkem '.$pairedByChannel.' plateb bylo identifikováno podle trvalého příkazu.', 'autopair');
+        }
+
+        $autoPaired = $this->autoPair();
+
+        if ($autoPaired > 0) {
+            $presenter->flashMessage('Celkem '.$autoPaired.' plateb a dokladů bylo automticky spárováno.', 'autopair');
         }
     }
 
@@ -120,7 +190,7 @@ class PairModel extends BaseModel
                 $paymentsAmount = - $this->tablePayments()->where('id', $paymentsId)->sum('czk_amount');
                 $difference = abs($invoiceAmount - $paymentsAmount);
 
-                if ($difference > self::MAX_MANUAL_PAIR_CZK_ABSOLUTE_DIFFERENCE) {
+                if ($difference > self::MAX_MANUAL_PAIR_CZK_DIFFERENCE) {
                     if (count($paymentsId) == 0) {
                         throw new ManualPairDifferenceWarning('Celková částka vybraných plateb a dokladu se liší o: '.$difference.' Kč.');
                     } else {
