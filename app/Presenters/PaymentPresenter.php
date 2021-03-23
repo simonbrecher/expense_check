@@ -226,10 +226,11 @@ class PaymentPresenter extends BasePresenter
 
             $form->addText('var_symbol', 'Variabilní symbol: ')->setRequired('Vyplňte variabilní symbol.');
 
-            $yesNoSelect = [1 => 'ANO', 0 => 'NE'];
+            $yesNoSelect = [1 => 'Aktivní', 0 => 'Neaktivní'];
             $form->addSelect('is_active', 'Je aktivní: ', $yesNoSelect)->setDefaultValue(1);
 
-            $form->addSelect('is_consumption', 'Je výdaj: ', $yesNoSelect)->setDefaultValue(1);
+            $yesNoSelect = [1 => 'Je výdaj', 0 => 'Není výdaj'];
+            $form->addSelect('is_consumption', 'Je výdaj: ', $yesNoSelect)->setPrompt('')->setRequired('Určete, jestli příkaz označuje výdajové, nebo nevýdajové platby');
 
         $form->addGroup('column1');
 

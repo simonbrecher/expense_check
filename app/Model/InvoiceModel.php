@@ -87,9 +87,17 @@ class InvoiceModel extends BaseModel
             }
         }
 
+        if ($values->czk_total_amount === '') {
+            throw new InvalidValueException('Vyplňte celkovou cenu.');
+        } elseif (! is_numeric($values->czk_total_amount)) {
+            throw new InvalidValueException('Neplatný formát celkové ceny ceny.');
+        } elseif ($values->czk_total_amount <= 0 && $values->type_paidby !== 'PAIDBY_ATM') {
+            throw new InvalidValueException('Celková cena musí být kladná.');
+        }
+
         $items = array();
         $firstItem = array(
-            'czk_amount' => $values->czk_total_amount,
+            'czk_amount' => round(floatval($values->czk_total_amount)),
             'description' => $values->description ?: $this->getCategoryName($values->category),
             'category_id' => $values->type_paidby === 'PAIDBY_ATM' ? null : $values->category,
             'consumer_id' => $values->type_paidby === 'PAIDBY_ATM' ? null : ($values->consumer ?: null),
@@ -159,7 +167,7 @@ class InvoiceModel extends BaseModel
         if ($head->type_paidby == 'PAIDBY_CASH') {
             $head->related('payment')->fetch()->delete();
         } else {
-            $head->related('payment')->update(['invoice_head_id' => null, 'is_identified' => false]);
+            $head->related('payment')->update(['invoice_head_id' => null, 'is_consumption' => true, 'is_identified' => false, 'cash_account_id' => null]);
         }
     }
 

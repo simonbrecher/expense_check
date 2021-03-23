@@ -125,12 +125,12 @@ class PaymentModel extends BaseModel
         return $this->table('bank_account')->where('is_active')->fetchPairs('id', 'number');
     }
 
-    public function getImportIntervalsSorted(int $bankAccountId): Selection
-    {
-        if (!$this->canAccessBankAccount($bankAccountId)) {
-            throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
-        }
-
-        return $this->database->table('ba_import')->where('bank_account_id', $bankAccountId)->order('d_statement_start');
-    }
+//    public function getImportIntervalsSorted(int $bankAccountId): Selection
+//    {
+//        if (!$this->canAccessBankAccount($bankAccountId)) {
+//            throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
+//        }
+//
+//        return $this->database->table('ba_import')->where('bank_account_id', $bankAccountId)->order('d_statement_start');
+//    }
 }

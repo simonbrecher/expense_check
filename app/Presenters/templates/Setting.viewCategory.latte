@@ -20,7 +20,7 @@
             <td class="message-cell">{$category->description}</td>
             <td>{$category->related('invoice_item')->count('id')}</td>
             <td class="price-cell">{$category->related('invoice_item')->sum('czk_amount')} Kč</td>
-            <td>{$category->is_active ? 'Aktivní' : 'NE'}</td>
+            <td>{$category->is_active ? 'Aktivní' : 'Neaktivní'}</td>
             <td class="edit-cell"><a n:href=":addCategory $category->id">Upravit</a></td>
         </tr>
     </table>

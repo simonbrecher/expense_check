@@ -182,7 +182,28 @@ class PairModel extends BaseModel
                 if (!$payment) {
                     throw new AccessUserException('Uživatel nemá přístup k této platbě.');
                 }
-                $payment->update(['invoice_head_id' => $invoiceId, 'is_identified' => true]);
+                $updateData = array(
+                    'invoice_head_id' => $invoiceId,
+                    'is_consumption' => $invoice->type_paidby != 'PAIDBY_ATM',
+                    'is_identified' => true,
+                );
+
+                if ($invoice->type_paidby == 'PAIDBY_ATM') {
+                    $cashAccount = $this->table('cash_account')->where('user_id', $this->user->identity->id)->fetch();
+                    $updateData['cash_account_id'] = $cashAccount;
+                    if ($payment->type_paidby == 'PAIDBY_CARD') {
+                        $updateData['type_paidby'] = 'PAIDBY_ATM';
+                    }
+                }
+
+                if ($payment->type_paidby === null) {
+                    $updateData['type_paidby'] = $invoice->type_paidby;
+                    if ($invoice->type_paidby == 'PAIDBY_CARD') {
+                        $updateData['card_id'] = $invoice->card_id;
+                    }
+                }
+
+                $payment->update($updateData);
             }
 
             if (!$confirmed) {

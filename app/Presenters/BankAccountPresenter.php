@@ -20,6 +20,8 @@ class BankAccountPresenter extends BasePresenter
     {
         try{
             $this->bankAccountModel->activateBankAccount($id);
+
+            $this->flashMessage('Bankovní účet byl úspěšně aktivovaný.', 'success');
         } catch (AccessUserException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }
@@ -29,6 +31,8 @@ class BankAccountPresenter extends BasePresenter
     {
         try{
             $this->bankAccountModel->deactivateBankAccount($id);
+
+            $this->flashMessage('Bankovní účet byl úspěšně deaktivovaný.', 'success');
         } catch (AccessUserException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }
@@ -38,6 +42,8 @@ class BankAccountPresenter extends BasePresenter
     {
         try{
             $this->bankAccountModel->activateCard($id);
+
+            $this->flashMessage('Platební karta byla úspěšně aktivovaná.', 'success');
         } catch (AccessUserException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }
@@ -47,6 +53,8 @@ class BankAccountPresenter extends BasePresenter
     {
         try{
             $this->bankAccountModel->deactivateCard($id);
+
+            $this->flashMessage('Platební karta byla úspěšně deaktivovaná.', 'success');
         } catch (AccessUserException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }

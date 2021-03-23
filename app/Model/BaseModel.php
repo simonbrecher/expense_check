@@ -42,7 +42,7 @@ class BaseModel
         null => 'Neznámý',
     );
 
-    private const ROLE_ISACTIVE = [1 => 'ANO', 0 => 'NE'];
+    private const ROLE_ISACTIVE = [1 => 'Aktivní', 0 => 'Neaktivní'];
 
     protected const MAX_BANK_ACCOUNT_NAME_LENGTH = 25;
     protected const MAX_DESCRIPTION_LENGTH = 35;
