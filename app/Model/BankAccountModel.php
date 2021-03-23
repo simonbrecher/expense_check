@@ -71,9 +71,11 @@ class BankAccountModel extends BaseModel
     {
         $values->user_id = $this->user->identity->getId();
 
-        $sameBankAccount = $this->database->table('bank_account')->where('bank_id', $values->bank_id)->where('number', $values->number)->fetch();
+        $sameBankAccount = $this->database->table('bank_account')
+            ->where('user.family_id', $this->user->identity->family_id) # COMMENT NOT TO ALLOW TWO SAME BANK ACCOUNTS FOR TWO FAMILIES
+            ->where('bank_id', $values->bank_id)->where('number', $values->number)->fetch();
         if ($sameBankAccount) {
-            throw new DupliciteException('Stejný bankovní účet už existuje.');
+            throw new DupliciteException('Stejný bankovní účet v této rodině už existuje.');
         }
 
         try {
@@ -95,7 +97,7 @@ class BankAccountModel extends BaseModel
 
         try {
             $this->database->table('card')->insert($values);
-        } catch (\PDOException $exception) {
+        } catch (\PDOException) {
             throw new \PDOException('Platební kartu se nepodařilo uložit.');
         }
     }

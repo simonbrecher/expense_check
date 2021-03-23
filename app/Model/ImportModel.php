@@ -17,17 +17,18 @@ class ImportModel extends BaseModel
             'sscanf' => 'Výpis č. %[0123456789/] z účtu "%[0123456789-/]"',
             'variables' => [null, 'bank_account_number'],
         ),
+        # now we get the dates from the next two lines, because this one has '-', that is changed to 'longer -' (difference character) when edited in libre office calc
+//        array(
+//            'sscanf' => 'Období: %s - %s',
+//            'variables' => ['d_statement_start', 'd_statement_end'],
+//        ),
         array(
-            'sscanf' => 'Období: %s - %s',
-            'variables' => ['d_statement_start', 'd_statement_end'],
+            'sscanf' => 'Počáteční stav účtu k %[0123456789.]: %[0123456789,] CZK',
+            'variables' => ['d_statement_start', 'balance_start'],
         ),
         array(
             'sscanf' => 'Koncový stav účtu k %[0123456789.]: %[0123456789,] CZK',
-            'variables' => [null, 'balance_start'],
-        ),
-        array(
-            'sscanf' => 'Počáteční stav účtu k %[0123456789.]: %[0123456789,] CZK',
-            'variables' => [null, 'balance_end'],
+            'variables' => ['d_statement_end', 'balance_end'],
         ),
     );
 

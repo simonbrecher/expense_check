@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace App\Presenters;
 
+
 use App\Form\BasicForm;
 
 use App\Model\DupliciteUserException;
@@ -14,6 +15,13 @@ class UserPresenter extends BasePresenter
 {
     public function __construct(private Model\UserModel $userModel)
     {}
+
+    public function renderDefault(): void
+    {
+        if ($this->user->isLoggedIn()) {
+            $this->template->userValues = $this->userModel->getUserValues();
+        }
+    }
 
     public function actionLogin(): void
     {
@@ -99,7 +107,7 @@ class UserPresenter extends BasePresenter
                 $wasUpdated = $this->userModel->editUser($values);
 
                 if ($wasUpdated) {
-                    $this->flashMessage('Uživatelský účet byl úspěšně editovaný.', 'success');
+                    $this->flashMessage('Uživatelský účet byl úspěšně upravený.', 'success');
                 } else {
                     $this->flashMessage('Nedošlo k žádné změně v nastavení uživatelského účtu.', 'info');
                 }
@@ -112,8 +120,9 @@ class UserPresenter extends BasePresenter
             try {
                 $this->userModel->addUser($values);
 
-                $this->flashMessage('Uživatelský účet byl úspěšně vytvořený. Můžete se přihlásit.', 'success');
-                $this->redirect('User:');
+                $this->flashMessage('Uživatelský účet a nová rodina byli správně založeni.', 'success');
+                $this->user->login($values->username, $values->password);
+                $this->redirect('Homepage:');
             } catch (\PDOException|DupliciteUserException $exception) {
                 $this->flashMessage($exception->getMessage(), 'error');
             }

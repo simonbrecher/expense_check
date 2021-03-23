@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace App\Model;
 
+
 use Nette;
 
 class UserModel extends BaseModel
@@ -14,6 +15,11 @@ class UserModel extends BaseModel
     )
     {
         parent::__construct($database, $user);
+    }
+
+    public function getUserValues(): Nette\Database\Table\ActiveRow
+    {
+        return $this->database->table('user')->select('name, surname, username, email')->get($this->user->id);
     }
 
     public function getUserEditValues(): array
@@ -29,10 +35,11 @@ class UserModel extends BaseModel
         if ($sameUsername) {
             throw new DupliciteUserException('Stejné uživatelské jméno už existuje.');
         }
-        $sameEmail = $database->table('user')->where('email', $values->email)->fetch();
-        if ($sameEmail) {
-            throw new DupliciteUserException('Stejný email už existuje.');
-        }
+        # UNCOMMENT TO ALLOW ONLY ONE USER WITH ONE EMAIL IN WHOLE DATABASE
+//        $sameEmail = $database->table('user')->where('email', $values->email)->fetch();
+//        if ($sameEmail) {
+//            throw new DupliciteUserException('Stejný email už existuje.');
+//        }
 
         $data = array(
             'name' => $values->name,
@@ -66,12 +73,12 @@ class UserModel extends BaseModel
                 throw new DupliciteUserException('Stejné uživatelské jméno už existuje.');
             }
         }
-        if ($row->email != $values->email) {
-            $sameUsername = $database->table('email')->where('email', $values->email)->fetch();
-            if ($sameUsername) {
-                throw new DupliciteUserException('Stejný email už existuje.');
-            }
-        }
+//        if ($row->email != $values->email) {
+//            $sameEmail = $database->table('user')->where('email', $values->email)->fetch();
+//            if ($sameEmail) {
+//                throw new DupliciteUserException('Stejný email už existuje.');
+//            }
+//        }
 
         try {
             return $row->update($values);

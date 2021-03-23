@@ -30,12 +30,12 @@ class PaymentPresenter extends BasePresenter
             } catch (\PDOException|AccessUserException $exception) {
                 $this->flashMessage($exception->getMessage(), 'error');
             } catch (Model\ManualPairDifferenceWarning $exception) {
-                $this->flashMessage($exception->getMessage(), 'info');
-                $this->flashMessage('Je potřeba potvrdit párování.', 'info');
+                $this->flashMessage($exception->getMessage(), 'warning');
+                $this->flashMessage('Je potřeba potvrdit párování.', 'warning');
                 $this->redirect(':pair', $parameters['selectedPayments'], $id);
             }
         } else {
-            $this->flashMessage('Vyberte platby pro párování.', 'info');
+            $this->flashMessage('Vyberte platby pro párování.', 'warning');
         }
 
         $this->redirect(':pair');
@@ -46,7 +46,7 @@ class PaymentPresenter extends BasePresenter
         try {
             $this->pairModel->cashConsumption($id);
 
-            $this->flashMessage('Platba v hotovosti byla označená za výdajovou, proto se započítá do součtu výdajů.', 'info');
+            $this->flashMessage('Platba v hotovosti byla označená za výdajovou.', 'info');
         } catch (\PDOException|AccessUserException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }
@@ -82,8 +82,6 @@ class PaymentPresenter extends BasePresenter
 
     public function renderPair(array $selectedPayments=[], int $confirmId=null): void
     {
-        $this->pairModel->pairMain($this); // TODO: remove when auto pairing is complete
-
         $this->template->payments = $this->pairModel->getNotIdentifiedPayments();
         $this->template->invoices = $this->pairModel->getNotIdentifiedInvoices();
         $this->template->selectedPayments = $selectedPayments;
@@ -236,7 +234,7 @@ class PaymentPresenter extends BasePresenter
         $form->addGroup('column1');
 
             $categorySelect = $this->paymentModel->getCategorySelect();
-            $form->addSelect('category_id', 'Kategorie: ', $categorySelect)->setPrompt('')->setRequired('Vyberte kategorii.');
+            $form->addSelect('category_id', 'Kategorie: ', $categorySelect)->setPrompt('');
 
             $form->addText('counter_account_number', 'Číslo protiúčtu: ');
 
@@ -263,7 +261,7 @@ class PaymentPresenter extends BasePresenter
             $this->pairModel->pairMain($this);
 
             $this->redirect(':viewPaymentChannel');
-        } catch (\PDOException|AccessUserException $exception) {
+        } catch (\PDOException|Model\InvalidValueException|AccessUserException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }
     }

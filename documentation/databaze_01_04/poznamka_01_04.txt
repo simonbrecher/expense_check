@@ -1,3 +1,0 @@
-Verze 01.02 - 01.04 mohly být špatně exportované, ale to nevadí, protože verze 01.05 toho změnila mnohem více.
-
-Přiložený printscreen pro formulář k verzi databáze 01.04, bez javascriptu.

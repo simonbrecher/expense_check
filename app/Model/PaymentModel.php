@@ -59,14 +59,19 @@ class PaymentModel extends BaseModel
             throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
         }
 
-        if (!$this->canAccessCategory($oldValues->category_id)) {
-            throw new AccessUserException('Uživatel nemá přístup k této kategorii.');
+        if ($oldValues->is_consumption) {
+            if ($oldValues->category_id === null) {
+                throw new InvalidValueException('Doplňte kategorii pro výdajový trvalý příkaz.');
+            }
+            if (!$this->canAccessCategory($oldValues->category_id)) {
+                throw new AccessUserException('Uživatel nemá přístup k této kategorii.');
+            }
         }
 
         $values = array(
             'user_id' => $this->user->identity->id,
             'bank_account_id' => $oldValues->bank_account_id,
-            'category_id' => $oldValues->category_id,
+            'category_id' => $oldValues->is_consumption ? $oldValues->category_id : null,
             'var_symbol' => $oldValues->var_symbol,
             'counter_account_number' => $oldValues->counter_account_number,
             'counter_account_bank_code' => $oldValues->counter_account_bank_code,

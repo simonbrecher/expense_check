@@ -19,8 +19,8 @@
         </tr>
         <tr n:foreach="$channels as $channel" class="table-body">
             <td>{$channel->dt_created->format('j.n.y')}</td>
-            <td>{$channel->bank_account->number}</td>
-            <td>{$channel->category->name}</td>
+            <td>{$channel->bank_account->number} / {$channel->bank_account->bank->bank_code}</td>
+            <td>{$channel->category?->name}</td>
             <td>{$channel->var_symbol}</td>
             <td>
                 {if $channel->counter_account_number != ''}
@@ -45,7 +45,7 @@
 
 </div>
 
-<a n:href=":import" class="menu-item">Přidat trvalý příkaz</a>
+<a n:href=":addPaymentChannel" class="menu-item">Přidat trvalý příkaz</a>
 
 <hr />
 <br>

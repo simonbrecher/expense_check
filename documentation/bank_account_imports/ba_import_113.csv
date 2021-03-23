@@ -1,0 +1,11 @@
+"Výpis č. 2/2021 z účtu ""11110001/2010""",,,,,,,,,,,,,,,,,,
+"Majitel účtu: Karel, Jouda, Adresa X",,,,,,,,,,,,,,,,,,
+Vytvořeno v aplikaci X,,,,,,,,,,,,,,,,,,
+Období: X,,,,,,,,,,,,,,,,,,
+Počáteční stav účtu k 2.3.2021: 999999 CZK,,,,,,,,,,,,,,,,,,
+Koncový stav účtu k 10.3.2021: 999999 CZK,,,,,,,,,,,,,,,,,,
+Suma příjmů: X,,,,,,,,,,,,,,,,,,
+Suma výdajů: X,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+ID operace,Datum,Objem,Měna,Protiúčet,Název protiúčtu,Kód banky,Název banky,KS,VS,SS,Poznámka,Zpráva pro příjemce,Typ,Provedl,Upřesnění,Poznámka,BIC,ID pokynu
+30000000000,3.3.2021,-1000,CZK,,,,x,x,,x,VÝPIS 113,VÝPIS 113,Bezhotovostní platba,x,x,VÝPIS 113,x,x

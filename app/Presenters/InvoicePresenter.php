@@ -50,7 +50,7 @@ class InvoicePresenter extends BasePresenter
 
         $form->addGroup('column0');
 
-            $form->addText('czk_total_amount', 'Celková cena:')->addRule($form::NUMERIC, 'Celková cena musí být číslo.')->setRequired('Vyplňte celkovou cenu.');
+            $form->addText('czk_total_amount', 'Celková cena:')->setRequired('Vyplňte celkovou cenu.');
 
             $form ->addText('description', 'Název:')->setMaxLength(35);
 

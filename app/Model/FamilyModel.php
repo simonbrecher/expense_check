@@ -76,10 +76,10 @@ class FamilyModel extends BaseModel
             if ($sameUsername) {
                 throw new DupliciteUserException('Stejné uživatelské jméno už existuje.');
             }
-            $sameEmail = $database->table('user')->where('email', $data['email'])->fetch();
-            if ($sameEmail) {
-                throw new DupliciteUserException('Stejný email už existuje.');
-            }
+//            $sameEmail = $database->table('user')->where('email', $data['email'])->fetch();
+//            if ($sameEmail) {
+//                throw new DupliciteUserException('Stejný email už existuje.');
+//            }
 
             try {
                 $database->beginTransaction();

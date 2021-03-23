@@ -1,8 +1,10 @@
 {block content}
 
+<h2 class="form-title">Importy bankovních výpisů</h2>
+
 {foreach $bankAccounts as $bankAccount}
 
-    <h2 class="form-title">Bankovní účet: {$bankAccount->number} / {$bankAccount->bank->bank_code}</h2>
+    <h2 class="form-subtitle">Bankovní účet: {$bankAccount->number} / {$bankAccount->bank->bank_code}</h2>
 
     <div class="table-list-container">
 
@@ -42,7 +44,7 @@
             {if $missingImportId != count($missingImports)}
                 {var $missingImport = $missingImports[$missingImportId]}
                 <tr class="table-body">
-                    <td class="missing-import" colspan="6">Chybí import z doby od: {$missingImport['start']->format('j.n.y')} do: {$missingImport['end']->format('j.n.y')}</td>
+                    <td class="missing-import" colspan="6">Dlouho neimportováno - od: {$missingImport['start']->format('j.n.y')} do: {$missingImport['end']->format('j.n.y')}</td>
                 </tr>
             {/if}
         </table>

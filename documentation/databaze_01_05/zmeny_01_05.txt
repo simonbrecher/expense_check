@@ -1,9 +1,0 @@
-Přejmenované tabulky
-member -> consumer
-order -> payment_channel
-
-invoice_item: amount - Výdajové faktury jsou záporné.
-
-Nespotřební platby nebudou mít záznam v invoice_head.
-
-Hodně malých změn.

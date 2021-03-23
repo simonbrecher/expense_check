@@ -159,7 +159,7 @@ class PairModel extends BaseModel
         $autoPaired = $this->autoPair();
 
         if ($autoPaired > 0) {
-            $presenter->flashMessage('Celkem '.$autoPaired.' plateb a dokladů bylo automticky spárováno.', 'autopair');
+            $presenter->flashMessage('Celkem '.$autoPaired.' plateb a dokladů bylo automaticky spárováno.', 'autopair');
         }
     }
 

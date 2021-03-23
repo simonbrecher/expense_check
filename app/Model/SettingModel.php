@@ -31,10 +31,15 @@ class SettingModel extends BaseModel
             throw new DupliciteCategoryException('Stejné jméno kategorie v této rodině už existuje.');
         }
 
-        $values->family_id = $this->user->identity->family_id;
+        $category = array(
+            'name' => $values->name,
+            'description' => $values->description ?: $values->name,
+            'is_active' => $values->is_active,
+            'family_id' => $this->user->identity->family_id,
+        );
 
         try {
-            $this->database->table('category')->insert($values);
+            $this->database->table('category')->insert($category);
         } catch (\PDOException) {
             throw new \PDOException('Nepodařilo se přidat kategorii.');
         }

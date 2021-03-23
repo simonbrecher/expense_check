@@ -65,7 +65,7 @@
             <td>{$invoice->d_issued->format('j.n.y')}</td>
             <td>{$invoice->related('invoice_item')->where('is_main')->fetch()->description}</td>
             <td class="price {$invoice->related('invoice_item')->sum('czk_amount') > 10000 ? bold : null}">{$invoice->related('invoice_item')->sum('czk_amount')} Kč</td>
-            <td>{$invoice->related('invoice_item')->where('is_main')->fetch()->category->name}</td>
+            <td>{$invoice->related('invoice_item')->where('is_main')->fetch()->category?->name}</td>
         </tr>
     </table>
 
@@ -94,7 +94,7 @@
             <td>{$payment->d_payment->format('j.n.y')}</td>
             <td>{$payment->czk_amount} Kč</td>
             <td>{$payment->description}</td>
-            <td>{$invoice->related('invoice_item')->where('is_main')->fetch()->category->name ?? '??'}</td>
+            <td>{$invoice->related('invoice_item')->where('is_main')->fetch()->category?->name ?? '??'}</td>
             <td>{$invoice->related('invoice_item')->where('is_main')->fetch()->consumer?->name ?? 'Všichni'}</td>
             <td><a n:href=":CashConsumption! $payment->id">Výdaj</a></td>
             <td><a n:href=":CashNotConsumption! $payment->id">Není výdaj</a></td>
@@ -113,9 +113,6 @@
     .wrapper-first { float: left; width: 64%; }
     .wrapper-last { float: right; width: 35%; }
     .table-smart td { padding: 7px; font-size: 14px; }
-    .bold { font-weight: bold; }
-    .positive { color: #0E0; }
-    .negative { color: #D60; }
     .table-smart .message-cell { font-size: 12px; }
 
 </style>

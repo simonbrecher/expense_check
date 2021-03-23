@@ -1,7 +1,27 @@
 {block content}
 
 {if $user->isLoggedIn()}
+
     <h2 class="form-title">Uživatelský účet</h2>
+
+    <div class="table-list-container">
+
+        <table class="table-smart">
+            <tr class="table-heading">
+                <td>Jméno</td>
+                <td>Příjmení</td>
+                <td>Uživatelské jméno</td>
+                <td>Email</td>
+            </tr>
+            <tr class="table-body">
+                <td>{$userValues->name}</td>
+                <td>{$userValues->surname}</td>
+                <td>{$userValues->username}</td>
+                <td>{$userValues->email}</td>
+            </tr>
+        </table>
+
+    </div>
 
     <a n:href=":signin" class="menu-item">Upravit uživatelský účet</a>
 {else}

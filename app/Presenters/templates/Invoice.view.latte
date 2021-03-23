@@ -28,34 +28,39 @@
 
     <table class="table-smart">
         <tr class="table-heading">
-{*            <td>Vložil</td>*}
             <td>Datum</td>
+            <td>Název</td>
             <td>Typ platby</td>
             <td>Kategorie</td>
             <td>Spotřebitel</td>
-            <td>Položka</td>
             <td>Částka</td>
             <td>Je spárovaný</td>
             <td></td>
         </tr>
         <tr n:foreach="$invoices as $invoice" class="table-body">
-{*            <td>{$invoice->user->name}</td>*}
             <td class="date-cell">{$invoice->d_issued->format('j.n.y')}</td>
-            <td class="{$invoice->type_paidby}">{$invoiceModel::PAIDBY_TYPES_TABLE[$invoice->type_paidby]}</td>
             {var $firstItem = $invoice->related('invoice_item')->where('is_main')->fetch()}
+            <td n:if="$firstItem">{$firstItem->description}</td>
+            {var $czk_sum = $invoice->related('invoice_item')->sum('czk_amount')}
+            <td class="{$invoice->type_paidby}">
+                {if $invoice->type_paidby == 'PAIDBY_ATM'}
+                    {$czk_sum > 0 ? 'Výběr' : 'Vklad'}
+                {else}
+                    {$invoiceModel::PAIDBY_TYPES_TABLE[$invoice->type_paidby]}
+                {/if}
+            </td>
             {if $firstItem}
                 {var $category = $firstItem->ref('category', 'category_id')}
                 {if $category !== null}
                     <td class="category-cell">{$firstItem->ref('category', 'category_id')->name}</td>
                 {else}
-                    <td class="category-cell">- ?? -</td>
+                    <td class="category-cell"></td>
                 {/if}
                 <td class="consumer-cell">{$firstItem->ref('user', 'consumer_id')?->name ?? 'Všichni'}</td>
-                <td>{$firstItem->description}</td>
-                {var $sum = $invoice->related('invoice_item')->sum('czk_amount')}
-                <td class="price-cell {$sum > 10000 ? bold : null}">{$sum} Kč</td>
+                <td class="price-cell {$czk_sum > 10000 ? bold : null}">{abs($czk_sum)} Kč</td>
             {/if}
-            <td>{$invoice->related('payment')->count('id') != 0 ? 'Spárovaný' : 'NE'}</td>
+            {var $isPaired = $invoice->related('payment')->count('id') != 0}
+            <td n:class="$isPaired ? 'positive' : 'negative'">{$isPaired ? 'Spárovaný' : 'Nespárovaný'}</td>
             <td class="edit-cell"><a n:href=":add $invoice->id">Upravit</a></td>
         </tr>
     </table>

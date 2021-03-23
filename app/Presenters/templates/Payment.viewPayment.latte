@@ -46,8 +46,14 @@
             {var $payments = $bankAccount->related('payment')->where('d_payment >=', $startInterval)->where('d_payment <=', $endInterval)}
             <tr n:foreach="$payments as $payment" class="table-body">
                 <td>{$payment->d_payment->format('j.n.y')}</td>
-                <td  class="PAIDBY {$payment->type_paidby}">{$paymentModel::PAIDBY_TYPES_TABLE[$payment->type_paidby]}</td>
-                <td>{$payment->card?->number}</td>
+                <td  class="PAIDBY {$payment->type_paidby}">
+                    {if $payment->type_paidby == 'PAIDBY_ATM'}
+                        {$payment->czk_amount < 0 ? 'Výběr' : 'Vklad'}
+                    {else}
+                        {$paymentModel::PAIDBY_TYPES_TABLE[$payment->type_paidby]}
+                    {/if}
+                </td>
+                <td>{$payment->card?->name}</td>
                 <td class="price-cell {abs($payment->czk_amount) > 10000 ? bold : null} {$payment->czk_amount > 0 ? positive : negative}">{$payment->czk_amount} Kč</td>
                     <td>
                         {if $payment->counter_account_number != ''}
