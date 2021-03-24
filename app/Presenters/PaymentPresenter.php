@@ -168,6 +168,7 @@ class PaymentPresenter extends BasePresenter
         $this->template->endInterval = $this->paymentModel->getLastDayInMonth($month, $year);
 
         $this->template->bankAccounts = $this->paymentModel->getbankAccounts();
+        $this->template->cashAccount = $this->paymentModel->getCashAccount();
         $this->template->paymentModel = $this->paymentModel;
     }
 

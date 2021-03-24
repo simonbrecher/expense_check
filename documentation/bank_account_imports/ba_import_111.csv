@@ -1,29 +1,29 @@
-"Výpis č. 1/2021 z účtu ""11110001/2010""",,,,,,,,,,,,,,,,,,,,,
-"Majitel účtu: Karel, Jouda, Adresa X",,,,,,,,,,,,,,,,,,,,,
-Vytvořeno v aplikaci X,,,,,,,,,,,,,,,,,,,,,
-Období: X,,,,,,,,,,,,,,,,,,,,,
-"Počáteční stav účtu k 01.1.2021: 10000,05 CZK",,,,,,,,,,,,,,,,,,,,,
-"Koncový stav účtu k 31.1.2021: 20000,05 CZK",,,,,,,,,,,,,,,,,,,,,
-Suma příjmů: X,,,,,,,,,,,,,,,,,,,,,
-Suma výdajů: X,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,,,,
-ID operace,Datum,Objem,Měna,Protiúčet,Název protiúčtu,Kód banky,Název banky,KS,VS,SS,Poznámka,Zpráva pro příjemce,Typ,Provedl,Upřesnění,Poznámka,BIC,ID pokynu,## COMMENT,## COMMENT 2,## COMMENT 3
-10000000000,1.1.2021,-100000,CZK,99-0001,,100,x,x,999999,x,Auto 1,Auto 2,Bezhotovostní platba,x,x,Auto 3,x,x,PAIDBY_BANK,Typ 1 -,DOKLAD
-10000000001,01.01.2021,-200,CZK,99-0002,,100,x,x,,x,Hotel 1,Hotel 2,Okamžitá odchozí platba,x,x,Hotel 3,x,x,PAIDBY_BANK,Typ 2 -,DOKLAD
-10000000002,2.1.2021,300,CZK,99990001,,100,x,x,999999,x,Příjem A 1,Příjem A 2,Bezhotovostní příjem,x,x,Příjem A 3,x,x,PAIDBY_BANK,Typ 3 +,NEVÝDAJ
-10000000003,2.1.2021,-400,CZK,99990002,,100,x,x,,x,Dovolená 1,Dovolená 2,Platba převodem uvnitř banky,x,x,Dovolená 3,x,x,PAIDBY_BANK,Typ 4 -,DOKLAD
-10000000004,3.1.2021,500,CZK,99990003,,100,x,x,999999,x,Příjem B 1,Příjem B 2,Platba převodem uvnitř banky,x,x,Příjem B 3,x,x,PAIDBY_BANK,Typ 4 +,NEVÝDAJ
-10000000005,4.1.2021,-600,CZK,99990004,,100,x,x,,#?_$,Elektřina bez VS 1,Elektřina bez VS 2,Inkaso,x,x,Elektřina bez VS 3,x,x,PAIDBY_BANK,Typ 5 -,DOKLAD
-10000000006,5.1.2021,700,CZK,99990005,,2700,x,x,,x,Příjem C 1,Příjem C 2,Inkaso,x,x,Příjem C 3,x,x,PAIDBY_BANK,Typ 5 +,NEVÝDAJ
-10000000007,8.1.2021,800,CZK,,,,x,#?_$,123,x,Bankomat vklad 1,Bankomat vklad 2,Karetní transakce,x,x,Bankomat vklad 3,x,x,PAIDBY_CARD,bankomat vklad +,DOKLAD
-10000000008,9.1.2021,-900,CZK,,,,x,x,123,x,Bankomat výběr 1,Bankomat výběr 2,Karetní transakce,x,x,Bankomat výběr 3,x,x,PAIDBY_CARD,bankomat výběr -,DOKLAD
-10000000010,10.1.2021,-1000,CZK,,,,x,x,123,x,Lidl 1,Lidl 2,Karetní transakce,x,x,Lidl 3,x,x,PAIDBY_CARD,-,DOKLAD
-10000000011,10.1.2021,1100,CZK,,,,x,x,,x,Přepážka vklad 1,Přepážka vklad 2,Vklad v hotovosti,x,x,Přepážka vklad 3,x,x,PAIDBY_ATM,přepážka vklad +,DOKLAD
-10000000012,14.1.2021,-1200,CZK,,,,#?_$,x,,x,Přepážka výběr 1,Přepážka výběr 2,Výběr v hotovosti,x,x,Přepážka výběr 3,x,x,PAIDBY_ATM,přepážka výběr -,DOKLAD
-10000000013,14.1.2021,-10,CZK,,,,x,x,,x,Poplatek A 1,Poplatek A 2,Poplatek,x,x,Poplatek A 3,x,x,PAIDBY_FEE,,doklad automaticky
-10000000014,15.1.2021,-20,CZK,,,,x,x,,x,Poplatek B 1,Poplatek B 2,Poplatek lol,x,#?_$,Poplatek B 3,x,x,PAIDBY_FEE,,doklad automaticky
-10000000015,16.1.2021,-1300,CZK,99990006,,2700,x,x,999999,x,Kaufland 1,Kaufland 2,hujaja,x,x,Kaufland 3,x,x,null,-,DOKLAD
-10000000016,17.1.2021,-1400,CZK,88880001,,2700,x,x,111111,x,Plyn 1,Plyn 2,Inkaso,#?_$,x,Plyn 3,x,x,PAIDBY_BANK,-,PŘÍKAZ
-10000000017,25.1.2021,-1500,CZK,,,,x,x,222222,x,Peníze babičce 1,Peníze babičce 2,Bezhotovostní platba,x,x,Peníze babičce 3,x,x,PAIDBY_BANK,-,NEVÝDAJ PŘÍKAZ
-10000000018,28.1.2021,-1600,CZK,99990001,,2700,x,x,,x,neznámá platba A 1,neznámá platba A 2,Platba převodem uvnitř banky,x,x,neznámá platba A 3,x,#?_$,PAIDBY_BANK,- chybí doklad,
-99000000019,28.1.2021,-1700,CZK,99990001,,2700,x,x,1101,x,neznámá platba B 1,neznámá platba B 2,Okamžitá odchozí platba,x,x,Dlouhý popis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,#?_$,x,PAIDBY_CARD,- chybí doklad,
+"Výpis č. 1/2021 z účtu ""11110001/2010""";;;;;;;;;;;;;;;;;;;;;
+Majitel účtu: Karel, Jouda, Adresa X;;;;;;;;;;;;;;;;;;;;;
+Vytvořeno v aplikaci X;;;;;;;;;;;;;;;;;;;;;
+Období: X;;;;;;;;;;;;;;;;;;;;;
+Počáteční stav účtu k 01.1.2021: 10000,05 CZK;;;;;;;;;;;;;;;;;;;;;
+Koncový stav účtu k 31.1.2021: 20000,05 CZK;;;;;;;;;;;;;;;;;;;;;
+Suma příjmů: X;;;;;;;;;;;;;;;;;;;;;
+Suma výdajů: X;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;
+ID operace;Datum;Objem;Měna;Protiúčet;Název protiúčtu;Kód banky;Název banky;KS;VS;SS;Poznámka;Zpráva pro příjemce;Typ;Provedl;Upřesnění;Poznámka;BIC;ID pokynu;## COMMENT;## COMMENT 2;## COMMENT 3
+10000000000;1.1.2021;-100000;CZK;99-0001;;100;x;x;999999;x;Auto 1;Auto 2;Bezhotovostní platba;x;x;Auto 3;x;x;PAIDBY_BANK;Typ 1 -;DOKLAD
+10000000001;01.01.2021;-200;CZK;99-0002;;100;x;x;;x;Hotel 1;Hotel 2;Okamžitá odchozí platba;x;x;Hotel 3;x;x;PAIDBY_BANK;Typ 2 -;DOKLAD
+10000000002;2.1.2021;300;CZK;99990001;;100;x;x;999999;x;Příjem A 1;Příjem A 2;Bezhotovostní příjem;x;x;Příjem A 3;x;x;PAIDBY_BANK;Typ 3 +;NEVÝDAJ
+10000000003;2.1.2021;-400;CZK;99990002;;100;x;x;;x;Dovolená 1;Dovolená 2;Platba převodem uvnitř banky;x;x;Dovolená 3;x;x;PAIDBY_BANK;Typ 4 -;DOKLAD
+10000000004;3.1.2021;500;CZK;99990003;;100;x;x;999999;x;Příjem B 1;Příjem B 2;Platba převodem uvnitř banky;x;x;Příjem B 3;x;x;PAIDBY_BANK;Typ 4 +;NEVÝDAJ
+10000000005;4.1.2021;-600;CZK;99990004;;100;x;x;;#?_$;Elektřina bez VS 1;Elektřina bez VS 2;Inkaso;x;x;Elektřina bez VS 3;x;x;PAIDBY_BANK;Typ 5 -;DOKLAD
+10000000006;5.1.2021;700;CZK;99990005;;2700;x;x;;x;Příjem C 1;Příjem C 2;Inkaso;x;x;Příjem C 3;x;x;PAIDBY_BANK;Typ 5 +;NEVÝDAJ
+10000000007;8.1.2021;800;CZK;;;;x;#?_$;123;x;Bankomat vklad 1;Bankomat vklad 2;Karetní transakce;x;x;Bankomat vklad 3;x;x;PAIDBY_CARD;bankomat vklad +;DOKLAD
+10000000008;9.1.2021;-900;CZK;;;;x;x;123;x;Bankomat výběr 1;Bankomat výběr 2;Karetní transakce;x;x;Bankomat výběr 3;x;x;PAIDBY_CARD;bankomat výběr -;DOKLAD
+10000000010;10.1.2021;-1000;CZK;;;;x;x;123;x;Lidl 1;Lidl 2;Karetní transakce;x;x;Lidl 3;x;x;PAIDBY_CARD;-;DOKLAD
+10000000011;10.1.2021;1100;CZK;;;;x;x;;x;Přepážka vklad 1;Přepážka vklad 2;Vklad v hotovosti;x;x;Přepážka vklad 3;x;x;PAIDBY_ATM;přepážka vklad +;DOKLAD
+10000000012;14.1.2021;-1200;CZK;;;;#?_$;x;;x;Přepážka výběr 1;Přepážka výběr 2;Výběr v hotovosti;x;x;Přepážka výběr 3;x;x;PAIDBY_ATM;přepážka výběr -;DOKLAD
+10000000013;14.1.2021;-10;CZK;;;;x;x;;x;Poplatek A 1;Poplatek A 2;Poplatek;x;x;Poplatek A 3;x;x;PAIDBY_FEE;;doklad automaticky
+10000000014;15.1.2021;-20;CZK;;;;x;x;;x;Poplatek B 1;Poplatek B 2;Poplatek lol;x;#?_$;Poplatek B 3;x;x;PAIDBY_FEE;;doklad automaticky
+10000000015;16.1.2021;-1300;CZK;99990006;;2700;x;x;999999;x;Kaufland 1;Kaufland 2;hujaja;x;x;Kaufland 3;x;x;null;-;DOKLAD
+10000000016;17.1.2021;-1400;CZK;88880001;;2700;x;x;111111;x;Plyn 1;Plyn 2;Inkaso;#?_$;x;Plyn 3;x;x;PAIDBY_BANK;-;PŘÍKAZ
+10000000017;25.1.2021;-1500;CZK;;;;x;x;222222;x;Peníze babičce 1;Peníze babičce 2;Bezhotovostní platba;x;x;Peníze babičce 3;x;x;PAIDBY_BANK;-;NEVÝDAJ PŘÍKAZ
+10000000018;28.1.2021;-1600;CZK;99990001;;2700;x;x;;x;neznámá platba A 1;neznámá platba A 2;Platba převodem uvnitř banky;x;x;neznámá platba A 3;x;#?_$;PAIDBY_BANK;- chybí doklad;
+99000000019;28.1.2021;-1700;CZK;99990001;;2700;x;x;1101;x;neznámá platba B 1;neznámá platba B 2;Okamžitá odchozí platba;x;x;Dlouhý popis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;#?_$;x;PAIDBY_CARD;- chybí doklad;

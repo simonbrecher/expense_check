@@ -161,9 +161,20 @@ class ImportModel extends BaseModel
 
         $head = [];
 
+        $separator = ';';
+        foreach ($fileData as $line) {
+            if ($line[-1] == ';') {
+                $separator = ';';
+                break;
+            } elseif ($line[-1] == ',') {
+                $separator = ',';
+                break;
+            }
+        }
+
         foreach (self::HEAD_SCHEMA as $format) {
             for ($i = 0; $i < count($fileData); $i++) {
-                $field = str_getcsv($fileData[$i])[0];
+                $field = str_getcsv($fileData[$i], $separator)[0];
                 if ($field != '') {
                     $list = sscanf($field, $format['sscanf']);
                     if ($list[count($list) - 1] !== null) {
@@ -190,7 +201,7 @@ class ImportModel extends BaseModel
 
         $start = null;
         foreach ($fileData as $i => $line) {
-            $exploded = str_getcsv($fileData[$i]);
+            $exploded = str_getcsv($fileData[$i], $separator);
             if (count($exploded) != 0) {
                 $field = $exploded[0];
                 if ($field == 'ID operace') {
@@ -203,7 +214,7 @@ class ImportModel extends BaseModel
         if ($start === null) {
             throw new InvalidFileFormatException('Neplatný formát výpisu z bankovního účtu.');
         } else {
-            $line = str_getcsv($fileData[$start]);
+            $line = str_getcsv($fileData[$start], $separator);
             foreach (self::LINES_TITLE_SCHEMA as $i => $title) {
                 if ($line[$i] != $title) {
                     throw new InvalidFileFormatException('Neplatný formát výpisu z bankovního účtu.');
@@ -213,7 +224,7 @@ class ImportModel extends BaseModel
 
         $payments = [];
         for ($i = $start + 1; $i < count($fileData); $i++) {
-            $line = str_getcsv($fileData[$i]);
+            $line = str_getcsv($fileData[$i], $separator);
             if (count($line) > 1) {
                 $payment = [];
                 foreach (self::LINES_SCHEMA as $columnId => $columnName) {

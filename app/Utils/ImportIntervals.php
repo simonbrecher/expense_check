@@ -145,6 +145,12 @@ class ImportIntervals
 
     public static function isImportIntervalDuplicate(array $importInterval, array $inputImportIntervals): bool
     {
+        foreach ($inputImportIntervals as $interval) {
+            if (self::isFirstImportIntervalInside($importInterval, $interval)) {
+                return true;
+            }
+        }
+
         $intervals = self::joinImportIntervals($inputImportIntervals);
 
         foreach ($intervals as $interval) {

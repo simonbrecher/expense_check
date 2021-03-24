@@ -6,6 +6,7 @@ namespace App\Model;
 
 use App\Form\BasicForm;
 use App\Presenters\AccessUserException;
+use Nette\Database\Table\ActiveRow;
 use Nette\Database\Table\Selection;
 use Nette\Utils\DateTime;
 
@@ -110,6 +111,11 @@ class PaymentModel extends BaseModel
         return $this->table('bank_account');
     }
 
+    public function getCashAccount(): ActiveRow
+    {
+        return $this->table('cash_account')->fetch();
+    }
+
     public function getPaymentChannels(): Selection
     {
         return $this->table('payment_channel');
@@ -125,12 +131,12 @@ class PaymentModel extends BaseModel
         return $this->table('bank_account')->where('is_active')->fetchPairs('id', 'number');
     }
 
-//    public function getImportIntervalsSorted(int $bankAccountId): Selection
-//    {
-//        if (!$this->canAccessBankAccount($bankAccountId)) {
-//            throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
-//        }
-//
-//        return $this->database->table('ba_import')->where('bank_account_id', $bankAccountId)->order('d_statement_start');
-//    }
+    public function getImportIntervalsSorted(int $bankAccountId): Selection
+    {
+        if (!$this->canAccessBankAccount($bankAccountId)) {
+            throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
+        }
+
+        return $this->database->table('ba_import')->where('bank_account_id', $bankAccountId)->order('d_statement_start');
+    }
 }
