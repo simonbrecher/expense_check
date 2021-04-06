@@ -11,6 +11,8 @@ use Nette\Database\Table\Selection;
 
 class PaymentModel extends BaseModel
 {
+    public const TOGGLE_BOX_HTML_IDS = ['category_id' => 'toggle-box-is-not-consumption'];
+
     public function activatePaymentChannel(int $id): void
     {
         $row = $this->table('payment_channel')->get($id);
@@ -63,8 +65,8 @@ class PaymentModel extends BaseModel
             'bank_account_id' => $oldValues->bank_account_id,
             'category_id' => $oldValues->is_consumption ? $oldValues->category_id : null,
             'var_symbol' => $oldValues->var_symbol,
-            'counter_account_number' => $oldValues->counter_account_number,
-            'counter_account_bank_code' => $oldValues->counter_account_bank_code,
+//            'counter_account_number' => $oldValues->counter_account_number,
+//            'counter_account_bank_code' => $oldValues->counter_account_bank_code,
             'description' => $oldValues->description,
             'is_active' => $oldValues->is_active,
             'is_consumption' => $oldValues->is_consumption,

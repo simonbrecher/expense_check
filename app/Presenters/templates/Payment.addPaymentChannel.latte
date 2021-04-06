@@ -19,11 +19,13 @@
 
     <div class="form-columnbox">
         <table class="form-table">
-            <tr n:foreach="$form->getGroup('column1')->getControls() as $input">
-                <td class="label-cell">{label $input /}</td>
-                <td class="control">{input $input}</td>
-                {*            <td n:ifcontent>{inputError $input}</td>*}
-            </tr>
+            {foreach $form->getGroup('column1')->getControls() as $input}
+                <tr n:attr="id: $paymentModel::TOGGLE_BOX_HTML_IDS[$input->name] ?? null">
+                    <td class="label-cell">{label $input /}</td>
+                    <td class="control">{input $input}</td>
+                    {*            <td n:ifcontent>{inputError $input}</td>*}
+                </tr>
+            {/foreach}
         </table>
     </div>
     <hr />

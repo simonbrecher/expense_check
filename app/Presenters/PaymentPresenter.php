@@ -230,17 +230,18 @@ class PaymentPresenter extends BasePresenter
             $yesNoSelect = [1 => 'Aktivní', 0 => 'Neaktivní'];
             $form->addSelect('is_active', 'Je aktivní: ', $yesNoSelect)->setDefaultValue(1);
 
-            $yesNoSelect = [1 => 'Je výdaj', 0 => 'Není výdaj'];
-            $form->addSelect('is_consumption', 'Je výdaj: ', $yesNoSelect)->setPrompt('')->setRequired('Určete, jestli příkaz označuje výdajové, nebo nevýdajové platby');
-
         $form->addGroup('column1');
+
+            $yesNoSelect = [1 => 'Je výdaj', 0 => 'Není výdaj'];
+            $form->addSelect('is_consumption', 'Je výdaj: ', $yesNoSelect)->setPrompt('')->setRequired('Určete, jestli příkaz označuje výdajové, nebo nevýdajové platby')
+                    ->addCondition($form::EQUAL, 1)->toggle('toggle-box-is-not-consumption');
 
             $categorySelect = $this->paymentModel->getCategorySelect();
             $form->addSelect('category_id', 'Kategorie: ', $categorySelect)->setPrompt('');
 
-            $form->addText('counter_account_number', 'Číslo protiúčtu: ');
-
-            $form->addText('counter_account_bank_code', 'Bankovní kód protiúčtu: ');
+//            $form->addText('counter_account_number', 'Číslo protiúčtu: ');
+//
+//            $form->addText('counter_account_bank_code', 'Bankovní kód protiúčtu: ');
 
             $form->addTextArea('description', 'Popis: ')->setMaxLength(35);
 
@@ -251,6 +252,11 @@ class PaymentPresenter extends BasePresenter
         $form->onSuccess[] = [$this, 'paymentChannelFormSuccess'];
 
         return $form;
+    }
+
+    public function renderAddPaymentChannel(): void
+    {
+        $this->template->paymentModel = $this->paymentModel;
     }
 
     public function paymentChannelFormSuccess(BasicForm $form): void

@@ -37,11 +37,11 @@ class PairModel extends BaseModel
                 foreach ($paymentChannels as $channel) {
                     if ($payment->bank_account_id == $channel['bank_account_id']) {
                         $isInChannel = true;
-                        if ($channel['counter_account_number'] != '' && $channel['counter_account_bank_code'] != '') {
-                            if ($channel['counter_account_number'] != $payment->counter_account_number || $channel['counter_account_number'] != $payment->counter_account_bank_code) {
-                                $isInChannel = false;
-                            }
-                        }
+//                        if ($channel['counter_account_number'] != '' && $channel['counter_account_bank_code'] != '') {
+//                            if ($channel['counter_account_number'] != $payment->counter_account_number || $channel['counter_account_number'] != $payment->counter_account_bank_code) {
+//                                $isInChannel = false;
+//                            }
+//                        }
                         if ($channel['var_symbol'] != $payment->var_symbol) {
                             $isInChannel = false;
                         }
@@ -88,7 +88,7 @@ class PairModel extends BaseModel
             }
 
         } catch (\PDOException) {
-
+            // this function is only used automatically. in case of bug, this automatic process will do nothing
         }
 
         return $pairedCount;
@@ -141,7 +141,7 @@ class PairModel extends BaseModel
             }
 
         } catch (\PDOException) {
-
+            // this function is only used automatically. in case of bug, this automatic process will do nothing
         }
 
         return $pairedCount;

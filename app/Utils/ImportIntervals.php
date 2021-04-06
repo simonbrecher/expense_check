@@ -16,7 +16,7 @@ class ImportIntervals
     /* return int for sorting */
     private static function doesFirstImportIntervalStartLater(array $a, array $b): int
     {
-        return $a['date']['start']->getTimeStamp() > $b['date']['start']->getTimeStamp();
+        return (int) ($a['date']['start']->getTimeStamp() > $b['date']['start']->getTimeStamp());
     }
 
     private static function doesFirstImportIntervalEndLater(array $a, array $b): bool
@@ -56,11 +56,11 @@ class ImportIntervals
         $secondStart = $b['date']['start']->getTimeStamp();
 
         if ($firstEnd + self::DAY_TIMESTAMP_DIFFERENCE < $secondStart) {
-            return false;
+            return 0;
         } elseif ($firstEnd < $secondStart) {
-            return $a['balance']['end'] == $b['balance']['start'];
+            return (int) ($a['balance']['end'] == $b['balance']['start']);
         } else {
-            return true;
+            return 1;
         }
     }
 

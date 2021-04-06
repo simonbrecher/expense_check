@@ -10,7 +10,7 @@
             <td>Bankovní účet</td>
             <td>Kategorie</td>
             <td>Variabilní symbol</td>
-            <td>Protiúčet</td>
+{*            <td>Protiúčet</td>*}
             <td>Popis</td>
             <td>Počet plateb</td>
             <td>Je výdaj</td>
@@ -22,11 +22,11 @@
             <td>{$channel->bank_account->number} / {$channel->bank_account->bank->bank_code}</td>
             <td>{$channel->category?->name}</td>
             <td>{$channel->var_symbol}</td>
-            <td>
-                {if $channel->counter_account_number != ''}
-                    {$channel->counter_account_number} / {$channel->counter_account_bank_code}
-                {/if}
-            </td>
+{*            <td>*}
+{*                {if $channel->counter_account_number != ''}*}
+{*                    {$channel->counter_account_number} / {$channel->counter_account_bank_code}*}
+{*                {/if}*}
+{*            </td>*}
             <td>{$channel->description}</td>
             <td>{$channel->related('payment')->count()}</td>
             <td>{$channel->is_consumption ? 'Je výdaj' : 'Není výdaj'}</td>
