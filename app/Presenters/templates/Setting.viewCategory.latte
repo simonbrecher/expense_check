@@ -16,7 +16,7 @@
         </tr>
         <tr n:foreach="$categories as $category" class="table-body">
             <td>{$category?->name}</td>
-            <td class="date-cell">{$category->dt_created->format('j.n.y')}</td>
+            <td class="date-cell">{$category->dt_created->format('j.n.Y')}</td>
             <td class="message-cell">{$category->description}</td>
             <td>{$category->related('invoice_item')->count('id')}</td>
             <td class="price-cell">{$category->related('invoice_item')->sum('czk_amount')} Kč</td>

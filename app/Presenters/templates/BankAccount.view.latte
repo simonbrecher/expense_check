@@ -58,7 +58,6 @@
             <td>{$bankAccountModel->getIsActiveLabel($card->is_active)}</td>
             {if $card->is_active}
                 {if $card->related('payment')->count('id') == 0}
-                    {dump $card->id}
                     <td class="edit-cell"><a n:href=":deleteCard! $card->id">Smazat</a></td>
                 {else}
                     <td class="edit-cell"><a n:href=":deactivateCard! $card->id">Deaktivovat</a></td>

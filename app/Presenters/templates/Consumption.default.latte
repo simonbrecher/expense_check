@@ -33,6 +33,7 @@
 
 <h2 class="form-subtitle">Spotřeba rodiny</h2>
 
+<div class="before-menu-item">Způsob rozdělení</div>
 <a n:href=":default 'year', $renderYear, $renderMonth, $renderCategory, $renderConsumer" class="menu-item {$renderBy == 'year' ? 'selected' : null}">Podle roku</a>
 <a n:href=":default 'month', $renderYear, $renderMonth, $renderCategory, $renderConsumer" class="menu-item {$renderBy == 'month' ? 'selected' : null}">Podle měsíce</a>
 <a n:href=":default 'category', $renderYear, $renderMonth, $renderCategory, $renderConsumer" class="menu-item {$renderBy == 'category' ? 'selected' : null}">Podle kategorie</a>
@@ -42,6 +43,7 @@
 <br>
 
 {if $renderBy != 'year'}
+    <div class="before-menu-item">Rok</div>
     <a n:href=":default $renderBy, null, null, $renderCategory, $renderConsumer" class="menu-item {$renderYear == null ? 'selected' : null}">Celé období</a>
     {for $year = $startYear; $year <= $endYear; $year++}
         <a n:href=":default $renderBy, $year, $renderMonth, $renderCategory, $renderConsumer" class="menu-item {$renderYear == $year ? 'selected' : null}">{$year}</a>
@@ -52,6 +54,7 @@
 {/if}
 
 {if $renderYear !== null && $renderBy != 'year' && $renderBy != 'month'}
+    <div class="before-menu-item">Měsíc</div>
     <a n:href=":default $renderBy, $renderYear, null, $renderCategory, $renderConsumer" class="menu-item {$renderMonth == null ? 'selected' : null}">Celý rok</a>
 
     {if $renderYear != $startYear}
@@ -70,6 +73,7 @@
 {/if}
 
 {if $renderBy != 'category'}
+    <div class="before-menu-item">Kategorie</div>
     <a n:href=":default $renderBy, $renderYear, $renderMonth, null, $renderConsumer" class="menu-item {$renderCategory == null ? 'selected' : null}">Všechny kategorie</a>
     {foreach $categories as $id => $name}
         <a n:href=":default $renderBy, $renderYear, $renderMonth, $id, $renderConsumer" class="menu-item {$renderCategory == $id ? 'selected' : null}">{$name}</a>
@@ -80,6 +84,7 @@
 {/if}
 
 {if $renderBy != 'consumer'}
+    <div class="before-menu-item">Spotřebitel</div>
     <a n:href=":default $renderBy, $renderYear, $renderMonth, $renderCategory, null" class="menu-item {$renderConsumer == null ? 'selected' : null}">Všichni</a>
     {foreach $consumers as $id => $name}
         <a n:href=":default $renderBy, $renderYear, $renderMonth, $renderCategory, $id" class="menu-item {$renderConsumer == $id ? 'selected' : null}">{$name}</a>
@@ -158,6 +163,10 @@
                     <td class="price-cell">{$consumptionModel->getTotalCzkAmount($renderYear, $renderMonth, $renderCategory, $id)} Kč</td>
                 </tr>
             {/foreach}
+            <tr class="table-body">
+                <td>Celkem</td>
+                <td class="price-cell">{$consumptionModel->getTotalCzkAmount($renderYear, $renderMonth, $renderCategory, null)} Kč</td>
+            </tr>
         </table>
     </div>
 

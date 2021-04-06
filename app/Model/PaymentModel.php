@@ -8,6 +8,7 @@ use App\Form\BasicForm;
 use App\Presenters\AccessUserException;
 use Nette\Database\Table\ActiveRow;
 use Nette\Database\Table\Selection;
+use Nette\Utils\DateTime;
 
 class PaymentModel extends BaseModel
 {
@@ -129,5 +130,15 @@ class PaymentModel extends BaseModel
         }
 
         return $this->database->table('ba_import')->where('bank_account_id', $bankAccountId)->order('d_statement_start');
+    }
+
+    public function getPaymentInterval(): array
+    {
+        $payments = $this->table('payment');
+        if ($payments->count('id') == 0) {
+            return [new DateTime(), new DateTime()];
+        } else {
+            return [$payments->min('d_payment'), $payments->max('d_payment')];
+        }
     }
 }

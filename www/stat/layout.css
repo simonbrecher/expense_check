@@ -14,8 +14,10 @@ table td { border-collapse: collapse; }
 .menu-item { float: left; display: block; margin-right: 12px; background-color: #46E; color: #FFF; padding: 6px 14px 8px; }
 .menu-item:last-child { margin-right: 0; }
 .menu-item:hover { background-color: #1BE; }
-.selected { background-color: #149; }
-.selected:hover { background-color: #149; }
+.selected { background-color: #138; }
+.selected:hover { background-color: #138; }
+
+.before-menu-item { float: left; display: block; margin-right: 12px; background-color: #3B3; color: #FFF; padding: 6px 14px 8px; }
 
 .after-menu-item { float: left; display: block; margin-left: 12px; background-color: #E54; color: #FFF; padding: 6px 14px 8px; }
 

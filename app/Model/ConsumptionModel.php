@@ -124,4 +124,15 @@ class ConsumptionModel extends BaseModel
             throw new \PDOException('Počáteční stav hotovosti se nepodařilo uložit do databáze');
         }
     }
+
+    public function getPaymentInterval(): array
+    {
+        $users = $this->table('user');
+        $payments = $this->database->table('payment')->where('user_id', $users->fetchPairs('id', 'id'));
+        if ($payments->count('id') == 0) {
+            return [new DateTime(), new DateTime()];
+        } else {
+            return [$payments->min('d_payment'), $payments->max('d_payment')];
+        }
+    }
 }
