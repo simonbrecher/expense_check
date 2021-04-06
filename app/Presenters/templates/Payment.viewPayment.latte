@@ -25,7 +25,6 @@
 <hr />
 <br>
 
-{*{foreach $bankAccounts as $bankAccount}*}
 {var $bankAccountCount = $bankAccounts->count('id')}
 {for $i = 0; $i < $bankAccountCount + 1; $i ++}
     {if $i < $bankAccountCount}
@@ -88,57 +87,6 @@
     </div>
 
 {/for}
-
-{*<h2 class="form-subtitle">V hotovosti</h2>*}
-
-{*<div class="table-list-container">*}
-
-{*    <table class="table-smart">*}
-{*        <tr class="table-heading">*}
-{*            <td>Datum</td>*}
-{*            <td>Typ platby</td>*}
-{*            <td>Karta</td>*}
-{*            <td style="min-width: 80px">Částka</td>*}
-{*            <td>Protiúčet</td>*}
-{*            <td>Variabilní symbol</td>*}
-{*            <td>Zprávy</td>*}
-{*            <td>Je identifikovaný</td>*}
-{*            <td>Je výdaj</td>*}
-{*        </tr>*}
-{*        {var $payments = $cashAccount->related('payment')->where('bank_account_id', null)->where('d_payment >=', $startInterval)->where('d_payment <=', $endInterval)}*}
-{*        <tr n:foreach="$payments as $payment" class="table-body">*}
-{*            <td>{$payment->d_payment->format('j.n.y')}</td>*}
-{*            <td  class="PAIDBY {$payment->type_paidby}">*}
-{*                {if $payment->type_paidby == 'PAIDBY_ATM'}*}
-{*                    {$payment->czk_amount < 0 ? 'Výběr' : 'Vklad'}*}
-{*                {else}*}
-{*                    {$paymentModel::PAIDBY_TYPES_TABLE[$payment->type_paidby]}*}
-{*                {/if}*}
-{*            </td>*}
-{*            <td>{$payment->card?->name}</td>*}
-{*            <td class="price-cell {abs($payment->czk_amount) > 10000 ? bold : null} {$payment->czk_amount > 0 ? positive : negative}">{$payment->czk_amount} Kč</td>*}
-{*            <td>*}
-{*                {if $payment->counter_account_number != ''}*}
-{*                    {$payment->counter_account_number} / {$payment->counter_account_bank_code}*}
-{*                    {if $payment->counter_account_name != ''}*}
-{*                        <br>{$payment->counter_account_name}*}
-{*                    {/if}*}
-{*                {/if}*}
-{*            </td>*}
-{*            <td>{$payment->var_symbol}</td>*}
-{*            <td class="message-cell">*}
-{*                {$payment->message_recipient}*}
-{*                    {if $payment->message_recipient !== '' && $payment->message_payer != ''}<br>{/if}*}
-{*                    {$payment->message_payer}*}
-{*                    {if $payment->message_payer !== '' && $payment->description != ''}<br>{/if}*}
-{*                    {$payment->description}*}
-{*            </td>*}
-{*            <td class="{$payment->is_identified ? 'positive' : 'negative'}">{$payment->is_identified ? 'Identifikovaný' : 'Neidentifikovaný'}</td>*}
-{*            <td>{$payment->is_consumption ? 'Výdaj' : 'Není výdaj'}</td>*}
-{*        </tr>*}
-{*    </table>*}
-
-{*</div>*}
 
 <a n:href=":import" class="menu-item">Importovat výpis z bankovního účtu</a>
 

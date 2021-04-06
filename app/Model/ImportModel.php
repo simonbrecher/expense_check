@@ -122,7 +122,7 @@ class ImportModel extends BaseModel
         // WARNING: if to add new type_paidby - check if the database object can be used in two for cycles, or has to be copied
         foreach ($payments->where('type_paidby', 'PAIDBY_FEE') as $payment) {
             $head = array(
-                'user_id' => $this->user->identity->id,
+                'user_id' => $this->user->id,
                 'd_issued' => $payment->d_payment,
                 'type_paidby' => 'PAIDBY_FEE',
             );
@@ -369,7 +369,7 @@ class ImportModel extends BaseModel
         $userBankAccounts = $this->table('bank_account');
         $bankAccount = $userBankAccounts->where('number', $oldHead['bank_account_number'])->where('bank.bank_code', $oldHead['bank_code'])->fetch();
         if (!$bankAccount) {
-            throw new AccessUserException('Uživatel nemá přístuk k bankovnímu účtu: '.$oldHead['bank_account_number'].'/'.$oldHead['bank_code']);
+            throw new AccessUserException('Uživatel nemá přístup k bankovnímu účtu: '.$oldHead['bank_account_number'].'/'.$oldHead['bank_code']);
         }
         $head['bank_account_id'] = $bankAccount->id;
 
@@ -382,7 +382,7 @@ class ImportModel extends BaseModel
         #ADDED: card_id, var_symbol, user_id, cash_account_id, bank_account_id
         foreach ($oldPayments as $oldPayment) {
             $payment = array(
-                'user_id' => $this->user->identity->id,
+                'user_id' => $this->user->id,
                 'bank_account_id' => $head['bank_account_id'],
                 'card_id' => null,
                 'cash_account_id' => null,
@@ -427,7 +427,7 @@ class ImportModel extends BaseModel
             }
 
             if ($payment['type_paidby'] == 'PAIDBY_ATM') {
-                $cashAccountId = $this->database->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
+                $cashAccountId = $this->table('cash_account')->fetch()->id;
                 $payment['cash_account_id'] = $cashAccountId;
             }
 

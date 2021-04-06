@@ -18,7 +18,7 @@ class PairModel extends BaseModel
 
     public function getNotIdentifiedCashPayments(): Selection
     {
-        $cashAccountId = $this->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
+        $cashAccountId = $this->table('cash_account')->fetch()->id;
         return $this->table('payment')->where('cash_account_id', $cashAccountId)->where('type_paidby', 'PAIDBY_CASH')->where('NOT is_identified');
     }
 
@@ -52,7 +52,7 @@ class PairModel extends BaseModel
 
                                 if ($channel['is_consumption']) {
                                     $head = array(
-                                        'user_id' => $this->user->identity->id,
+                                        'user_id' => $this->user->id,
                                         'card_id' => $payment->card_id,
                                         'd_issued' => $payment->d_payment,
                                         'counter_account_number' => $payment->counter_account_number,
@@ -189,7 +189,7 @@ class PairModel extends BaseModel
                 );
 
                 if ($invoice->type_paidby == 'PAIDBY_ATM') {
-                    $cashAccount = $this->table('cash_account')->where('user_id', $this->user->identity->id)->fetch();
+                    $cashAccount = $this->table('cash_account')->fetch();
                     $updateData['cash_account_id'] = $cashAccount;
                     if ($payment->type_paidby == 'PAIDBY_CARD') {
                         $updateData['type_paidby'] = 'PAIDBY_ATM';
@@ -252,7 +252,7 @@ class PairModel extends BaseModel
 
     public function cashConsumption(int $id): void
     {
-        $cashAccountId = $this->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
+        $cashAccountId = $this->table('cash_account')->fetch()->id;
         $payment = $this->table('payment')->where('cash_account_id', $cashAccountId)->where('type_paidby', 'PAIDBY_CASH')->get($id);
         if (!$payment) {
             throw new AccessUserException('Uživatel nemá přístup k této platbě.');
@@ -263,7 +263,7 @@ class PairModel extends BaseModel
 
     public function cashNotConsumption(int $id): void
     {
-        $cashAccountId = $this->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id;
+        $cashAccountId = $this->table('cash_account')->fetch()->id;
         $payment = $this->table('payment')->where('cash_account_id', $cashAccountId)->where('type_paidby', 'PAIDBY_CASH')->get($id);
         if (!$payment) {
             throw new AccessUserException('Uživatel nemá přístup k této platbě.');

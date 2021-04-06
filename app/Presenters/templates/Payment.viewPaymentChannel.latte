@@ -9,7 +9,7 @@
             <td>Datum vytvoření</td>
             <td>Bankovní účet</td>
             <td>Kategorie</td>
-            <td>Variablní symbol</td>
+            <td>Variabilní symbol</td>
             <td>Protiúčet</td>
             <td>Popis</td>
             <td>Počet plateb</td>
@@ -29,7 +29,7 @@
             </td>
             <td>{$channel->description}</td>
             <td>{$channel->related('payment')->count()}</td>
-            <td>{$channel->is_consumption ? 'Aktivní' : 'Neaktivní'}</td>
+            <td>{$channel->is_consumption ? 'Je výdaj' : 'Není výdaj'}</td>
             <td>{$channel->is_active ? 'Aktivní' : 'Neaktivní'}</td>
             <td class="edit-cell">
                 {if ! $channel->is_active}

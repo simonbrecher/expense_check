@@ -59,7 +59,7 @@ class PaymentModel extends BaseModel
         }
 
         $values = array(
-            'user_id' => $this->user->identity->id,
+            'user_id' => $this->user->id,
             'bank_account_id' => $oldValues->bank_account_id,
             'category_id' => $oldValues->is_consumption ? $oldValues->category_id : null,
             'var_symbol' => $oldValues->var_symbol,

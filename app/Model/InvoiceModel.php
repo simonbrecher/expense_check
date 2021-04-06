@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace App\Model;
 
+
 use App\Form\InvoiceForm;
 use App\Presenters\AccessUserException;
 use Nette\Neon\Exception;
@@ -148,8 +149,8 @@ class InvoiceModel extends BaseModel
     {
         if ($head->type_paidby == 'PAIDBY_CASH') {
             $payment = array(
-                'user_id' => $this->user->identity->id,
-                'cash_account_id' => $this->database->table('cash_account')->where('user_id', $this->user->identity->id)->fetch()->id,
+                'user_id' => $this->user->id,
+                'cash_account_id' => $this->table('cash_account')->fetch()->id,
                 'd_payment' => $head->d_issued,
                 'czk_amount' => - $head->related('invoice_item')->sum('czk_amount'),
                 'description' => $head->related('invoice_item')->where('is_main')->fetch()->description,
@@ -283,7 +284,7 @@ class InvoiceModel extends BaseModel
 
     public function getCardSelect(string|null $editId): array
     {
-        $data = $this->table('card')->where('is_active')->select('id, CONCAT(number, "** - ", name) AS name')->fetchPairs('id', 'name');
+        $data = $this->table('card')->where('is_active')->select('id, CONCAT("**", number, " - ", name) AS name')->fetchPairs('id', 'name');
         if ($editId !== null) {
             if ($this->canAccessInvoice((int) $editId)) {
                 $invoice = $this->table('invoice_head')->get($editId);
