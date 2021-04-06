@@ -1,3 +1,30 @@
 {block content}
 
-<p>Consumption page</p>
+<h2 class="form-title">Spotřeba</h2>
+
+<h2 class="form-subtitle">Stav hotovosti</h2>
+
+<div class="wrapper-first">
+
+    <table class="table-smart">
+        <tr class="table-heading">
+            <td></td>
+            <td>Datum</td>
+            <td>Částka</td>
+            <td></td>
+        </tr>
+        <tr class="table-body">
+            <td>Výchozí stav hotovosti</td>
+            <td>{$initialCashAccountDate->format('j.n.Y')}</td>
+            <td>{$initialCashAccountAmount} Kč</td>
+            <td class="edit-cell"><a n:href=":editStartBalance">Upravit</td>
+        </tr>
+        <tr class="table-body">
+            <td>Očekávaný aktuální stav hotovosti</td>
+            <td>{$actualCashAccountDate->format('j.n.Y')}</td>
+            <td>{$actualCashAccountAmount} Kč</td>
+            <td></td>
+        </tr>
+    </table>
+
+</div>

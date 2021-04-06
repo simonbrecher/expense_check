@@ -1,0 +1,30 @@
+{block content}
+
+<div>
+
+    {form editStartBalanceForm}
+
+        <h2 class="form-title">Upravit počáteční stav hotovosti</h2>
+
+        <div class="form-linebox">
+            <div class="form-columnbox">
+                <table class="form-table">
+                    <tr n:foreach="$form->getGroup('body')->getControls() as $input">
+                        <td class="label-cell">{label $input /}</td>
+                        <td class="control">{input $input}</td>
+                        {*            <td n:ifcontent>{inputError $input}</td>*}
+                    </tr>
+                </table>
+            </div>
+            <hr />
+        </div>
+
+        <div class="form-linebox submit-box">
+            {foreach $form->getGroup('buttons')->getControls() as $button}{input $button}{/foreach}
+        </div>
+
+    {/form}
+
+</div>
+
+<a n:href=":default" class="menu-item">Zpět</a>
