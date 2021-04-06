@@ -2,7 +2,7 @@
 
 <h2 class="form-title">Spotřeba</h2>
 
-<h2 class="form-subtitle">Stav hotovosti</h2>
+<h2 class="form-subtitle">Váš stav hotovosti</h2>
 
 <div class="wrapper-first">
 
@@ -16,15 +16,149 @@
         <tr class="table-body">
             <td>Výchozí stav hotovosti</td>
             <td>{$initialCashAccountDate->format('j.n.Y')}</td>
-            <td>{$initialCashAccountAmount} Kč</td>
+            <td class="price-cell">{$initialCashAccountAmount} Kč</td>
             <td class="edit-cell"><a n:href=":editStartBalance">Upravit</td>
         </tr>
         <tr class="table-body">
             <td>Očekávaný aktuální stav hotovosti</td>
             <td>{$actualCashAccountDate->format('j.n.Y')}</td>
-            <td>{$actualCashAccountAmount} Kč</td>
+            <td class="price-cell">{$actualCashAccountAmount} Kč</td>
             <td></td>
         </tr>
     </table>
 
 </div>
+
+<br>
+
+<h2 class="form-subtitle">Spotřeba rodiny</h2>
+
+<a n:href=":default 'year', $renderYear, $renderMonth, $renderCategory, $renderConsumer" class="menu-item {$renderBy == 'year' ? 'selected' : null}">Podle roku</a>
+<a n:href=":default 'month', $renderYear, $renderMonth, $renderCategory, $renderConsumer" class="menu-item {$renderBy == 'month' ? 'selected' : null}">Podle měsíce</a>
+<a n:href=":default 'category', $renderYear, $renderMonth, $renderCategory, $renderConsumer" class="menu-item {$renderBy == 'category' ? 'selected' : null}">Podle kategorie</a>
+<a n:href=":default 'consumer', $renderYear, $renderMonth, $renderCategory, $renderConsumer" class="menu-item {$renderBy == 'consumer' ? 'selected' : null}">Podle spotřebitele</a>
+
+<hr />
+<br>
+
+{if $renderBy != 'year'}
+    <a n:href=":default $renderBy, null, null, $renderCategory, $renderConsumer" class="menu-item {$renderYear == null ? 'selected' : null}">Celé období</a>
+    {for $year = $startYear; $year <= $endYear; $year++}
+        <a n:href=":default $renderBy, $year, $renderMonth, $renderCategory, $renderConsumer" class="menu-item {$renderYear == $year ? 'selected' : null}">{$year}</a>
+    {/for}
+
+    <hr />
+    <br>
+{/if}
+
+{if $renderYear !== null && $renderBy != 'year' && $renderBy != 'month'}
+    <a n:href=":default $renderBy, $renderYear, null, $renderCategory, $renderConsumer" class="menu-item {$renderMonth == null ? 'selected' : null}">Celý rok</a>
+
+    {if $renderYear != $startYear}
+        {var $startMonth = 1}
+    {/if}
+    {if $renderYear != $endYear}
+        {var $endMonth = 12}
+    {/if}
+
+    {for $month = $startMonth; $month <= $endMonth; $month++}
+        <a n:href=":default $renderBy, $renderYear, $month, $renderCategory, $renderConsumer" class="menu-item {$renderMonth == $month ? 'selected' : null}">{$month}</a>
+    {/for}
+
+    <hr />
+    <br>
+{/if}
+
+{if $renderBy != 'category'}
+    <a n:href=":default $renderBy, $renderYear, $renderMonth, null, $renderConsumer" class="menu-item {$renderCategory == null ? 'selected' : null}">Všechny kategorie</a>
+    {foreach $categories as $id => $name}
+        <a n:href=":default $renderBy, $renderYear, $renderMonth, $id, $renderConsumer" class="menu-item {$renderCategory == $id ? 'selected' : null}">{$name}</a>
+    {/foreach}
+
+    <hr />
+    <br>
+{/if}
+
+{if $renderBy != 'consumer'}
+    <a n:href=":default $renderBy, $renderYear, $renderMonth, $renderCategory, null" class="menu-item {$renderConsumer == null ? 'selected' : null}">Všichni</a>
+    {foreach $consumers as $id => $name}
+        <a n:href=":default $renderBy, $renderYear, $renderMonth, $renderCategory, $id" class="menu-item {$renderConsumer == $id ? 'selected' : null}">{$name}</a>
+    {/foreach}
+
+    <hr />
+    <br>
+{/if}
+
+{if $renderBy == 'year'}
+
+    <div class="table-list-container">
+        <table class="table-smart">
+            <tr class="table-heading">
+                <td>Rok</td>
+                <td>Spotřeba</td>
+            </tr>
+            {for $year = $startYear; $year <= $endYear; $year++}
+                <tr class="table-body">
+                    <td>{$year}</td>
+                    <td class="price-cell">{$consumptionModel->getTotalCzkAmount($year, null, $renderCategory, $renderConsumer)} Kč</td>
+                </tr>
+            {/for}
+        </table>
+    </div>
+
+{elseif $renderBy == 'month'}
+
+    <div class="table-list-container">
+        <table class="table-smart">
+            <tr class="table-heading">
+                <td>Rok</td>
+                <td>Měsíc</td>
+                <td>Spotřeba</td>
+            </tr>
+            {for $year = ($renderYear === null ? $startYear : $renderYear); $year <= ($renderYear === null ? $endYear : $renderYear); $year++}
+                {for $month = $year == $startYear ? $startMonth : 1; $month <= ($year == $endYear ? $endMonth : 12); $month++}
+                    <tr class="table-body">
+                        <td>{$year}</td>
+                        <td>{$month}</td>
+                        <td class="price-cell">{$consumptionModel->getTotalCzkAmount($year, $month, $renderCategory, $renderConsumer)} Kč</td>
+                    </tr>
+                {/for}
+            {/for}
+        </table>
+    </div>
+
+{elseif $renderBy == 'category'}
+
+    <div class="table-list-container">
+        <table class="table-smart">
+            <tr class="table-heading">
+                <td>Kategorie</td>
+                <td>Spotřeba</td>
+            </tr>
+            {foreach $categories as $id => $name}
+                <tr class="table-body">
+                    <td>{$name}</td>
+                    <td class="price-cell">{$consumptionModel->getTotalCzkAmount($renderYear, $renderMonth, $id, $renderConsumer)} Kč</td>
+                </tr>
+            {/foreach}
+        </table>
+    </div>
+
+{elseif $renderBy == 'consumer'}
+
+    <div class="table-list-container">
+        <table class="table-smart">
+            <tr class="table-heading">
+                <td>Kategorie</td>
+                <td>Spotřeba</td>
+            </tr>
+            {foreach $consumers as $id => $name}
+                <tr class="table-body">
+                    <td>{$name}</td>
+                    <td class="price-cell">{$consumptionModel->getTotalCzkAmount($renderYear, $renderMonth, $renderCategory, $id)} Kč</td>
+                </tr>
+            {/foreach}
+        </table>
+    </div>
+
+{/if}

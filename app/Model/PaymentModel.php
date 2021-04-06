@@ -8,20 +8,9 @@ use App\Form\BasicForm;
 use App\Presenters\AccessUserException;
 use Nette\Database\Table\ActiveRow;
 use Nette\Database\Table\Selection;
-use Nette\Utils\DateTime;
 
 class PaymentModel extends BaseModel
 {
-    public function getPaymentInterval(): array
-    {
-        $payments = $this->tablePayments();
-        if ($payments->count('id') == 0) {
-            return [new DateTime(), new DateTime()];
-        } else {
-            return [$payments->min('d_payment'), $payments->max('d_payment')];
-        }
-    }
-
     public function activatePaymentChannel(int $id): void
     {
         $row = $this->table('payment_channel')->get($id);

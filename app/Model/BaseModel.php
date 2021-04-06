@@ -113,4 +113,14 @@ class BaseModel
     {
         return self::ROLE_ISACTIVE[$isActive];
     }
+
+    public function getPaymentInterval(): array
+    {
+        $payments = $this->table('payment');
+        if ($payments->count('id') == 0) {
+            return [new DateTime(), new DateTime()];
+        } else {
+            return [$payments->min('d_payment'), $payments->max('d_payment')];
+        }
+    }
 }
