@@ -39,6 +39,17 @@ class BankAccountPresenter extends BasePresenter
         }
     }
 
+    public function handleDeleteBankAccount(int $id): void
+    {
+        try{
+            $this->bankAccountModel->deleteBankAccount($id);
+
+            $this->flashMessage('Bankovní účet byl úspěšně smazaný.', 'success');
+        } catch (AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+    }
+
     public function handleActivateCard(int $id): void
     {
         try{
@@ -56,6 +67,17 @@ class BankAccountPresenter extends BasePresenter
             $this->bankAccountModel->deactivateCard($id);
 
             $this->flashMessage('Platební karta byla úspěšně deaktivovaná.', 'success');
+        } catch (AccessUserException $exception) {
+            $this->flashMessage($exception->getMessage(), 'error');
+        }
+    }
+
+    public function handleDeleteCard(int $id): void
+    {
+        try{
+            $this->bankAccountModel->deleteCard($id);
+
+            $this->flashMessage('Platební karta byla úspěšně smazaná.', 'success');
         } catch (AccessUserException $exception) {
             $this->flashMessage($exception->getMessage(), 'error');
         }

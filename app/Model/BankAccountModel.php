@@ -29,6 +29,18 @@ class BankAccountModel extends BaseModel
         $row->update(['is_active' => false]);
     }
 
+    public function deleteBankAccount(int $id): void
+    {
+        $row = $this->table('bank_account')->get($id);
+        if (!$row) {
+            throw new AccessUserException('Uživatel nemá přístup k tomuto bankovnímu účtu.');
+        }
+        if ($row->related('payment')->count('id') > 0) {
+            throw new AccessUserException('Bankovní účet, k němuž už byly importované platby, nelze smazat.');
+        }
+        $row->delete();
+    }
+
     public function activateCard(int $id): void
     {
         $row = $this->table('card')->get($id);
@@ -45,6 +57,18 @@ class BankAccountModel extends BaseModel
             throw new AccessUserException('Uživatel nemá přístup k této kartě.');
         }
         $row->update(['is_active' => false]);
+    }
+
+    public function deleteCard(int $id): void
+    {
+        $row = $this->table('card')->get($id);
+        if (!$row) {
+            throw new AccessUserException('Uživatel nemá přístup k této kartě.');
+        }
+        if ($row->related('payment')->count('id') > 0) {
+            throw new AccessUserException('Platební karta, k níž už byly importované platby, nelze smazat.');
+        }
+        $row->delete();
     }
 
     public function getBankAccounts(): Selection
