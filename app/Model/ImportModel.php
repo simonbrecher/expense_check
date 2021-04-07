@@ -14,14 +14,13 @@ class ImportModel extends BaseModel
 {
     private const HEAD_SCHEMA = array(
         array(
-            'sscanf' => 'Výpis č. %[0123456789/] z účtu "%[0123456789-/]"',
+            'sscanf' => 'Výpis č. %[0123456789/] z účtu %[0123456789-/]',
             'variables' => [null, 'bank_account_number'],
         ),
-        # now we get the dates from the next two lines, because this one has '-', that is changed to 'longer -' (difference character) when edited in libre office calc
-//        array(
-//            'sscanf' => 'Období: %s - %s',
-//            'variables' => ['d_statement_start', 'd_statement_end'],
-//        ),
+        array(
+            'sscanf' => '﻿Výpis č. %[0123456789/] z účtu %[0123456789-/]', // I have no idea, why this had to be here.
+            'variables' => [null, 'bank_account_number'],
+        ),
         array(
             'sscanf' => 'Počáteční stav účtu k %[0123456789.]: %[0123456789,] CZK',
             'variables' => ['d_statement_start', 'balance_start'],
@@ -41,10 +40,10 @@ class ImportModel extends BaseModel
         6 => 'counter_account_bank_code',
         5 => 'counter_account_name',
         9 => 'var_symbol',
-        11 => 'message_recipient', # TODO: check
-        12 => 'message_payer', # TODO: check
+        11 => 'message_recipient',
+        12 => 'message_payer',
         13 => 'type_paidby',
-        16 => 'description', # TODO: check
+        16 => 'description',
     );
 
     private const LINES_TITLE_SCHEMA = array(
@@ -163,19 +162,24 @@ class ImportModel extends BaseModel
 
         $separator = ';';
         foreach ($fileData as $line) {
-            if ($line[-1] == ';') {
-                $separator = ';';
-                break;
-            } elseif ($line[-1] == ',') {
-                $separator = ',';
-                break;
+            if ($line != '') {
+                if ($line[-1] == ',') {
+                    $separator = ',';
+                    break;
+                } elseif ($line[-1] == ';') {
+                    $separator = ';';
+                    break;
+                }
             }
         }
 
         foreach (self::HEAD_SCHEMA as $format) {
             for ($i = 0; $i < count($fileData); $i++) {
                 $field = str_getcsv($fileData[$i], $separator)[0];
-                if ($field != '') {
+                if ($field !== null) {
+                    $field = str_replace('"', '', $field);
+                }
+                if ($field != '' && $field !== null) {
                     $list = sscanf($field, $format['sscanf']);
                     if ($list[count($list) - 1] !== null) {
                         foreach ($format['variables'] as $i2 => $name) {
