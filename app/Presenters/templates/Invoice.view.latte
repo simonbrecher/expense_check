@@ -61,7 +61,11 @@
             {/if}
             {var $isPaired = $invoice->related('payment')->count('id') != 0}
             <td n:class="$isPaired ? 'positive' : 'negative'">{$isPaired ? 'Spárovaný' : 'Nespárovaný'}</td>
-            <td class="edit-cell"><a n:href=":add $invoice->id">Upravit</a></td>
+            <td class="edit-cell">
+                {if ! $invoice->is_auto_created}
+                    <a n:href=":add $invoice->id">Upravit</a>
+                {/if}
+            </td>
         </tr>
     </table>
 

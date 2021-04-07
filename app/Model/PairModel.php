@@ -59,6 +59,7 @@ class PairModel extends BaseModel
                                         'counter_account_bank_code' => $payment->counter_account_bank_code,
                                         'var_symbol' => $payment->var_symbol,
                                         'type_paidby' => $payment->type_paidby,
+                                        'is_auto_created' => true,
                                     );
                                     $head = $this->database->table('invoice_head')->insert($head);
                                     $payment->update(['payment_channel_id' => $channel['id'], 'invoice_head_id' => $head->id, 'is_identified' => true]);
