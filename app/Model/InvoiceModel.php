@@ -20,11 +20,7 @@ class InvoiceModel extends BaseModel
     public function canAccessInvoice(int $id): bool
     {
         $invoice = $this->table('invoice_head')->get($id);
-        if (!$invoice) {
-            return false;
-        } else {
-            return !$invoice->is_cash_account_balance;
-        }
+        return (bool) $invoice;
     }
 
     public function getInvoiceDate(int $id): DateTime
@@ -252,7 +248,7 @@ class InvoiceModel extends BaseModel
 
     public function getCategorySelect(string|null $editId): array
     {
-        $data = $this->table('category')->where('NOT is_cash_account_balance')->where('is_active')->fetchPairs('id', 'name');
+        $data = $this->table('category')->where('is_active')->fetchPairs('id', 'name');
         if ($editId !== null) {
             if ($this->canAccessInvoice((int) $editId)) {
                 $items = $this->database->table('invoice_item')->where('invoice_head_id', $editId)->select('category.id AS id, category.name AS name');
@@ -306,8 +302,7 @@ class InvoiceModel extends BaseModel
 
     private function getInvoices(): Selection
     {
-        return $this->table('invoice_head')->where('NOT type_paidby', 'PAIDBY_FEE')
-                    ->where('NOT invoice_head.is_cash_account_balance');
+        return $this->table('invoice_head')->where('NOT type_paidby', 'PAIDBY_FEE');
     }
 
     public function getEditInvoiceData(int $id): array

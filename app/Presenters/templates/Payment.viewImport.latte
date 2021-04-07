@@ -25,16 +25,16 @@
                     {var $missingImport = $missingImports[$missingImportId]}
                     {if $missingImport['start']->getTimeStamp() < $import->d_statement_start->getTimeStamp()}
                         <tr class="table-body">
-                            <td class="missing-import" colspan="6">Chybí import z doby od: {$missingImport['start']->format('j.n.y')} do: {$missingImport['end']->format('j.n.y')}</td>
+                            <td class="missing-import" colspan="6">Chybí import z doby od: {$missingImport['start']->format('j.n.Y')} do: {$missingImport['end']->format('j.n.Y')}</td>
                         </tr>
                         {var $missingImportId = $missingImportId + 1}
                     {/if}
                 {/if}
 
                 <tr class="table-body">
-                    <td>{$import->dt_created->format('j.n.y')}</td>
-                    <td>{$import->d_statement_start->format('j.n.y')}</td>
-                    <td>{$import->d_statement_end->format('j.n.y')}</td>
+                    <td>{$import->dt_created->format('j.n.Y')}</td>
+                    <td>{$import->d_statement_start->format('j.n.Y')}</td>
+                    <td>{$import->d_statement_end->format('j.n.Y')}</td>
                     <td>{$import->balance_start} Kč</td>
                     <td>{$import->balance_end} Kč</td>
                     <td>{$import->related('payment')->count()}</td>
@@ -44,7 +44,7 @@
             {if $missingImportId != count($missingImports)}
                 {var $missingImport = $missingImports[$missingImportId]}
                 <tr class="table-body">
-                    <td class="missing-import" colspan="6">Dlouho neimportováno - od: {$missingImport['start']->format('j.n.y')} do: {$missingImport['end']->format('j.n.y')}</td>
+                    <td class="missing-import" colspan="6">Dlouho neimportováno - od: {$missingImport['start']->format('j.n.Y')} do: {$missingImport['end']->format('j.n.Y')}</td>
                 </tr>
             {/if}
         </table>

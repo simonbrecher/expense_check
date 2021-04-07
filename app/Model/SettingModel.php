@@ -11,7 +11,7 @@ class SettingModel extends BaseModel
 {
     public function getCategories()
     {
-        return $this->table('category')->where('NOT is_cash_account_balance')->group('category.id')->order('SUM(:invoice_item.czk_amount) DESC');
+        return $this->table('category')->group('category.id')->order('SUM(:invoice_item.czk_amount) DESC');
     }
 
     public function canAccessCategory(int $id): bool
@@ -20,7 +20,7 @@ class SettingModel extends BaseModel
         if (!$category) {
             return false;
         } else {
-            return $category->family_id == $this->user->identity->family_id and !$category->is_cash_account_balance;
+            return $category->family_id == $this->user->identity->family_id;
         }
     }
 
